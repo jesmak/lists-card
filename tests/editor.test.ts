@@ -1,0 +1,82 @@
+import { describe, expect, it } from "vitest";
+
+import { configFromForm, formData, tidyList } from "../src/editor";
+import type { ListsCardConfig } from "../src/types";
+
+const TYPE = "custom:lists-card";
+
+describe("formData", () => {
+    it("shows the defaults a configuration leaves out, for the card and for each list", () => {
+        const data = formData({ type: TYPE, title: null as unknown as string, lists: [{ entity: "sensor.chores", limit: 3 }] });
+        expect(data).toMatchObject({ layout: "rows", text: "clamp", headings: "plain" });
+        expect(data).not.toHaveProperty("title");
+        expect(data.lists).toEqual([{ entity: "sensor.chores", group: "time", limit: 3, order: ["before", "now", "after"] }]);
+    });
+});
+
+describe("tidyList", () => {
+    it("keeps what is set and drops blanks and defaults", () => {
+        expect(
+            tidyList({
+                entity: "sensor.chores",
+                attribute: "tasks",
+                path: "",
+                name: undefined,
+                fields: { title: "name", text: "", start: undefined },
+                group: "time",
+                limit: 0,
+                order: ["before", "now", "after"],
+                before: { name: "", tone: "plain", farthest_first: false },
+                now: { name: "Today", tone: "highlight" },
+                after: { days: 0, farthest_first: true },
+                empty: "",
+            }),
+        ).toEqual({
+            entity: "sensor.chores",
+            attribute: "tasks",
+            fields: { title: "name" },
+            now: { name: "Today", tone: "highlight" },
+            after: { days: 0, farthest_first: true },
+        });
+    });
+
+    it("keeps a grouping, a limit and an order that aren't the defaults", () => {
+        expect(tidyList({ entity: "sensor.chores", group: "key", limit: 5, order: ["now", "after"] })).toEqual({
+            entity: "sensor.chores",
+            group: "key",
+            limit: 5,
+            order: ["now", "after"],
+        });
+    });
+});
+
+describe("configFromForm", () => {
+    it("writes a configuration as short as one written by hand", () => {
+        const form = {
+            type: TYPE,
+            title: "",
+            icon: "mdi:format-list-bulleted",
+            layout: "rows",
+            text: "fold",
+            headings: "plain",
+            row_step: "full",
+            lists: [{ entity: "sensor.chores", group: "time", limit: 0, order: ["before", "now", "after"] }, { entity: "" }],
+        } as unknown as ListsCardConfig;
+        expect(configFromForm(form)).toEqual({
+            type: TYPE,
+            icon: "mdi:format-list-bulleted",
+            text: "fold",
+            lists: [{ entity: "sensor.chores" }],
+        });
+    });
+
+    it("goes round: a form filled from a configuration writes the same one back", () => {
+        const config: ListsCardConfig = {
+            type: TYPE,
+            title: "Home",
+            layout: "timeline",
+            lists: [{ entity: "sensor.chores", attribute: "tasks", fields: { start: "due" }, after: { days: 7 }, order: ["now", "after"] }],
+        };
+        expect(configFromForm(formData(config) as unknown as ListsCardConfig)).toEqual(config);
+    });
+});

@@ -1,0 +1,2535 @@
+/*! lists-card 1.0.0 | MIT License */
+var __defProp = Object.defineProperty;
+var __getOwnPropDesc = Object.getOwnPropertyDescriptor;
+var __decorateClass = (decorators, target, key, kind) => {
+  var result = kind > 1 ? void 0 : kind ? __getOwnPropDesc(target, key) : target;
+  for (var i7 = decorators.length - 1, decorator; i7 >= 0; i7--)
+    if (decorator = decorators[i7])
+      result = (kind ? decorator(target, key, result) : decorator(result)) || result;
+  if (kind && result) __defProp(target, key, result);
+  return result;
+};
+
+// node_modules/@lit/reactive-element/css-tag.js
+var t = globalThis;
+var e = t.ShadowRoot && (void 0 === t.ShadyCSS || t.ShadyCSS.nativeShadow) && "adoptedStyleSheets" in Document.prototype && "replace" in CSSStyleSheet.prototype;
+var s = /* @__PURE__ */ Symbol();
+var o = /* @__PURE__ */ new WeakMap();
+var n = class {
+  constructor(t6, e6, o6) {
+    if (this._$cssResult$ = true, o6 !== s) throw Error("CSSResult is not constructable. Use `unsafeCSS` or `css` instead.");
+    this.cssText = t6, this.t = e6;
+  }
+  get styleSheet() {
+    let t6 = this.o;
+    const s5 = this.t;
+    if (e && void 0 === t6) {
+      const e6 = void 0 !== s5 && 1 === s5.length;
+      e6 && (t6 = o.get(s5)), void 0 === t6 && ((this.o = t6 = new CSSStyleSheet()).replaceSync(this.cssText), e6 && o.set(s5, t6));
+    }
+    return t6;
+  }
+  toString() {
+    return this.cssText;
+  }
+};
+var r = (t6) => new n("string" == typeof t6 ? t6 : t6 + "", void 0, s);
+var i = (t6, ...e6) => {
+  const o6 = 1 === t6.length ? t6[0] : e6.reduce((e7, s5, o7) => e7 + ((t7) => {
+    if (true === t7._$cssResult$) return t7.cssText;
+    if ("number" == typeof t7) return t7;
+    throw Error("Value passed to 'css' function must be a 'css' function result: " + t7 + ". Use 'unsafeCSS' to pass non-literal values, but take care to ensure page security.");
+  })(s5) + t6[o7 + 1], t6[0]);
+  return new n(o6, t6, s);
+};
+var S = (s5, o6) => {
+  if (e) s5.adoptedStyleSheets = o6.map((t6) => t6 instanceof CSSStyleSheet ? t6 : t6.styleSheet);
+  else for (const e6 of o6) {
+    const o7 = document.createElement("style"), n5 = t.litNonce;
+    void 0 !== n5 && o7.setAttribute("nonce", n5), o7.textContent = e6.cssText, s5.appendChild(o7);
+  }
+};
+var c = e ? (t6) => t6 : (t6) => t6 instanceof CSSStyleSheet ? ((t7) => {
+  let e6 = "";
+  for (const s5 of t7.cssRules) e6 += s5.cssText;
+  return r(e6);
+})(t6) : t6;
+
+// node_modules/@lit/reactive-element/reactive-element.js
+var { is: i2, defineProperty: e2, getOwnPropertyDescriptor: h, getOwnPropertyNames: r2, getOwnPropertySymbols: o2, getPrototypeOf: n2 } = Object;
+var a = globalThis;
+var c2 = a.trustedTypes;
+var l = c2 ? c2.emptyScript : "";
+var p = a.reactiveElementPolyfillSupport;
+var d = (t6, s5) => t6;
+var u = { toAttribute(t6, s5) {
+  switch (s5) {
+    case Boolean:
+      t6 = t6 ? l : null;
+      break;
+    case Object:
+    case Array:
+      t6 = null == t6 ? t6 : JSON.stringify(t6);
+  }
+  return t6;
+}, fromAttribute(t6, s5) {
+  let i7 = t6;
+  switch (s5) {
+    case Boolean:
+      i7 = null !== t6;
+      break;
+    case Number:
+      i7 = null === t6 ? null : Number(t6);
+      break;
+    case Object:
+    case Array:
+      try {
+        i7 = JSON.parse(t6);
+      } catch (t7) {
+        i7 = null;
+      }
+  }
+  return i7;
+} };
+var f = (t6, s5) => !i2(t6, s5);
+var b = { attribute: true, type: String, converter: u, reflect: false, useDefault: false, hasChanged: f };
+Symbol.metadata ?? (Symbol.metadata = /* @__PURE__ */ Symbol("metadata")), a.litPropertyMetadata ?? (a.litPropertyMetadata = /* @__PURE__ */ new WeakMap());
+var y = class extends HTMLElement {
+  static addInitializer(t6) {
+    this._$Ei(), (this.l ?? (this.l = [])).push(t6);
+  }
+  static get observedAttributes() {
+    return this.finalize(), this._$Eh && [...this._$Eh.keys()];
+  }
+  static createProperty(t6, s5 = b) {
+    if (s5.state && (s5.attribute = false), this._$Ei(), this.prototype.hasOwnProperty(t6) && ((s5 = Object.create(s5)).wrapped = true), this.elementProperties.set(t6, s5), !s5.noAccessor) {
+      const i7 = /* @__PURE__ */ Symbol(), h4 = this.getPropertyDescriptor(t6, i7, s5);
+      void 0 !== h4 && e2(this.prototype, t6, h4);
+    }
+  }
+  static getPropertyDescriptor(t6, s5, i7) {
+    const { get: e6, set: r6 } = h(this.prototype, t6) ?? { get() {
+      return this[s5];
+    }, set(t7) {
+      this[s5] = t7;
+    } };
+    return { get: e6, set(s6) {
+      const h4 = e6?.call(this);
+      r6?.call(this, s6), this.requestUpdate(t6, h4, i7);
+    }, configurable: true, enumerable: true };
+  }
+  static getPropertyOptions(t6) {
+    return this.elementProperties.get(t6) ?? b;
+  }
+  static _$Ei() {
+    if (this.hasOwnProperty(d("elementProperties"))) return;
+    const t6 = n2(this);
+    t6.finalize(), void 0 !== t6.l && (this.l = [...t6.l]), this.elementProperties = new Map(t6.elementProperties);
+  }
+  static finalize() {
+    if (this.hasOwnProperty(d("finalized"))) return;
+    if (this.finalized = true, this._$Ei(), this.hasOwnProperty(d("properties"))) {
+      const t7 = this.properties, s5 = [...r2(t7), ...o2(t7)];
+      for (const i7 of s5) this.createProperty(i7, t7[i7]);
+    }
+    const t6 = this[Symbol.metadata];
+    if (null !== t6) {
+      const s5 = litPropertyMetadata.get(t6);
+      if (void 0 !== s5) for (const [t7, i7] of s5) this.elementProperties.set(t7, i7);
+    }
+    this._$Eh = /* @__PURE__ */ new Map();
+    for (const [t7, s5] of this.elementProperties) {
+      const i7 = this._$Eu(t7, s5);
+      void 0 !== i7 && this._$Eh.set(i7, t7);
+    }
+    this.elementStyles = this.finalizeStyles(this.styles);
+  }
+  static finalizeStyles(s5) {
+    const i7 = [];
+    if (Array.isArray(s5)) {
+      const e6 = new Set(s5.flat(1 / 0).reverse());
+      for (const s6 of e6) i7.unshift(c(s6));
+    } else void 0 !== s5 && i7.push(c(s5));
+    return i7;
+  }
+  static _$Eu(t6, s5) {
+    const i7 = s5.attribute;
+    return false === i7 ? void 0 : "string" == typeof i7 ? i7 : "string" == typeof t6 ? t6.toLowerCase() : void 0;
+  }
+  constructor() {
+    super(), this._$Ep = void 0, this.isUpdatePending = false, this.hasUpdated = false, this._$Em = null, this._$Ev();
+  }
+  _$Ev() {
+    this._$ES = new Promise((t6) => this.enableUpdating = t6), this._$AL = /* @__PURE__ */ new Map(), this._$E_(), this.requestUpdate(), this.constructor.l?.forEach((t6) => t6(this));
+  }
+  addController(t6) {
+    (this._$EO ?? (this._$EO = /* @__PURE__ */ new Set())).add(t6), void 0 !== this.renderRoot && this.isConnected && t6.hostConnected?.();
+  }
+  removeController(t6) {
+    this._$EO?.delete(t6);
+  }
+  _$E_() {
+    const t6 = /* @__PURE__ */ new Map(), s5 = this.constructor.elementProperties;
+    for (const i7 of s5.keys()) this.hasOwnProperty(i7) && (t6.set(i7, this[i7]), delete this[i7]);
+    t6.size > 0 && (this._$Ep = t6);
+  }
+  createRenderRoot() {
+    const t6 = this.shadowRoot ?? this.attachShadow(this.constructor.shadowRootOptions);
+    return S(t6, this.constructor.elementStyles), t6;
+  }
+  connectedCallback() {
+    this.renderRoot ?? (this.renderRoot = this.createRenderRoot()), this.enableUpdating(true), this._$EO?.forEach((t6) => t6.hostConnected?.());
+  }
+  enableUpdating(t6) {
+  }
+  disconnectedCallback() {
+    this._$EO?.forEach((t6) => t6.hostDisconnected?.());
+  }
+  attributeChangedCallback(t6, s5, i7) {
+    this._$AK(t6, i7);
+  }
+  _$ET(t6, s5) {
+    const i7 = this.constructor.elementProperties.get(t6), e6 = this.constructor._$Eu(t6, i7);
+    if (void 0 !== e6 && true === i7.reflect) {
+      const h4 = (void 0 !== i7.converter?.toAttribute ? i7.converter : u).toAttribute(s5, i7.type);
+      this._$Em = t6, null == h4 ? this.removeAttribute(e6) : this.setAttribute(e6, h4), this._$Em = null;
+    }
+  }
+  _$AK(t6, s5) {
+    const i7 = this.constructor, e6 = i7._$Eh.get(t6);
+    if (void 0 !== e6 && this._$Em !== e6) {
+      const t7 = i7.getPropertyOptions(e6), h4 = "function" == typeof t7.converter ? { fromAttribute: t7.converter } : void 0 !== t7.converter?.fromAttribute ? t7.converter : u;
+      this._$Em = e6;
+      const r6 = h4.fromAttribute(s5, t7.type);
+      this[e6] = r6 ?? this._$Ej?.get(e6) ?? r6, this._$Em = null;
+    }
+  }
+  requestUpdate(t6, s5, i7, e6 = false, h4) {
+    if (void 0 !== t6) {
+      const r6 = this.constructor;
+      if (false === e6 && (h4 = this[t6]), i7 ?? (i7 = r6.getPropertyOptions(t6)), !((i7.hasChanged ?? f)(h4, s5) || i7.useDefault && i7.reflect && h4 === this._$Ej?.get(t6) && !this.hasAttribute(r6._$Eu(t6, i7)))) return;
+      this.C(t6, s5, i7);
+    }
+    false === this.isUpdatePending && (this._$ES = this._$EP());
+  }
+  C(t6, s5, { useDefault: i7, reflect: e6, wrapped: h4 }, r6) {
+    i7 && !(this._$Ej ?? (this._$Ej = /* @__PURE__ */ new Map())).has(t6) && (this._$Ej.set(t6, r6 ?? s5 ?? this[t6]), true !== h4 || void 0 !== r6) || (this._$AL.has(t6) || (this.hasUpdated || i7 || (s5 = void 0), this._$AL.set(t6, s5)), true === e6 && this._$Em !== t6 && (this._$Eq ?? (this._$Eq = /* @__PURE__ */ new Set())).add(t6));
+  }
+  async _$EP() {
+    this.isUpdatePending = true;
+    try {
+      await this._$ES;
+    } catch (t7) {
+      Promise.reject(t7);
+    }
+    const t6 = this.scheduleUpdate();
+    return null != t6 && await t6, !this.isUpdatePending;
+  }
+  scheduleUpdate() {
+    return this.performUpdate();
+  }
+  performUpdate() {
+    if (!this.isUpdatePending) return;
+    if (!this.hasUpdated) {
+      if (this.renderRoot ?? (this.renderRoot = this.createRenderRoot()), this._$Ep) {
+        for (const [t8, s6] of this._$Ep) this[t8] = s6;
+        this._$Ep = void 0;
+      }
+      const t7 = this.constructor.elementProperties;
+      if (t7.size > 0) for (const [s6, i7] of t7) {
+        const { wrapped: t8 } = i7, e6 = this[s6];
+        true !== t8 || this._$AL.has(s6) || void 0 === e6 || this.C(s6, void 0, i7, e6);
+      }
+    }
+    let t6 = false;
+    const s5 = this._$AL;
+    try {
+      t6 = this.shouldUpdate(s5), t6 ? (this.willUpdate(s5), this._$EO?.forEach((t7) => t7.hostUpdate?.()), this.update(s5)) : this._$EM();
+    } catch (s6) {
+      throw t6 = false, this._$EM(), s6;
+    }
+    t6 && this._$AE(s5);
+  }
+  willUpdate(t6) {
+  }
+  _$AE(t6) {
+    this._$EO?.forEach((t7) => t7.hostUpdated?.()), this.hasUpdated || (this.hasUpdated = true, this.firstUpdated(t6)), this.updated(t6);
+  }
+  _$EM() {
+    this._$AL = /* @__PURE__ */ new Map(), this.isUpdatePending = false;
+  }
+  get updateComplete() {
+    return this.getUpdateComplete();
+  }
+  getUpdateComplete() {
+    return this._$ES;
+  }
+  shouldUpdate(t6) {
+    return true;
+  }
+  update(t6) {
+    this._$Eq && (this._$Eq = this._$Eq.forEach((t7) => this._$ET(t7, this[t7]))), this._$EM();
+  }
+  updated(t6) {
+  }
+  firstUpdated(t6) {
+  }
+};
+y.elementStyles = [], y.shadowRootOptions = { mode: "open" }, y[d("elementProperties")] = /* @__PURE__ */ new Map(), y[d("finalized")] = /* @__PURE__ */ new Map(), p?.({ ReactiveElement: y }), (a.reactiveElementVersions ?? (a.reactiveElementVersions = [])).push("2.1.2");
+
+// node_modules/lit-html/lit-html.js
+var t2 = globalThis;
+var i3 = (t6) => t6;
+var s2 = t2.trustedTypes;
+var e3 = s2 ? s2.createPolicy("lit-html", { createHTML: (t6) => t6 }) : void 0;
+var h2 = "$lit$";
+var o3 = `lit$${Math.random().toFixed(9).slice(2)}$`;
+var n3 = "?" + o3;
+var r3 = `<${n3}>`;
+var l2 = document;
+var c3 = () => l2.createComment("");
+var a2 = (t6) => null === t6 || "object" != typeof t6 && "function" != typeof t6;
+var u2 = Array.isArray;
+var d2 = (t6) => u2(t6) || "function" == typeof t6?.[Symbol.iterator];
+var f2 = "[ 	\n\f\r]";
+var v = /<(?:(!--|\/[^a-zA-Z])|(\/?[a-zA-Z][^>\s]*)|(\/?$))/g;
+var _ = /-->/g;
+var m = />/g;
+var p2 = RegExp(`>|${f2}(?:([^\\s"'>=/]+)(${f2}*=${f2}*(?:[^ 	
+\f\r"'\`<>=]|("|')|))|$)`, "g");
+var g = /'/g;
+var $ = /"/g;
+var y2 = /^(?:script|style|textarea|title)$/i;
+var x = (t6) => (i7, ...s5) => ({ _$litType$: t6, strings: i7, values: s5 });
+var b2 = x(1);
+var w = x(2);
+var T = x(3);
+var E = /* @__PURE__ */ Symbol.for("lit-noChange");
+var A = /* @__PURE__ */ Symbol.for("lit-nothing");
+var C = /* @__PURE__ */ new WeakMap();
+var P = l2.createTreeWalker(l2, 129);
+function V(t6, i7) {
+  if (!u2(t6) || !t6.hasOwnProperty("raw")) throw Error("invalid template strings array");
+  return void 0 !== e3 ? e3.createHTML(i7) : i7;
+}
+var N = (t6, i7) => {
+  const s5 = t6.length - 1, e6 = [];
+  let n5, l3 = 2 === i7 ? "<svg>" : 3 === i7 ? "<math>" : "", c5 = v;
+  for (let i8 = 0; i8 < s5; i8++) {
+    const s6 = t6[i8];
+    let a3, u5, d3 = -1, f3 = 0;
+    for (; f3 < s6.length && (c5.lastIndex = f3, u5 = c5.exec(s6), null !== u5); ) f3 = c5.lastIndex, c5 === v ? "!--" === u5[1] ? c5 = _ : void 0 !== u5[1] ? c5 = m : void 0 !== u5[2] ? (y2.test(u5[2]) && (n5 = RegExp("</" + u5[2], "g")), c5 = p2) : void 0 !== u5[3] && (c5 = p2) : c5 === p2 ? ">" === u5[0] ? (c5 = n5 ?? v, d3 = -1) : void 0 === u5[1] ? d3 = -2 : (d3 = c5.lastIndex - u5[2].length, a3 = u5[1], c5 = void 0 === u5[3] ? p2 : '"' === u5[3] ? $ : g) : c5 === $ || c5 === g ? c5 = p2 : c5 === _ || c5 === m ? c5 = v : (c5 = p2, n5 = void 0);
+    const x2 = c5 === p2 && t6[i8 + 1].startsWith("/>") ? " " : "";
+    l3 += c5 === v ? s6 + r3 : d3 >= 0 ? (e6.push(a3), s6.slice(0, d3) + h2 + s6.slice(d3) + o3 + x2) : s6 + o3 + (-2 === d3 ? i8 : x2);
+  }
+  return [V(t6, l3 + (t6[s5] || "<?>") + (2 === i7 ? "</svg>" : 3 === i7 ? "</math>" : "")), e6];
+};
+var S2 = class _S {
+  constructor({ strings: t6, _$litType$: i7 }, e6) {
+    let r6;
+    this.parts = [];
+    let l3 = 0, a3 = 0;
+    const u5 = t6.length - 1, d3 = this.parts, [f3, v3] = N(t6, i7);
+    if (this.el = _S.createElement(f3, e6), P.currentNode = this.el.content, 2 === i7 || 3 === i7) {
+      const t7 = this.el.content.firstChild;
+      t7.replaceWith(...t7.childNodes);
+    }
+    for (; null !== (r6 = P.nextNode()) && d3.length < u5; ) {
+      if (1 === r6.nodeType) {
+        if (r6.hasAttributes()) for (const t7 of r6.getAttributeNames()) if (t7.endsWith(h2)) {
+          const i8 = v3[a3++], s5 = r6.getAttribute(t7).split(o3), e7 = /([.?@])?(.*)/.exec(i8);
+          d3.push({ type: 1, index: l3, name: e7[2], strings: s5, ctor: "." === e7[1] ? I : "?" === e7[1] ? L : "@" === e7[1] ? z : H }), r6.removeAttribute(t7);
+        } else t7.startsWith(o3) && (d3.push({ type: 6, index: l3 }), r6.removeAttribute(t7));
+        if (y2.test(r6.tagName)) {
+          const t7 = r6.textContent.split(o3), i8 = t7.length - 1;
+          if (i8 > 0) {
+            r6.textContent = s2 ? s2.emptyScript : "";
+            for (let s5 = 0; s5 < i8; s5++) r6.append(t7[s5], c3()), P.nextNode(), d3.push({ type: 2, index: ++l3 });
+            r6.append(t7[i8], c3());
+          }
+        }
+      } else if (8 === r6.nodeType) if (r6.data === n3) d3.push({ type: 2, index: l3 });
+      else {
+        let t7 = -1;
+        for (; -1 !== (t7 = r6.data.indexOf(o3, t7 + 1)); ) d3.push({ type: 7, index: l3 }), t7 += o3.length - 1;
+      }
+      l3++;
+    }
+  }
+  static createElement(t6, i7) {
+    const s5 = l2.createElement("template");
+    return s5.innerHTML = t6, s5;
+  }
+};
+function M(t6, i7, s5 = t6, e6) {
+  if (i7 === E) return i7;
+  let h4 = void 0 !== e6 ? s5._$Co?.[e6] : s5._$Cl;
+  const o6 = a2(i7) ? void 0 : i7._$litDirective$;
+  return h4?.constructor !== o6 && (h4?._$AO?.(false), void 0 === o6 ? h4 = void 0 : (h4 = new o6(t6), h4._$AT(t6, s5, e6)), void 0 !== e6 ? (s5._$Co ?? (s5._$Co = []))[e6] = h4 : s5._$Cl = h4), void 0 !== h4 && (i7 = M(t6, h4._$AS(t6, i7.values), h4, e6)), i7;
+}
+var R = class {
+  constructor(t6, i7) {
+    this._$AV = [], this._$AN = void 0, this._$AD = t6, this._$AM = i7;
+  }
+  get parentNode() {
+    return this._$AM.parentNode;
+  }
+  get _$AU() {
+    return this._$AM._$AU;
+  }
+  u(t6) {
+    const { el: { content: i7 }, parts: s5 } = this._$AD, e6 = (t6?.creationScope ?? l2).importNode(i7, true);
+    P.currentNode = e6;
+    let h4 = P.nextNode(), o6 = 0, n5 = 0, r6 = s5[0];
+    for (; void 0 !== r6; ) {
+      if (o6 === r6.index) {
+        let i8;
+        2 === r6.type ? i8 = new k(h4, h4.nextSibling, this, t6) : 1 === r6.type ? i8 = new r6.ctor(h4, r6.name, r6.strings, this, t6) : 6 === r6.type && (i8 = new Z(h4, this, t6)), this._$AV.push(i8), r6 = s5[++n5];
+      }
+      o6 !== r6?.index && (h4 = P.nextNode(), o6++);
+    }
+    return P.currentNode = l2, e6;
+  }
+  p(t6) {
+    let i7 = 0;
+    for (const s5 of this._$AV) void 0 !== s5 && (void 0 !== s5.strings ? (s5._$AI(t6, s5, i7), i7 += s5.strings.length - 2) : s5._$AI(t6[i7])), i7++;
+  }
+};
+var k = class _k {
+  get _$AU() {
+    return this._$AM?._$AU ?? this._$Cv;
+  }
+  constructor(t6, i7, s5, e6) {
+    this.type = 2, this._$AH = A, this._$AN = void 0, this._$AA = t6, this._$AB = i7, this._$AM = s5, this.options = e6, this._$Cv = e6?.isConnected ?? true;
+  }
+  get parentNode() {
+    let t6 = this._$AA.parentNode;
+    const i7 = this._$AM;
+    return void 0 !== i7 && 11 === t6?.nodeType && (t6 = i7.parentNode), t6;
+  }
+  get startNode() {
+    return this._$AA;
+  }
+  get endNode() {
+    return this._$AB;
+  }
+  _$AI(t6, i7 = this) {
+    t6 = M(this, t6, i7), a2(t6) ? t6 === A || null == t6 || "" === t6 ? (this._$AH !== A && this._$AR(), this._$AH = A) : t6 !== this._$AH && t6 !== E && this._(t6) : void 0 !== t6._$litType$ ? this.$(t6) : void 0 !== t6.nodeType ? this.T(t6) : d2(t6) ? this.k(t6) : this._(t6);
+  }
+  O(t6) {
+    return this._$AA.parentNode.insertBefore(t6, this._$AB);
+  }
+  T(t6) {
+    this._$AH !== t6 && (this._$AR(), this._$AH = this.O(t6));
+  }
+  _(t6) {
+    this._$AH !== A && a2(this._$AH) ? this._$AA.nextSibling.data = t6 : this.T(l2.createTextNode(t6)), this._$AH = t6;
+  }
+  $(t6) {
+    const { values: i7, _$litType$: s5 } = t6, e6 = "number" == typeof s5 ? this._$AC(t6) : (void 0 === s5.el && (s5.el = S2.createElement(V(s5.h, s5.h[0]), this.options)), s5);
+    if (this._$AH?._$AD === e6) this._$AH.p(i7);
+    else {
+      const t7 = new R(e6, this), s6 = t7.u(this.options);
+      t7.p(i7), this.T(s6), this._$AH = t7;
+    }
+  }
+  _$AC(t6) {
+    let i7 = C.get(t6.strings);
+    return void 0 === i7 && C.set(t6.strings, i7 = new S2(t6)), i7;
+  }
+  k(t6) {
+    u2(this._$AH) || (this._$AH = [], this._$AR());
+    const i7 = this._$AH;
+    let s5, e6 = 0;
+    for (const h4 of t6) e6 === i7.length ? i7.push(s5 = new _k(this.O(c3()), this.O(c3()), this, this.options)) : s5 = i7[e6], s5._$AI(h4), e6++;
+    e6 < i7.length && (this._$AR(s5 && s5._$AB.nextSibling, e6), i7.length = e6);
+  }
+  _$AR(t6 = this._$AA.nextSibling, s5) {
+    for (this._$AP?.(false, true, s5); t6 !== this._$AB; ) {
+      const s6 = i3(t6).nextSibling;
+      i3(t6).remove(), t6 = s6;
+    }
+  }
+  setConnected(t6) {
+    void 0 === this._$AM && (this._$Cv = t6, this._$AP?.(t6));
+  }
+};
+var H = class {
+  get tagName() {
+    return this.element.tagName;
+  }
+  get _$AU() {
+    return this._$AM._$AU;
+  }
+  constructor(t6, i7, s5, e6, h4) {
+    this.type = 1, this._$AH = A, this._$AN = void 0, this.element = t6, this.name = i7, this._$AM = e6, this.options = h4, s5.length > 2 || "" !== s5[0] || "" !== s5[1] ? (this._$AH = Array(s5.length - 1).fill(new String()), this.strings = s5) : this._$AH = A;
+  }
+  _$AI(t6, i7 = this, s5, e6) {
+    const h4 = this.strings;
+    let o6 = false;
+    if (void 0 === h4) t6 = M(this, t6, i7, 0), o6 = !a2(t6) || t6 !== this._$AH && t6 !== E, o6 && (this._$AH = t6);
+    else {
+      const e7 = t6;
+      let n5, r6;
+      for (t6 = h4[0], n5 = 0; n5 < h4.length - 1; n5++) r6 = M(this, e7[s5 + n5], i7, n5), r6 === E && (r6 = this._$AH[n5]), o6 || (o6 = !a2(r6) || r6 !== this._$AH[n5]), r6 === A ? t6 = A : t6 !== A && (t6 += (r6 ?? "") + h4[n5 + 1]), this._$AH[n5] = r6;
+    }
+    o6 && !e6 && this.j(t6);
+  }
+  j(t6) {
+    t6 === A ? this.element.removeAttribute(this.name) : this.element.setAttribute(this.name, t6 ?? "");
+  }
+};
+var I = class extends H {
+  constructor() {
+    super(...arguments), this.type = 3;
+  }
+  j(t6) {
+    this.element[this.name] = t6 === A ? void 0 : t6;
+  }
+};
+var L = class extends H {
+  constructor() {
+    super(...arguments), this.type = 4;
+  }
+  j(t6) {
+    this.element.toggleAttribute(this.name, !!t6 && t6 !== A);
+  }
+};
+var z = class extends H {
+  constructor(t6, i7, s5, e6, h4) {
+    super(t6, i7, s5, e6, h4), this.type = 5;
+  }
+  _$AI(t6, i7 = this) {
+    if ((t6 = M(this, t6, i7, 0) ?? A) === E) return;
+    const s5 = this._$AH, e6 = t6 === A && s5 !== A || t6.capture !== s5.capture || t6.once !== s5.once || t6.passive !== s5.passive, h4 = t6 !== A && (s5 === A || e6);
+    e6 && this.element.removeEventListener(this.name, this, s5), h4 && this.element.addEventListener(this.name, this, t6), this._$AH = t6;
+  }
+  handleEvent(t6) {
+    "function" == typeof this._$AH ? this._$AH.call(this.options?.host ?? this.element, t6) : this._$AH.handleEvent(t6);
+  }
+};
+var Z = class {
+  constructor(t6, i7, s5) {
+    this.element = t6, this.type = 6, this._$AN = void 0, this._$AM = i7, this.options = s5;
+  }
+  get _$AU() {
+    return this._$AM._$AU;
+  }
+  _$AI(t6) {
+    M(this, t6);
+  }
+};
+var j = { M: h2, P: o3, A: n3, C: 1, L: N, R, D: d2, V: M, I: k, H, N: L, U: z, B: I, F: Z };
+var B = t2.litHtmlPolyfillSupport;
+B?.(S2, k), (t2.litHtmlVersions ?? (t2.litHtmlVersions = [])).push("3.3.3");
+var D = (t6, i7, s5) => {
+  const e6 = s5?.renderBefore ?? i7;
+  let h4 = e6._$litPart$;
+  if (void 0 === h4) {
+    const t7 = s5?.renderBefore ?? null;
+    e6._$litPart$ = h4 = new k(i7.insertBefore(c3(), t7), t7, void 0, s5 ?? {});
+  }
+  return h4._$AI(t6), h4;
+};
+
+// node_modules/lit-element/lit-element.js
+var s3 = globalThis;
+var i4 = class extends y {
+  constructor() {
+    super(...arguments), this.renderOptions = { host: this }, this._$Do = void 0;
+  }
+  createRenderRoot() {
+    var _a;
+    const t6 = super.createRenderRoot();
+    return (_a = this.renderOptions).renderBefore ?? (_a.renderBefore = t6.firstChild), t6;
+  }
+  update(t6) {
+    const r6 = this.render();
+    this.hasUpdated || (this.renderOptions.isConnected = this.isConnected), super.update(t6), this._$Do = D(r6, this.renderRoot, this.renderOptions);
+  }
+  connectedCallback() {
+    super.connectedCallback(), this._$Do?.setConnected(true);
+  }
+  disconnectedCallback() {
+    super.disconnectedCallback(), this._$Do?.setConnected(false);
+  }
+  render() {
+    return E;
+  }
+};
+i4._$litElement$ = true, i4["finalized"] = true, s3.litElementHydrateSupport?.({ LitElement: i4 });
+var o4 = s3.litElementPolyfillSupport;
+o4?.({ LitElement: i4 });
+(s3.litElementVersions ?? (s3.litElementVersions = [])).push("4.2.2");
+
+// node_modules/@lit/reactive-element/decorators/custom-element.js
+var t3 = (t6) => (e6, o6) => {
+  void 0 !== o6 ? o6.addInitializer(() => {
+    customElements.define(t6, e6);
+  }) : customElements.define(t6, e6);
+};
+
+// node_modules/@lit/reactive-element/decorators/property.js
+var o5 = { attribute: true, type: String, converter: u, reflect: false, hasChanged: f };
+var r4 = (t6 = o5, e6, r6) => {
+  const { kind: n5, metadata: i7 } = r6;
+  let s5 = globalThis.litPropertyMetadata.get(i7);
+  if (void 0 === s5 && globalThis.litPropertyMetadata.set(i7, s5 = /* @__PURE__ */ new Map()), "setter" === n5 && ((t6 = Object.create(t6)).wrapped = true), s5.set(r6.name, t6), "accessor" === n5) {
+    const { name: o6 } = r6;
+    return { set(r7) {
+      const n6 = e6.get.call(this);
+      e6.set.call(this, r7), this.requestUpdate(o6, n6, t6, true, r7);
+    }, init(e7) {
+      return void 0 !== e7 && this.C(o6, void 0, t6, e7), e7;
+    } };
+  }
+  if ("setter" === n5) {
+    const { name: o6 } = r6;
+    return function(r7) {
+      const n6 = this[o6];
+      e6.call(this, r7), this.requestUpdate(o6, n6, t6, true, r7);
+    };
+  }
+  throw Error("Unsupported decorator location: " + n5);
+};
+function n4(t6) {
+  return (e6, o6) => "object" == typeof o6 ? r4(t6, e6, o6) : ((t7, e7, o7) => {
+    const r6 = e7.hasOwnProperty(o7);
+    return e7.constructor.createProperty(o7, t7), r6 ? Object.getOwnPropertyDescriptor(e7, o7) : void 0;
+  })(t6, e6, o6);
+}
+
+// node_modules/@lit/reactive-element/decorators/state.js
+function r5(r6) {
+  return n4({ ...r6, state: true, attribute: false });
+}
+
+// node_modules/lit-html/directive.js
+var t4 = { ATTRIBUTE: 1, CHILD: 2, PROPERTY: 3, BOOLEAN_ATTRIBUTE: 4, EVENT: 5, ELEMENT: 6 };
+var e5 = (t6) => (...e6) => ({ _$litDirective$: t6, values: e6 });
+var i5 = class {
+  constructor(t6) {
+  }
+  get _$AU() {
+    return this._$AM._$AU;
+  }
+  _$AT(t6, e6, i7) {
+    this._$Ct = t6, this._$AM = e6, this._$Ci = i7;
+  }
+  _$AS(t6, e6) {
+    return this.update(t6, e6);
+  }
+  update(t6, e6) {
+    return this.render(...e6);
+  }
+};
+
+// node_modules/lit-html/directive-helpers.js
+var { I: t5 } = j;
+var i6 = (o6) => o6;
+var s4 = () => document.createComment("");
+var v2 = (o6, n5, e6) => {
+  const l3 = o6._$AA.parentNode, d3 = void 0 === n5 ? o6._$AB : n5._$AA;
+  if (void 0 === e6) {
+    const i7 = l3.insertBefore(s4(), d3), n6 = l3.insertBefore(s4(), d3);
+    e6 = new t5(i7, n6, o6, o6.options);
+  } else {
+    const t6 = e6._$AB.nextSibling, n6 = e6._$AM, c5 = n6 !== o6;
+    if (c5) {
+      let t7;
+      e6._$AQ?.(o6), e6._$AM = o6, void 0 !== e6._$AP && (t7 = o6._$AU) !== n6._$AU && e6._$AP(t7);
+    }
+    if (t6 !== d3 || c5) {
+      let o7 = e6._$AA;
+      for (; o7 !== t6; ) {
+        const t7 = i6(o7).nextSibling;
+        i6(l3).insertBefore(o7, d3), o7 = t7;
+      }
+    }
+  }
+  return e6;
+};
+var u3 = (o6, t6, i7 = o6) => (o6._$AI(t6, i7), o6);
+var m2 = {};
+var p3 = (o6, t6 = m2) => o6._$AH = t6;
+var M2 = (o6) => o6._$AH;
+var h3 = (o6) => {
+  o6._$AR(), o6._$AA.remove();
+};
+
+// node_modules/lit-html/directives/repeat.js
+var u4 = (e6, s5, t6) => {
+  const r6 = /* @__PURE__ */ new Map();
+  for (let l3 = s5; l3 <= t6; l3++) r6.set(e6[l3], l3);
+  return r6;
+};
+var c4 = e5(class extends i5 {
+  constructor(e6) {
+    if (super(e6), e6.type !== t4.CHILD) throw Error("repeat() can only be used in text expressions");
+  }
+  dt(e6, s5, t6) {
+    let r6;
+    void 0 === t6 ? t6 = s5 : void 0 !== s5 && (r6 = s5);
+    const l3 = [], o6 = [];
+    let i7 = 0;
+    for (const s6 of e6) l3[i7] = r6 ? r6(s6, i7) : i7, o6[i7] = t6(s6, i7), i7++;
+    return { values: o6, keys: l3 };
+  }
+  render(e6, s5, t6) {
+    return this.dt(e6, s5, t6).values;
+  }
+  update(s5, [t6, r6, c5]) {
+    const d3 = M2(s5), { values: p4, keys: a3 } = this.dt(t6, r6, c5);
+    if (!Array.isArray(d3)) return this.ut = a3, p4;
+    const h4 = this.ut ?? (this.ut = []), v3 = [];
+    let m3, y3, x2 = 0, j2 = d3.length - 1, k2 = 0, w2 = p4.length - 1;
+    for (; x2 <= j2 && k2 <= w2; ) if (null === d3[x2]) x2++;
+    else if (null === d3[j2]) j2--;
+    else if (h4[x2] === a3[k2]) v3[k2] = u3(d3[x2], p4[k2]), x2++, k2++;
+    else if (h4[j2] === a3[w2]) v3[w2] = u3(d3[j2], p4[w2]), j2--, w2--;
+    else if (h4[x2] === a3[w2]) v3[w2] = u3(d3[x2], p4[w2]), v2(s5, v3[w2 + 1], d3[x2]), x2++, w2--;
+    else if (h4[j2] === a3[k2]) v3[k2] = u3(d3[j2], p4[k2]), v2(s5, d3[x2], d3[j2]), j2--, k2++;
+    else if (void 0 === m3 && (m3 = u4(a3, k2, w2), y3 = u4(h4, x2, j2)), m3.has(h4[x2])) if (m3.has(h4[j2])) {
+      const e6 = y3.get(a3[k2]), t7 = void 0 !== e6 ? d3[e6] : null;
+      if (null === t7) {
+        const e7 = v2(s5, d3[x2]);
+        u3(e7, p4[k2]), v3[k2] = e7;
+      } else v3[k2] = u3(t7, p4[k2]), v2(s5, d3[x2], t7), d3[e6] = null;
+      k2++;
+    } else h3(d3[j2]), j2--;
+    else h3(d3[x2]), x2++;
+    for (; k2 <= w2; ) {
+      const e6 = v2(s5, v3[w2 + 1]);
+      u3(e6, p4[k2]), v3[k2++] = e6;
+    }
+    for (; x2 <= j2; ) {
+      const e6 = d3[x2++];
+      null !== e6 && h3(e6);
+    }
+    return this.ut = a3, p3(s5, v3), E;
+  }
+});
+
+// src/const.ts
+var CARD_VERSION = "1.0.0";
+
+// src/localize/languages/en.json
+var en_default = {
+  common: {
+    name: "Lists card",
+    description: "Any list an entity holds, such as tasks, events or notices, grouped by time or by a key",
+    invalid_configuration: "Invalid configuration. Each entry under lists needs an entity, group must be time, key or none, limit a whole number, order a list of before, now and after, and a tone plain, warning, highlight or dimmed.",
+    invalid_layout: "Invalid layout. Layout must be rows or timeline.",
+    invalid_text: "Invalid text mode. Text must be full, clamp or fold.",
+    invalid_headings: "Invalid headings. Headings must be plain or fold.",
+    invalid_height: "Invalid height. The heights (height and max_height) must be positive numbers in pixels, and the height mode (height_mode) auto, fixed or max.",
+    invalid_row_step: "Invalid rounding. The rounding (row_step) must be full or half.",
+    no_lists: "No lists yet. Add one in the card's settings.",
+    unreadable: "No list found in {entity}.",
+    empty: "Nothing on the list.",
+    more: "+ {n} more",
+    open_source: "Open the source",
+    bucket_before: "Earlier",
+    bucket_now: "Now",
+    bucket_after: "Coming"
+  },
+  editor: {
+    title: "Title",
+    icon: "Icon",
+    layout: "Layout",
+    layout_rows: "Rows",
+    layout_timeline: "Timeline, with a date badge",
+    text: "An item's text",
+    text_helper: "Cut or folded, a tap on the item opens it.",
+    text_full: "Shown whole",
+    text_clamp: "Cut to two lines",
+    text_fold: "Folded away",
+    headings: "Group headings",
+    headings_plain: "Plain",
+    headings_fold: "Foldable",
+    lists: "Lists",
+    lists_helper: "A card with one list shows that list's groups. With several lists, each list is shown under its own name instead, with no groups inside it.",
+    entity: "Entity",
+    attribute: "Attribute",
+    attribute_helper: "The attribute that holds the list's items. Left empty, the items are read from the entity's state as JSON.",
+    path: "Path to the list's items",
+    path_helper: "Only when the items are deeper inside the attribute, for example data.items.",
+    name: "Name",
+    name_helper: "The list's heading on a card with several lists. Left empty, the entity's name is used.",
+    fields: "Keys",
+    fields_helper: "Which key of a list's item holds each field. A key left empty is the field's own name, and a key may be a path, for example attributes.title.",
+    field_title: "Title",
+    field_text: "Text",
+    field_start: "Date, or a period's start",
+    field_end: "A period's end",
+    field_label: "Label",
+    field_icon: "Icon",
+    field_link: "Link",
+    field_group: "Group",
+    field_id: "Id",
+    group: "Groups",
+    group_time: "By time",
+    group_key: "By the group key",
+    group_none: "None, one list",
+    limit: "Most items shown",
+    limit_helper: "0 shows them all. The card says how many were left out.",
+    order: "Time groups shown, in order",
+    order_helper: "The items of a group left out aren't shown.",
+    before: "Earlier",
+    now: "Now",
+    after: "Coming",
+    bucket_name: "Heading",
+    bucket_tone: "Tone",
+    bucket_days: "Reach in days",
+    bucket_days_helper: "Items further away are left out. Left empty, there is no limit in days.",
+    bucket_farthest_first: "Furthest from today first",
+    bucket_farthest_first_helper: "Usually the items nearest today come first.",
+    tone_plain: "Plain",
+    tone_warning: "Warning",
+    tone_highlight: "Highlight",
+    tone_dimmed: "Dimmed",
+    empty: "Text of an empty list",
+    row_step: "Rounding in a sections view",
+    row_step_helper: "On automatic rows the card's height is rounded up to whole rows, or to half rows to save room.",
+    row_step_full: "To whole rows",
+    row_step_half: "To half rows"
+  }
+};
+
+// src/localize/languages/fi.json
+var fi_default = {
+  common: {
+    name: "Listakortti",
+    description: "Mik\xE4 tahansa entiteetin lista, kuten teht\xE4v\xE4t, tapahtumat tai tiedotteet, ryhmiteltyn\xE4 ajan tai avaimen mukaan",
+    invalid_configuration: "Virheelliset asetukset. Jokainen lista kohdassa lists tarvitsee entiteetin (entity). Ryhmittelyn (group) on oltava time, key tai none, rajan (limit) kokonaisluku, j\xE4rjestyksen (order) lista arvoista before, now ja after, ja s\xE4vyn (tone) plain, warning, highlight tai dimmed.",
+    invalid_layout: "Virheellinen asettelu. Asettelun (layout) on oltava rows tai timeline.",
+    invalid_text: "Virheellinen tekstin tapa. Tekstin (text) on oltava full, clamp tai fold.",
+    invalid_headings: "Virheelliset otsikot. Otsikoiden (headings) on oltava plain tai fold.",
+    invalid_height: "Virheellinen korkeus. Korkeuksien (height ja max_height) on oltava positiivisia lukuja pikselein\xE4, ja korkeustilan (height_mode) auto, fixed tai max.",
+    invalid_row_step: "Virheellinen py\xF6ristys. Py\xF6ristyksen (row_step) on oltava full tai half.",
+    no_lists: "Ei viel\xE4 listoja. Lis\xE4\xE4 lista kortin asetuksista.",
+    unreadable: "Entiteetist\xE4 {entity} ei l\xF6ytynyt listaa.",
+    empty: "Lista on tyhj\xE4.",
+    more: "+ {n} muuta",
+    open_source: "Avaa l\xE4hde",
+    bucket_before: "Aiemmat",
+    bucket_now: "Nyt",
+    bucket_after: "Tulossa"
+  },
+  editor: {
+    title: "Otsikko",
+    icon: "Kuvake",
+    layout: "Asettelu",
+    layout_rows: "Rivit",
+    layout_timeline: "Aikajana, jossa p\xE4iv\xE4 on merkkin\xE4",
+    text: "Rivin teksti",
+    text_helper: "Katkaistun tai taitetun rivin saa auki napauttamalla.",
+    text_full: "N\xE4ytet\xE4\xE4n kokonaan",
+    text_clamp: "Katkaistaan kahteen riviin",
+    text_fold: "Taitetaan piiloon",
+    headings: "Ryhmien otsikot",
+    headings_plain: "V\xE4liotsikko",
+    headings_fold: "Taittuva",
+    lists: "Listat",
+    lists_helper: "Yhden listan kortti n\xE4ytt\xE4\xE4 listan omat ryhm\xE4t. Kun listoja on useita, jokainen lista n\xE4kyy oman nimens\xE4 alla, eik\xE4 sen sis\xE4ll\xE4 ole ryhmi\xE4.",
+    entity: "Entiteetti",
+    attribute: "Attribuutti",
+    attribute_helper: "Attribuutti, jossa listan rivit ovat. Tyhj\xE4ksi j\xE4tettyn\xE4 rivit luetaan entiteetin tilasta JSON-muodossa.",
+    path: "Polku listan riveihin",
+    path_helper: "Vain kun rivit ovat attribuutin sis\xE4ll\xE4 syvemm\xE4ll\xE4, esimerkiksi data.items.",
+    name: "Nimi",
+    name_helper: "Listan otsikko kortilla, jolla on useita listoja. Tyhj\xE4ksi j\xE4tettyn\xE4 k\xE4ytet\xE4\xE4n entiteetin nime\xE4.",
+    fields: "Avaimet",
+    fields_helper: "Miss\xE4 listan rivin avaimessa kukin kentt\xE4 on. Tyhj\xE4ksi j\xE4tetty avain on kent\xE4n oma nimi, ja avain voi olla polku, esimerkiksi attributes.title.",
+    field_title: "Otsikko",
+    field_text: "Teksti",
+    field_start: "P\xE4iv\xE4 tai jakson alku",
+    field_end: "Jakson loppu",
+    field_label: "Nimike",
+    field_icon: "Kuvake",
+    field_link: "Linkki",
+    field_group: "Ryhm\xE4",
+    field_id: "Tunniste",
+    group: "Ryhm\xE4t",
+    group_time: "Ajan mukaan",
+    group_key: "Ryhm\xE4n avaimen mukaan",
+    group_none: "Ei ryhmi\xE4, yksi lista",
+    limit: "Rivej\xE4 enint\xE4\xE4n",
+    limit_helper: "0 n\xE4ytt\xE4\xE4 kaikki. Kortti kertoo, montako j\xE4tettiin pois.",
+    order: "N\xE4ytett\xE4v\xE4t aikaryhm\xE4t j\xE4rjestyksess\xE4",
+    order_helper: "Pois j\xE4tetyn ryhm\xE4n rivej\xE4 ei n\xE4ytet\xE4.",
+    before: "Aiemmat",
+    now: "Nyt",
+    after: "Tulossa",
+    bucket_name: "Otsikko",
+    bucket_tone: "S\xE4vy",
+    bucket_days: "Ulottuma p\xE4ivin\xE4",
+    bucket_days_helper: "Kauempana olevat rivit j\xE4tet\xE4\xE4n pois. Tyhj\xE4ksi j\xE4tettyn\xE4 p\xE4iv\xE4rajausta ei k\xE4ytet\xE4.",
+    bucket_farthest_first: "Kauimmaiset ensin",
+    bucket_farthest_first_helper: "Tavallisesti t\xE4t\xE4 p\xE4iv\xE4\xE4 l\xE4himm\xE4t rivit ovat ensin.",
+    tone_plain: "Tavallinen",
+    tone_warning: "Varoitus",
+    tone_highlight: "Korostus",
+    tone_dimmed: "Himme\xE4",
+    empty: "Tyhj\xE4n listan teksti",
+    row_step: "Py\xF6ristys osioihin jaetussa n\xE4kym\xE4ss\xE4",
+    row_step_helper: "Automaattisella rivikorkeudella kortin korkeus py\xF6ristet\xE4\xE4n yl\xF6sp\xE4in kokonaisiin riveihin, tai tilan s\xE4\xE4st\xE4miseksi puolikkaisiin riveihin.",
+    row_step_full: "Kokonaisiin riveihin",
+    row_step_half: "Puolikkaisiin riveihin"
+  }
+};
+
+// src/localize/localize.ts
+var FILES = { "./languages/en.json": en_default, "./languages/fi.json": fi_default };
+var LANGUAGES = Object.fromEntries(
+  Object.entries(FILES).map(([path, table]) => [path.replace(/^.*\/|\.json$/g, "").toLowerCase(), table])
+);
+var LANGUAGE_CODES = Object.keys(LANGUAGES).sort();
+function translate(language, key) {
+  const code = (language ?? "en").split(/[-_]/)[0].toLowerCase();
+  return read(LANGUAGES[code], key) ?? read(LANGUAGES.en, key) ?? key;
+}
+function read(table, key) {
+  let value = table;
+  for (const part of key.split(".")) {
+    if (value === null || typeof value !== "object") {
+      return void 0;
+    }
+    value = value[part];
+  }
+  return typeof value === "string" ? value : void 0;
+}
+function browserLanguage() {
+  return document.documentElement.lang || navigator.language || "en";
+}
+
+// src/height.ts
+var HEIGHT_MODES = ["auto", "fixed", "max"];
+var pixels = (value) => value == null || typeof value === "number" && Number.isFinite(value) && value > 0;
+function validHeight(config) {
+  return (config.height_mode == null || HEIGHT_MODES.includes(config.height_mode)) && pixels(config.height) && pixels(config.max_height);
+}
+function heightMode(config) {
+  return config.height_mode ?? (config.height ? "fixed" : config.max_height ? "max" : "auto");
+}
+var ROW_HEIGHT = 56;
+var ROW_GAP = 8;
+function heightStyle(config, layout, minimum = 0) {
+  const rows = config.grid_options ? config.grid_options.rows : config.layout_options?.grid_rows;
+  if (layout === "grid" && typeof rows === "number") {
+    return "height: 100%";
+  }
+  const mode = heightMode(config);
+  if (mode === "fixed" && config.height) {
+    return `height: ${Math.max(config.height, minimum)}px`;
+  }
+  return mode === "max" && config.max_height ? `max-height: ${Math.max(config.max_height, minimum)}px` : "";
+}
+function gridMinRows(minimum) {
+  return Math.max(1, Math.ceil((minimum + ROW_GAP) / (ROW_HEIGHT + ROW_GAP)));
+}
+function heightCardSize(config, content, minimum = 0) {
+  const mode = heightMode(config);
+  if (mode === "fixed" && config.height) {
+    return Math.max(1, Math.round(Math.max(config.height, minimum) / 50));
+  }
+  return mode === "max" && config.max_height ? Math.max(1, Math.min(content, Math.round(Math.max(config.max_height, minimum) / 50))) : content;
+}
+
+// src/rows.ts
+var ROW_STEPS = ["full", "half"];
+var ROW_PX = 64;
+var ROW_GAP_PX = 8;
+function validRowStep(config) {
+  return config.row_step === void 0 || config.row_step === null || ROW_STEPS.includes(config.row_step);
+}
+var step = (config) => config.row_step === "half" ? ROW_PX / 2 : ROW_PX;
+var SLACK_PX = 0.01;
+function drawnScale(card) {
+  const layout = Number.parseFloat(getComputedStyle(card).width) || 0;
+  const drawn = card.getBoundingClientRect().width;
+  return layout > 0 && drawn > 0 ? drawn / layout : 1;
+}
+function filledHeight(content, config, limit = Infinity) {
+  return Math.min(Math.max(1, Math.ceil((content - SLACK_PX + ROW_GAP_PX) / step(config))) * step(config) - ROW_GAP_PX, limit);
+}
+function spareRoom(filled, content) {
+  return Math.max(0, Math.floor(filled - content + SLACK_PX));
+}
+function fillLimit(config, layout, minimum = 0) {
+  const rows = config.grid_options ? config.grid_options.rows : config.layout_options?.grid_rows;
+  if (layout !== "grid" || typeof rows === "number") {
+    return 0;
+  }
+  const mode = heightMode(config);
+  if (mode === "fixed" && config.height) {
+    return 0;
+  }
+  if (mode !== "max" || !config.max_height) {
+    return Infinity;
+  }
+  const down = Math.floor((config.max_height + ROW_GAP_PX) / step(config)) * step(config) - ROW_GAP_PX;
+  return Math.max(down, filledHeight(minimum, config));
+}
+function filledStyle(config, layout, minimum, filled) {
+  const limit = fillLimit(config, layout, minimum);
+  if (!limit) {
+    return heightStyle(config, layout, minimum);
+  }
+  return [limit < Infinity && `max-height: ${limit}px`, filled && `min-height: ${filled}px`].filter(Boolean).join("; ");
+}
+function rowStepSchema(config, text2) {
+  if (heightMode(config) === "fixed" && config.height) {
+    return [];
+  }
+  return [
+    {
+      name: "row_step",
+      selector: {
+        select: { mode: "dropdown", options: ROW_STEPS.map((value) => ({ value, label: text2(`editor.row_step_${value}`) })) }
+      }
+    }
+  ];
+}
+function rowStepData(config) {
+  return { ...config, row_step: config.row_step ?? "full" };
+}
+function tidyRowStep(config) {
+  const tidied = { ...config };
+  if (tidied.row_step !== "half" || heightMode(tidied) === "fixed" && tidied.height) {
+    delete tidied.row_step;
+  }
+  return tidied;
+}
+
+// src/types.ts
+var LAYOUTS = ["rows", "timeline"];
+var TEXT_MODES = ["full", "clamp", "fold"];
+var HEADINGS = ["plain", "fold"];
+var GROUPINGS = ["time", "key", "none"];
+var BUCKETS = ["before", "now", "after"];
+var TONES = ["plain", "warning", "highlight", "dimmed"];
+var FIELDS = ["title", "text", "start", "end", "label", "icon", "link", "group", "id"];
+
+// src/editor.ts
+var DEFAULTS = { layout: "rows", text: "clamp", headings: "plain" };
+var LIST_DEFAULTS = { group: "time", limit: 0 };
+var select = (name, values, text2) => ({
+  mode: "dropdown",
+  options: values.map((value) => ({ value, label: text2(`editor.${name}_${value}`) }))
+});
+function lookSchema(text2) {
+  return [
+    {
+      type: "grid",
+      name: "",
+      schema: [
+        { name: "title", selector: { text: {} } },
+        { name: "icon", selector: { icon: {} } }
+      ]
+    },
+    { name: "layout", selector: { select: select("layout", LAYOUTS, text2) } },
+    { name: "text", selector: { select: select("text", TEXT_MODES, text2) } },
+    { name: "headings", selector: { select: select("headings", HEADINGS, text2) } }
+  ];
+}
+function listsSchema(text2) {
+  const bucket = (name) => ({
+    label: text2(`editor.${name}`),
+    selector: {
+      object: {
+        fields: {
+          name: { label: text2("editor.bucket_name"), selector: { text: {} } },
+          tone: { label: text2("editor.bucket_tone"), selector: { select: select("tone", TONES, text2) } },
+          days: {
+            label: text2("editor.bucket_days"),
+            description: text2("editor.bucket_days_helper"),
+            selector: { number: { min: 0, step: 1, mode: "box" } }
+          },
+          farthest_first: {
+            label: text2("editor.bucket_farthest_first"),
+            description: text2("editor.bucket_farthest_first_helper"),
+            selector: { boolean: {} }
+          }
+        }
+      }
+    }
+  });
+  return [
+    {
+      name: "lists",
+      selector: {
+        object: {
+          multiple: true,
+          label_field: "entity",
+          description_field: "attribute",
+          fields: {
+            entity: { label: text2("editor.entity"), required: true, selector: { entity: {} } },
+            attribute: {
+              label: text2("editor.attribute"),
+              description: text2("editor.attribute_helper"),
+              selector: { text: {} }
+            },
+            path: { label: text2("editor.path"), description: text2("editor.path_helper"), selector: { text: {} } },
+            name: { label: text2("editor.name"), description: text2("editor.name_helper"), selector: { text: {} } },
+            fields: {
+              label: text2("editor.fields"),
+              description: text2("editor.fields_helper"),
+              selector: {
+                object: {
+                  fields: Object.fromEntries(
+                    FIELDS.map((field) => [field, { label: text2(`editor.field_${field}`), selector: { text: {} } }])
+                  )
+                }
+              }
+            },
+            group: { label: text2("editor.group"), selector: { select: select("group", GROUPINGS, text2) } },
+            limit: {
+              label: text2("editor.limit"),
+              description: text2("editor.limit_helper"),
+              selector: { number: { min: 0, step: 1, mode: "box" } }
+            },
+            order: {
+              label: text2("editor.order"),
+              description: text2("editor.order_helper"),
+              selector: {
+                select: {
+                  multiple: true,
+                  reorder: true,
+                  options: BUCKETS.map((value) => ({ value, label: text2(`editor.${value}`) }))
+                }
+              }
+            },
+            before: bucket("before"),
+            now: bucket("now"),
+            after: bucket("after"),
+            empty: { label: text2("editor.empty"), selector: { text: {} } }
+          }
+        }
+      }
+    }
+  ];
+}
+function formData(config) {
+  const set = Object.fromEntries(Object.entries(config).filter(([, value]) => value != null));
+  const lists = (config.lists ?? []).map((list) => ({ ...LIST_DEFAULTS, order: BUCKETS, ...list }));
+  return { ...DEFAULTS, ...set, lists };
+}
+var blank = (value) => value === void 0 || value === null || value === "" || value === false;
+function tidy(value) {
+  const entries = Object.entries(value ?? {}).filter(([, v3]) => !blank(v3));
+  return entries.length > 0 ? Object.fromEntries(entries) : void 0;
+}
+function tidyList(list) {
+  const tidied = { entity: list.entity };
+  for (const key of ["attribute", "path", "name", "empty"]) {
+    if (!blank(list[key])) {
+      tidied[key] = list[key];
+    }
+  }
+  const fields = tidy(list.fields);
+  if (fields) {
+    tidied.fields = fields;
+  }
+  if (list.group && list.group !== LIST_DEFAULTS.group) {
+    tidied.group = list.group;
+  }
+  if (list.limit) {
+    tidied.limit = list.limit;
+  }
+  if (list.order?.length && list.order.join() !== BUCKETS.join()) {
+    tidied.order = list.order;
+  }
+  for (const bucket of BUCKETS) {
+    const config = tidy(list[bucket]);
+    if (config && !(Object.keys(config).length === 1 && config.tone === "plain")) {
+      tidied[bucket] = config;
+    }
+  }
+  return tidied;
+}
+function configFromForm(value) {
+  const config = tidyRowStep(value);
+  config.lists = (config.lists ?? []).filter((list) => list?.entity).map(tidyList);
+  for (const key of ["title", "icon"]) {
+    if (!config[key]) {
+      delete config[key];
+    }
+  }
+  for (const [key, defaultValue] of Object.entries(DEFAULTS)) {
+    if (config[key] === defaultValue || blank(config[key])) {
+      delete config[key];
+    }
+  }
+  return config;
+}
+var ListsCardEditor = class extends i4 {
+  constructor() {
+    super(...arguments);
+    this.config = { type: "custom:lists-card", lists: [] };
+  }
+  setConfig(config) {
+    this.config = { ...config };
+  }
+  render() {
+    if (!this.hass) {
+      return A;
+    }
+    const data = formData(rowStepData(this.config));
+    const text2 = (key) => this.text(key);
+    const form = (schema) => b2`
+            <ha-form
+                .hass=${this.hass}
+                .data=${data}
+                .schema=${schema}
+                .computeLabel=${(entry) => this.text(`editor.${entry.name}`)}
+                .computeHelper=${(entry) => this.helper(entry.name)}
+                @value-changed=${this.valueChanged}
+            ></ha-form>
+        `;
+    return b2`
+            ${form(lookSchema(text2))} ${form(listsSchema(text2))}
+            <p class="helper">${this.text("editor.lists_helper")}</p>
+            ${form(rowStepSchema(this.config, text2))}
+        `;
+  }
+  static get styles() {
+    return i`
+            ha-form {
+                display: block;
+                margin-bottom: 16px;
+            }
+
+            .helper {
+                margin: -8px 0 16px;
+                padding: 0 16px;
+                color: var(--secondary-text-color);
+                font-size: 12px;
+            }
+        `;
+  }
+  valueChanged(event) {
+    const config = configFromForm({ ...this.config, ...event.detail.value });
+    this.dispatchEvent(new CustomEvent("config-changed", { detail: { config }, bubbles: true, composed: true }));
+  }
+  text(key) {
+    return translate(this.language(), key);
+  }
+  helper(name) {
+    const key = `editor.${name}_helper`;
+    const helper = translate(this.language(), key);
+    return helper === key ? void 0 : helper;
+  }
+  language() {
+    return this.hass?.locale?.language ?? this.hass?.language ?? browserLanguage();
+  }
+};
+__decorateClass([
+  n4({ attribute: false })
+], ListsCardEditor.prototype, "hass", 2);
+__decorateClass([
+  r5()
+], ListsCardEditor.prototype, "config", 2);
+ListsCardEditor = __decorateClass([
+  t3("lists-card-editor")
+], ListsCardEditor);
+
+// src/fade.ts
+var fadeStyles = i`
+    .fades {
+        --fade-length: min(24px, 25%);
+        scroll-padding-block: calc(var(--fade-top-offset, 0px) + var(--fade-length, 24px)) var(--fade-length, 24px);
+    }
+
+    .fade-top {
+        mask-image: linear-gradient(
+            to bottom,
+            #000 var(--fade-top-offset, 0px),
+            transparent var(--fade-top-offset, 0px),
+            #000 calc(var(--fade-top-offset, 0px) + var(--fade-length, 24px))
+        );
+    }
+
+    .fade-bottom {
+        mask-image: linear-gradient(to top, transparent, #000 var(--fade-length, 24px));
+    }
+
+    .fade-top.fade-bottom {
+        mask-image: linear-gradient(
+            to bottom,
+            #000 var(--fade-top-offset, 0px),
+            transparent var(--fade-top-offset, 0px),
+            #000 calc(var(--fade-top-offset, 0px) + var(--fade-length, 24px)),
+            #000 calc(100% - var(--fade-length, 24px)),
+            transparent
+        );
+    }
+`;
+function markFade(part) {
+  const hidden = part.scrollHeight - part.clientHeight;
+  part.classList.toggle("fade-top", hidden > 1 && part.scrollTop > 1);
+  part.classList.toggle("fade-bottom", hidden > 1 && hidden - part.scrollTop > 1);
+}
+var onScroll = (event) => markFade(event.currentTarget);
+var ScrollFade = class {
+  constructor(host, parts) {
+    this.host = host;
+    this.parts = parts;
+    /** Each followed part with the children whose size it watches. */
+    this.followed = /* @__PURE__ */ new Map();
+    this.resized = typeof ResizeObserver === "undefined" ? void 0 : new ResizeObserver((entries) => {
+      for (const { target } of entries) {
+        const part = this.followed.has(target) ? target : target.parentElement;
+        if (part && this.followed.has(part)) {
+          markFade(part);
+        }
+      }
+    });
+    host.addController(this);
+  }
+  hostConnected() {
+    if (this.host.hasUpdated) {
+      this.follow();
+    }
+  }
+  hostUpdated() {
+    if (this.host.isConnected) {
+      this.follow();
+    }
+  }
+  hostDisconnected() {
+    for (const part of [...this.followed.keys()]) {
+      this.forget(part);
+    }
+  }
+  follow() {
+    const now = new Set(this.parts());
+    for (const part of [...this.followed.keys()]) {
+      if (!now.has(part)) {
+        this.forget(part);
+      }
+    }
+    for (const part of now) {
+      if (!this.followed.has(part)) {
+        part.addEventListener("scroll", onScroll, { passive: true });
+        this.resized?.observe(part);
+      }
+      part.classList.add("fades");
+      const before = this.followed.get(part) ?? [];
+      const children = [...part.children];
+      before.filter((child) => !children.includes(child)).forEach((child) => this.resized?.unobserve(child));
+      children.filter((child) => !before.includes(child)).forEach((child) => this.resized?.observe(child));
+      this.followed.set(part, children);
+      markFade(part);
+    }
+  }
+  forget(part) {
+    this.followed.get(part)?.forEach((child) => this.resized?.unobserve(child));
+    this.followed.delete(part);
+    part.removeEventListener("scroll", onScroll);
+    this.resized?.unobserve(part);
+    part.classList.remove("fades", "fade-top", "fade-bottom");
+  }
+};
+
+// src/lists.ts
+var DAY_MS = 864e5;
+function dig(value, path) {
+  if (!path) {
+    return value;
+  }
+  for (const part of path.split(".")) {
+    if (value === null || typeof value !== "object") {
+      return void 0;
+    }
+    value = value[part];
+  }
+  return value;
+}
+function parsed(value) {
+  if (typeof value !== "string") {
+    return value;
+  }
+  try {
+    return JSON.parse(value);
+  } catch {
+    return void 0;
+  }
+}
+function parseWhen(value) {
+  if (typeof value === "number") {
+    return Number.isFinite(value) ? { time: value < 1e11 ? value * 1e3 : value, allDay: false } : void 0;
+  }
+  if (typeof value !== "string") {
+    return void 0;
+  }
+  const text2 = value.trim();
+  const day = /^(\d{4})-(\d{2})-(\d{2})$/.exec(text2) ?? /^(\d{1,2})\.(\d{1,2})\.(\d{4})$/.exec(text2);
+  if (day) {
+    const [year, month, date] = day[1].length === 4 ? [day[1], day[2], day[3]] : [day[3], day[2], day[1]];
+    const time2 = Date.UTC(Number(year), Number(month) - 1, Number(date));
+    return new Date(time2).getUTCDate() === Number(date) ? { time: time2, allDay: true } : void 0;
+  }
+  const time = /\d{4}/.test(text2) ? Date.parse(text2) : NaN;
+  return Number.isNaN(time) ? void 0 : { time, allDay: false };
+}
+function plainText(value) {
+  if (!/[<&]/.test(value)) {
+    return value.replace(/\s+/g, " ").trim();
+  }
+  const spaced = value.replace(/<\/(p|div|li|h\d|tr)>|<br\s*\/?>/gi, " $&");
+  const text2 = new DOMParser().parseFromString(spaced, "text/html").body.textContent ?? "";
+  return text2.replace(/\s+/g, " ").trim();
+}
+function text(value) {
+  if (typeof value === "number" && Number.isFinite(value)) {
+    return String(value);
+  }
+  return typeof value === "string" && value.trim() ? value.trim() : void 0;
+}
+function webLink(value) {
+  const link = text(value);
+  if (!link) {
+    return void 0;
+  }
+  try {
+    return ["http:", "https:"].includes(new URL(link).protocol) ? link : void 0;
+  } catch {
+    return void 0;
+  }
+}
+function readItem(raw, fields, fallbackId) {
+  const source = raw !== null && typeof raw === "object" ? raw : { [fields.title ?? "title"]: raw };
+  const field = (name) => dig(source, fields[name] ?? name);
+  const title = text(field("title"));
+  if (!title) {
+    return void 0;
+  }
+  const item = { key: "", title: plainText(title) };
+  const body = text(field("text"));
+  if (body) {
+    item.text = plainText(body);
+  }
+  item.start = parseWhen(field("start"));
+  item.end = parseWhen(field("end"));
+  item.label = text(field("label"));
+  item.icon = text(field("icon"));
+  item.link = webLink(field("link"));
+  item.group = text(field("group"));
+  item.key = text(field("id")) ?? fallbackId ?? [item.title, item.start?.time ?? "", item.end?.time ?? ""].join("|");
+  return item;
+}
+function readItems(state, list) {
+  if (!state) {
+    return void 0;
+  }
+  const source = dig(parsed(list.attribute ? state.attributes[list.attribute] : state.state), list.path);
+  if (source === null || typeof source !== "object") {
+    return void 0;
+  }
+  const fields = list.fields ?? {};
+  const items = Array.isArray(source) ? source.map((raw) => readItem(raw, fields, void 0)) : Object.entries(source).map(([id, raw]) => readItem(raw, fields, id));
+  const seen = /* @__PURE__ */ new Map();
+  return items.filter((item) => item !== void 0).map((item) => {
+    const count = seen.get(item.key) ?? 0;
+    seen.set(item.key, count + 1);
+    return count === 0 ? item : { ...item, key: `${item.key} #${count + 1}` };
+  });
+}
+function zoneDay(time, timeZone) {
+  const parts = new Intl.DateTimeFormat("en-CA", { timeZone, year: "numeric", month: "2-digit", day: "2-digit" }).formatToParts(time);
+  const part = (type) => Number(parts.find((p4) => p4.type === type)?.value);
+  return Date.UTC(part("year"), part("month") - 1, part("day")) / DAY_MS;
+}
+var dayOf = (when, timeZone) => when.allDay ? Math.round(when.time / DAY_MS) : zoneDay(when.time, timeZone);
+function span(item, timeZone) {
+  const start = item.start ?? item.end;
+  const end = item.end ?? item.start;
+  return start && end ? [dayOf(start, timeZone), dayOf(end, timeZone)] : void 0;
+}
+function bucketOf(item, today, timeZone) {
+  const days = span(item, timeZone);
+  if (!days) {
+    return "now";
+  }
+  return days[1] < today ? "before" : days[0] > today ? "after" : "now";
+}
+function validList(list) {
+  const config = list;
+  const bucket = (value) => {
+    const b3 = value;
+    return b3 == null || typeof b3 === "object" && (b3.tone == null || TONES.includes(b3.tone)) && (b3.days == null || count(b3.days)) && (b3.farthest_first == null || typeof b3.farthest_first === "boolean");
+  };
+  const count = (value) => typeof value === "number" && Number.isInteger(value) && value >= 0;
+  const textOrUnset = (value) => value == null || typeof value === "string";
+  return config !== null && typeof config === "object" && typeof config.entity === "string" && config.entity !== "" && textOrUnset(config.attribute) && textOrUnset(config.path) && textOrUnset(config.name) && textOrUnset(config.empty) && (config.fields == null || typeof config.fields === "object" && Object.values(config.fields).every(textOrUnset)) && (config.group == null || GROUPINGS.includes(config.group)) && (config.limit == null || count(config.limit)) && (config.order == null || Array.isArray(config.order) && config.order.every((b3) => BUCKETS.includes(b3))) && bucket(config.before) && bucket(config.now) && bucket(config.after);
+}
+function arrange(items, list, now, names, { timeZone, whole = false } = {}) {
+  const today = zoneDay(now, timeZone);
+  const order = list.order?.length ? list.order : BUCKETS;
+  const placed = [];
+  items.forEach((item, index) => {
+    const bucket = bucketOf(item, today, timeZone);
+    const days = span(item, timeZone);
+    const away = !days || bucket === "now" ? 0 : bucket === "before" ? today - days[1] : days[0] - today;
+    const reach = list[bucket]?.days;
+    if (!order.includes(bucket) || reach != null && away > reach) {
+      return;
+    }
+    const nearest = bucket === "before" ? -(item.end ?? item.start).time : (item.start ?? item.end)?.time ?? 0;
+    const near = list[bucket]?.farthest_first ? -nearest : nearest;
+    placed.push({ item: { ...item, bucket, tone: list[bucket]?.tone ?? "plain" }, index, near: days ? near : 0, undated: !days });
+  });
+  placed.sort(
+    (a3, b3) => order.indexOf(a3.item.bucket) - order.indexOf(b3.item.bucket) || Number(a3.undated) - Number(b3.undated) || a3.near - b3.near || a3.index - b3.index
+  );
+  const shown = (list.limit ? placed.slice(0, list.limit) : placed).map(({ item }) => item);
+  const grouping = whole ? "none" : list.group ?? "time";
+  const groups = [];
+  if (grouping === "none") {
+    groups.push({ key: "all", tone: "plain", items: shown });
+  } else {
+    for (const item of shown) {
+      const key = grouping === "time" ? item.bucket : item.group ?? "";
+      let group = groups.find((g2) => g2.key === key);
+      if (!group) {
+        const name = grouping === "time" ? list[item.bucket]?.name || names[item.bucket] : item.group;
+        group = { key, name, tone: grouping === "time" ? item.tone : "plain", items: [] };
+        groups.push(group);
+      }
+      group.items.push(item);
+    }
+  }
+  return { groups: groups.filter((group) => group.items.length > 0), hidden: placed.length - shown.length };
+}
+
+// src/lists-card.ts
+var LIST_TOP_PX = 4;
+var HEADER_PX = 44;
+var HEADING_PX = 24;
+var ITEM_PX = 88;
+var BORDER_PX = 2;
+var LIST_BOTTOM_PX = 6;
+var px = (value) => parseFloat(value) || 0;
+var CARD_PARTS = [".hd", ".list"].map((part) => `:scope > ${part}`).join(", ");
+var ICON_NAME = /^[a-z0-9-]+:[a-z0-9-]+$/i;
+function endHeight(part, scale = 1, own = true) {
+  if (own && !part.querySelector(".fold")) {
+    return part.getBoundingClientRect().height / scale;
+  }
+  const style = getComputedStyle(part);
+  const sideBySide = style.display === "flex" && !style.flexDirection.startsWith("column");
+  let height = 0;
+  for (const element of part.children) {
+    const child = element;
+    const childStyle = getComputedStyle(child);
+    if (childStyle.position === "absolute") {
+      continue;
+    }
+    let own2;
+    if (child.classList.contains("fold")) {
+      const content = child.firstElementChild?.firstElementChild;
+      own2 = child.classList.contains("open") && content ? endHeight(content, scale) : 0;
+    } else {
+      own2 = px(childStyle.marginTop) + endHeight(child, scale) + px(childStyle.marginBottom);
+    }
+    height = sideBySide ? Math.max(height, own2) : height + own2;
+  }
+  return height + px(style.paddingTop) + px(style.paddingBottom) + px(style.borderTopWidth) + px(style.borderBottomWidth);
+}
+var ListsCard = class extends i4 {
+  constructor() {
+    super();
+    this.opened = /* @__PURE__ */ new Set();
+    this.shut = /* @__PURE__ */ new Set();
+    this.cut = /* @__PURE__ */ new Set();
+    this.sliding = false;
+    this.filled = 0;
+    this.spare = 0;
+    this.lists = [];
+    this.slid = (event) => {
+      const fold = event.target;
+      if (event.propertyName !== "grid-template-rows" || !fold.classList?.contains("fold")) {
+        return;
+      }
+      const moving = [...this.renderRoot.querySelectorAll(".fold")].some((f3) => f3 !== fold && (f3.getAnimations?.().length ?? 0) > 0);
+      if (!moving) {
+        window.clearTimeout(this.slideTimer);
+        this.sliding = false;
+      }
+    };
+    new ScrollFade(this, () => this.heightStyle() ? this.renderRoot.querySelectorAll(".list") : []);
+  }
+  static getConfigElement() {
+    return document.createElement("lists-card-editor");
+  }
+  /** The first entity with a list of objects in an attribute, with the key that looks most like a title. */
+  static getStubConfig(hass) {
+    for (const entity of Object.values(hass?.states ?? {})) {
+      for (const [attribute, value] of Object.entries(entity?.attributes ?? {})) {
+        const first = Array.isArray(value) ? value[0] : void 0;
+        if (!entity || first === null || typeof first !== "object") {
+          continue;
+        }
+        const title = ["title", "name", "summary"].find((key) => typeof first[key] === "string");
+        if (title) {
+          const list = { entity: entity.entity_id, attribute };
+          return { lists: [title === "title" ? list : { ...list, fields: { title } }] };
+        }
+      }
+    }
+    return { lists: [] };
+  }
+  setConfig(config) {
+    const invalid = (key) => new Error(translate(browserLanguage(), `common.${key}`));
+    if (!config || !Array.isArray(config.lists) || !config.lists.every(validList)) {
+      throw invalid("invalid_configuration");
+    }
+    if (config.layout != null && !LAYOUTS.includes(config.layout)) {
+      throw invalid("invalid_layout");
+    }
+    if (config.text != null && !TEXT_MODES.includes(config.text)) {
+      throw invalid("invalid_text");
+    }
+    if (config.headings != null && !HEADINGS.includes(config.headings)) {
+      throw invalid("invalid_headings");
+    }
+    if (!validHeight(config)) {
+      throw invalid("invalid_height");
+    }
+    if (!validRowStep(config)) {
+      throw invalid("invalid_row_step");
+    }
+    this.config = config;
+  }
+  getCardSize() {
+    const items = this.lists.reduce((sum, list) => sum + (list.arranged?.groups.reduce((n5, g2) => n5 + g2.items.length, 0) ?? 0), 0);
+    return heightCardSize(this.config ?? {}, 1 + Math.max(1, items), this.minimumHeight());
+  }
+  getGridOptions() {
+    return { columns: 12, min_columns: 6, rows: "auto", min_rows: gridMinRows(this.minimumHeight()) };
+  }
+  hasHeader() {
+    return Boolean(this.config?.title || this.config?.icon);
+  }
+  minimumHeight() {
+    return (this.hasHeader() ? HEADER_PX : 0) + LIST_TOP_PX + HEADING_PX + ITEM_PX + LIST_BOTTOM_PX + BORDER_PX;
+  }
+  heightStyle() {
+    return heightStyle(this.config ?? {}, this.layout, this.minimumHeight());
+  }
+  layoutMode() {
+    return this.config?.layout ?? "rows";
+  }
+  textMode() {
+    return this.config?.text ?? "clamp";
+  }
+  headings() {
+    return this.config?.headings ?? "plain";
+  }
+  connectedCallback() {
+    super.connectedCallback();
+    this.resizes = new ResizeObserver(() => this.measureSoon());
+    this.watchDay();
+    if (this.hasUpdated) {
+      this.requestUpdate();
+    }
+  }
+  disconnectedCallback() {
+    super.disconnectedCallback();
+    window.clearTimeout(this.slideTimer);
+    window.clearInterval(this.dayTimer);
+    this.sliding = false;
+    this.resizes?.disconnect();
+    cancelAnimationFrame(this.frame ?? 0);
+  }
+  /** The items change buckets when the day does, with no change in any entity, so the card is drawn again then. */
+  watchDay() {
+    window.clearInterval(this.dayTimer);
+    let day = zoneDay(Date.now(), this.timeZone());
+    this.dayTimer = window.setInterval(() => {
+      const now = zoneDay(Date.now(), this.timeZone());
+      if (now !== day) {
+        day = now;
+        this.requestUpdate();
+      }
+    }, 6e4);
+  }
+  shouldUpdate(changed) {
+    if (!this.config || !changed.has("hass") || changed.size > 1) {
+      return true;
+    }
+    const previous = changed.get("hass");
+    if (!previous || !this.hass) {
+      return true;
+    }
+    if ((previous.locale?.language ?? previous.language) !== (this.hass.locale?.language ?? this.hass.language)) {
+      return true;
+    }
+    return this.config.lists.some(({ entity }) => previous.states[entity] !== this.hass?.states[entity]);
+  }
+  willUpdate() {
+    if (!this.hass || !this.config) {
+      return;
+    }
+    const names = Object.fromEntries(
+      ["before", "now", "after"].map((bucket) => [bucket, this.text(`common.bucket_${bucket}`)])
+    );
+    const whole = this.config.lists.length > 1;
+    this.lists = this.config.lists.map((config) => {
+      const entity = this.hass?.states[config.entity];
+      const name = config.name || entity && this.hass?.formatEntityName?.(entity, [{ type: "device" }, { type: "entity" }]) || entity?.attributes.friendly_name || config.entity;
+      const items = readItems(entity, config);
+      return { config, name, arranged: items && arrange(items, config, Date.now(), names, { timeZone: this.timeZone(), whole }) };
+    });
+  }
+  updated() {
+    if (!this.isConnected) {
+      return;
+    }
+    const card = this.renderRoot.querySelector("ha-card");
+    if (card) {
+      this.resizes?.observe(card);
+    }
+    this.measureSoon();
+  }
+  render() {
+    if (!this.hass || !this.config) {
+      return A;
+    }
+    const several = this.lists.length > 1;
+    return b2`
+            <ha-card style=${this.cardStyle()} class=${this.cardClass()} @transitionend=${this.slid}>
+                ${this.header()}
+                <div class="list">
+                    ${this.lists.length === 0 ? b2`<div class="empty">${this.text("common.no_lists")}</div>` : A}
+                    ${this.lists.map((list, index) => several ? this.listAsGroup(list, index) : this.listGroups(list, index))}
+                </div>
+            </ha-card>
+        `;
+  }
+  header() {
+    if (!this.hasHeader()) {
+      return A;
+    }
+    const title = this.config?.title ?? "";
+    return b2`<div class="hd">
+            ${this.config?.icon ? b2`<ha-icon class="hd-icon" icon=${this.config.icon}></ha-icon>` : A}
+            <div class="hd-title" title=${title}>${title}</div>
+            ${this.pill()}
+        </div>`;
+  }
+  /**
+   * Beside the title: how many items the first group has, with its name, when its tone says it matters, as "2 late"
+   * does. Otherwise the number of items on the card.
+   */
+  pill() {
+    const groups = this.lists.flatMap((list) => list.arranged?.groups ?? []);
+    const count = groups.reduce((sum, group) => sum + group.items.length, 0);
+    if (count === 0) {
+      return A;
+    }
+    const lead = this.lists.length === 1 ? groups[0] : void 0;
+    if (lead?.name && (lead.tone === "warning" || lead.tone === "highlight")) {
+      return b2`<span class="pill tone-${lead.tone}">${lead.items.length} ${lead.name.toLocaleLowerCase(this.language())}</span>`;
+    }
+    return b2`<span class="pill">${count}</span>`;
+  }
+  /** One list on the card: its groups are the card's groups. */
+  listGroups(list, index) {
+    const groups = list.arranged?.groups ?? [];
+    if (groups.length === 0) {
+      return b2`<div class="empty">${this.emptyText(list)}</div>`;
+    }
+    return b2`${groups.map((group) => this.group(group, `${index} ${group.key}`, index, A))} ${this.more(list)}`;
+  }
+  /** One of several lists: a group of its own, under its name. */
+  listAsGroup(list, index) {
+    const items = list.arranged?.groups.flatMap((group2) => group2.items) ?? [];
+    const group = { key: "list", name: list.name, tone: "plain", items };
+    const rest = items.length === 0 ? b2`<div class="empty">${this.emptyText(list)}</div>` : this.more(list);
+    return this.group(group, `${index} list`, index, rest);
+  }
+  emptyText(list) {
+    if (!list.arranged) {
+      return this.text("common.unreadable", { entity: list.config.entity });
+    }
+    return list.config.empty || this.text("common.empty");
+  }
+  more(list) {
+    const hidden = list.arranged?.hidden ?? 0;
+    return hidden > 0 ? b2`<div class="more">${this.text("common.more", { n: hidden })}</div>` : A;
+  }
+  group(group, key, list, rest) {
+    const items = b2`<div class="items">
+            ${c4(
+      group.items,
+      (item) => item.key,
+      (item) => this.item(item, `${list} ${item.key}`)
+    )}
+        </div>`;
+    if (group.name === void 0) {
+      return b2`<div class="grp">${items}${rest}</div>`;
+    }
+    if (this.headings() === "plain") {
+      return b2`<div class="grp">
+                <div class="gh" title=${group.name}>${group.name}</div>
+                ${items}${rest}
+            </div>`;
+    }
+    const open = !this.shut.has(key);
+    return b2`<div class="grp">
+            <button class="gh folding" aria-expanded=${open ? "true" : "false"} @click=${() => this.toggle("shut", key)}>
+                <span class="dot tone-${group.tone}"></span>
+                <span class="gh-name" title=${group.name}>${group.name}</span>
+                <span class="count">${group.items.length}</span>
+                <ha-icon class="chev" icon="mdi:chevron-down"></ha-icon>
+            </button>
+            ${this.fold(open, b2`${items}${rest}`)}
+        </div>`;
+  }
+  item(item, key) {
+    const mode = this.textMode();
+    const open = this.opened.has(key);
+    const can = Boolean(item.text) && (mode === "fold" || mode === "clamp" && (open || this.cut.has(key)));
+    const classes = ["item", this.layoutMode(), `tone-${item.tone}`, open && "open", can && "can"].filter(Boolean).join(" ");
+    const cover = can ? b2`<button
+                  class="cover"
+                  aria-label=${item.title}
+                  aria-expanded=${open ? "true" : "false"}
+                  @click=${() => this.toggle("opened", key)}
+              ></button>` : A;
+    const source = item.link ? b2`<a class="src" href=${item.link} target="_blank" rel="noreferrer" title=${this.text("common.open_source")}
+                  ><ha-icon icon="mdi:open-in-new"></ha-icon
+              ></a>` : A;
+    const chevron = item.text && mode !== "full" ? b2`<ha-icon class="chev ${can ? "" : "idle"}" icon="mdi:chevron-down"></ha-icon>` : A;
+    const actions = item.link || item.text && mode !== "full" ? b2`<span class="act">${source}${chevron}</span>` : A;
+    const text2 = item.text ? b2`<div class="tx ${mode === "clamp" && !open ? "clamp" : ""}" data-key=${key}>${item.text}</div>` : A;
+    const label = item.label ? b2`<div class="lb" title=${item.label}>${item.label}</div>` : A;
+    const when = this.whenText(item);
+    if (this.layoutMode() === "timeline") {
+      const extra = this.badgeSaysIt(item) ? "" : when;
+      const line = item.label || extra ? b2`<div class="lb" title=${[item.label, extra].filter(Boolean).join(" \xB7 ")}>
+                          ${item.label ?? A}${item.label && extra ? " \xB7 " : A}${extra ? b2`<span class="when">${extra}</span>` : A}
+                      </div>` : A;
+      return b2`<div class=${classes}>
+                ${cover} ${this.badge(item)}
+                <div class="body">
+                    <div class="ti" title=${item.title}>${this.icon(item, "ti-icon")}${item.title}</div>
+                    ${line} ${mode === "fold" ? this.fold(open, text2) : text2}
+                </div>
+                ${actions}
+            </div>`;
+    }
+    const folded = mode === "fold";
+    return b2`<div class=${classes}>
+            ${cover}
+            <div class="line">
+                <span class="ic">${this.icon(item)}</span>
+                <span class="ti" title=${item.title}
+                    >${item.title}${folded && !open && item.label ? b2`<span class="inl"> · ${item.label}</span>` : A}</span
+                >
+                ${when ? b2`<span class="when" title=${this.longWhen(item)}>${when}</span>` : A} ${actions}
+            </div>
+            ${folded ? this.fold(open, b2`<div class="sub">${label}${text2}</div>`) : label !== A || text2 !== A ? b2`<div class="sub">${label}${text2}</div>` : A}
+        </div>`;
+  }
+  icon(item, classes = "") {
+    if (!item.icon) {
+      return A;
+    }
+    return ICON_NAME.test(item.icon) ? b2`<ha-icon class=${classes} icon=${item.icon}></ha-icon>` : b2`<span class="emoji ${classes}">${item.icon}</span>`;
+  }
+  format(when, options) {
+    return new Intl.DateTimeFormat(this.language(), { ...options, timeZone: when.allDay ? "UTC" : this.timeZone() });
+  }
+  year(when) {
+    return this.format(when, { year: "numeric" }).format(when.time);
+  }
+  thisYear() {
+    return new Intl.DateTimeFormat(this.language(), { year: "numeric", timeZone: this.timeZone() }).format(Date.now());
+  }
+  /** The date's parts for a text: day and month, the year when it isn't this one, the time when the date has one. */
+  dateOptions(when, ...also) {
+    const year = [when, ...also].some((w2) => this.year(w2) !== this.thisYear());
+    return {
+      day: "numeric",
+      month: "numeric",
+      ...year ? { year: "numeric" } : {},
+      ...when.allDay ? {} : { hour: "numeric", minute: "2-digit" }
+    };
+  }
+  /**
+   * When the item is, as a short text: a period as its range, today as "today", a day in a bucket toned as a warning
+   * as how long ago it was, and any other day with its weekday.
+   */
+  whenText(item) {
+    const start = item.start ?? item.end;
+    if (!start) {
+      return "";
+    }
+    const end = item.start && item.end ? item.end : void 0;
+    if (end && (end.time !== start.time || end.allDay !== start.allDay)) {
+      return this.format(start, this.dateOptions(start, end)).formatRange(start.time, end.time);
+    }
+    const away = dayOf(start, this.timeZone()) - zoneDay(Date.now(), this.timeZone());
+    if (away === 0 || away < 0 && item.tone === "warning") {
+      const relative = new Intl.RelativeTimeFormat(this.language(), { numeric: "auto", style: "short" }).format(away, "day");
+      return start.allDay || away !== 0 ? relative : `${relative} ${this.format(start, { hour: "numeric", minute: "2-digit" }).format(start.time)}`;
+    }
+    return this.format(start, { weekday: "short", ...this.dateOptions(start) }).format(start.time);
+  }
+  longWhen(item) {
+    const start = item.start ?? item.end;
+    if (!start) {
+      return "";
+    }
+    const options = start.allDay ? { dateStyle: "full" } : { dateStyle: "full", timeStyle: "short" };
+    const end = item.start && item.end ? item.end : void 0;
+    const format = this.format(start, options);
+    return end ? format.formatRange(start.time, end.time) : format.format(start.time);
+  }
+  sameMonthDays(item) {
+    const { start, end } = item;
+    return Boolean(
+      start?.allDay && end?.allDay && end.time > start.time && this.format(start, { year: "numeric", month: "numeric" }).format(start.time) === this.format(end, { year: "numeric", month: "numeric" }).format(end.time)
+    );
+  }
+  /** Whether the timeline's badge already says when the item is, so the text needn't: a plain day, or days within a month. */
+  badgeSaysIt(item) {
+    const start = item.start ?? item.end;
+    if (!start) {
+      return true;
+    }
+    if (item.start && item.end && item.end.time !== item.start.time) {
+      return this.sameMonthDays(item);
+    }
+    const away = dayOf(start, this.timeZone()) - zoneDay(Date.now(), this.timeZone());
+    return start.allDay && away !== 0 && !(away < 0 && item.tone === "warning");
+  }
+  /** The day large, or a period's days within one month, the month under it, and the year only when it isn't this year's. */
+  badge(item) {
+    const start = item.start ?? item.end;
+    if (!start) {
+      return b2`<div class="badge"><div class="day">–</div></div>`;
+    }
+    const day = (when) => this.format(when, { day: "numeric" }).format(when.time);
+    const days = this.sameMonthDays(item) ? `${day(start)}\u2013${day(item.end)}` : day(start);
+    const year = this.year(start);
+    return b2`<div class="badge" title=${this.longWhen(item)}>
+            <div class="day">${days}</div>
+            <div class="month">${this.format(start, { month: "short" }).format(start.time)}</div>
+            ${year === this.thisYear() ? A : b2`<div class="year">${year}</div>`}
+        </div>`;
+  }
+  timeZone() {
+    return this.hass?.locale?.time_zone === "server" ? this.hass.config?.time_zone : void 0;
+  }
+  toggle(which, key) {
+    const keys = new Set(this[which]);
+    if (!keys.delete(key)) {
+      keys.add(key);
+    }
+    this[which] = keys;
+    if (which === "shut" || this.textMode() === "fold") {
+      this.sliding = true;
+      window.clearTimeout(this.slideTimer);
+      this.slideTimer = window.setTimeout(() => this.sliding = false, 1e3);
+    }
+  }
+  /** Content that slides open and shut. A shut one stays in the page, so the change can be animated. */
+  fold(isOpen, content) {
+    return b2`<div class="fold ${isOpen ? "open" : ""}" ?inert=${!isOpen}>
+            <div class="fold-in"><div class="fold-body">${content}</div></div>
+        </div>`;
+  }
+  measureSoon() {
+    cancelAnimationFrame(this.frame ?? 0);
+    this.frame = requestAnimationFrame(() => {
+      if (!this.findCut()) {
+        this.fillRows();
+      }
+    });
+  }
+  /** Which texts, cut to two lines, have more to show. Only those open on a tap. True when the set changed. */
+  findCut() {
+    const cut = /* @__PURE__ */ new Set();
+    for (const text2 of this.renderRoot.querySelectorAll(".tx.clamp")) {
+      if (text2.scrollHeight > text2.clientHeight + 1 && text2.dataset.key) {
+        cut.add(text2.dataset.key);
+      }
+    }
+    for (const key of this.opened) {
+      if (this.cut.has(key)) {
+        cut.add(key);
+      }
+    }
+    if (cut.size === this.cut.size && [...cut].every((key) => this.cut.has(key))) {
+      return false;
+    }
+    this.cut = cut;
+    return true;
+  }
+  fillRows() {
+    const card = this.renderRoot.querySelector("ha-card");
+    if (!card || !card.clientWidth) {
+      return;
+    }
+    const limit = fillLimit(this.config ?? {}, this.layout, this.minimumHeight());
+    if (!limit) {
+      if (this.filled) this.filled = 0;
+      if (this.spare) this.spare = 0;
+      return;
+    }
+    const scale = drawnScale(card);
+    const style = getComputedStyle(card);
+    let content = px(style.borderTopWidth) + px(style.borderBottomWidth) + px(style.paddingTop) + px(style.paddingBottom);
+    for (const part of card.querySelectorAll(CARD_PARTS)) {
+      const partStyle = getComputedStyle(part);
+      const height = part.classList.contains("list") ? endHeight(part, scale, false) : part.getBoundingClientRect().height / scale;
+      content += px(partStyle.marginTop) + height + px(partStyle.marginBottom);
+    }
+    const list = card.querySelector(":scope > .list");
+    content -= list ? Math.max(0, px(getComputedStyle(list).paddingTop) - LIST_TOP_PX) : 0;
+    const filled = filledHeight(content, this.config ?? {}, limit);
+    const spare = spareRoom(filled, content);
+    if (filled !== this.filled) {
+      this.filled = filled;
+    }
+    if (spare !== this.spare) {
+      this.spare = spare;
+    }
+  }
+  /** The card's inline style: the height it is held to, or the rows it fills up to any limit, with their spare room under the header. */
+  cardStyle() {
+    const style = filledStyle(this.config ?? {}, this.layout, this.minimumHeight(), this.filled);
+    return this.filled ? `${style}; --lc-spare: ${this.spare}px` : style;
+  }
+  cardClass() {
+    const icons = this.lists.some((list) => list.arranged?.groups.some((group) => group.items.some((item) => item.icon)));
+    return [this.heightStyle() && "held", this.sliding && "sliding", !icons && "no-icons"].filter(Boolean).join(" ");
+  }
+  text(key, values = {}) {
+    return Object.entries(values).reduce(
+      (text2, [name, value]) => text2.replaceAll(`{${name}}`, String(value)),
+      translate(this.language(), key)
+    );
+  }
+  language() {
+    return this.hass?.locale?.language ?? this.hass?.language ?? browserLanguage();
+  }
+  static get styles() {
+    return [
+      i`
+                /*
+                 * A column, so that with a height of its own, given in the options or by the dashboard's grid, the
+                 * header keeps its place and the lists scroll in what is left.
+                 */
+                ha-card {
+                    /* ha-card's own transition covers every property, so a change in the rows filled would animate. Only a slide does. */
+                    transition: none;
+                    box-sizing: border-box;
+                    display: flex;
+                    flex-direction: column;
+                    overflow: hidden;
+                    container-type: inline-size;
+                    --lc-warning: var(--warning-color, #ffa600);
+                    --lc-highlight: var(--success-color, #43a047);
+                }
+
+                .hd {
+                    flex: none;
+                    display: flex;
+                    align-items: center;
+                    gap: 10px;
+                    padding: 12px 16px 0;
+                    min-height: 32px;
+                }
+
+                .hd-icon {
+                    flex: none;
+                    color: var(--state-icon-color);
+                }
+
+                .hd-title {
+                    flex: 1 1 auto;
+                    min-width: 0;
+                    font-size: var(--ha-card-header-font-size, 18px);
+                    line-height: 1.4;
+                }
+
+                .pill {
+                    flex: none;
+                    font-size: 12px;
+                    font-weight: 500;
+                    white-space: nowrap;
+                    border-radius: 10px;
+                    padding: 1px 8px;
+                    background: rgba(var(--rgb-primary-text-color, 33, 33, 33), 0.1);
+                }
+
+                .pill.tone-warning {
+                    background: color-mix(in srgb, var(--lc-warning) 24%, transparent);
+                }
+
+                .pill.tone-highlight {
+                    background: color-mix(in srgb, var(--lc-highlight) 24%, transparent);
+                }
+
+                /* The room a whole row leaves over goes under the header, above the lists. */
+                .list {
+                    flex: 1 1 auto;
+                    min-height: 0;
+                    padding: calc(4px + var(--lc-spare, 0px)) 0 6px;
+                }
+
+                .grp + .grp {
+                    border-top: 1px solid var(--divider-color, rgba(0, 0, 0, 0.12));
+                    margin-top: 4px;
+                }
+
+                .gh {
+                    display: flex;
+                    align-items: center;
+                    gap: 8px;
+                    box-sizing: border-box;
+                    width: 100%;
+                    padding: 6px 16px 2px;
+                    font: inherit;
+                    font-size: 11px;
+                    font-weight: 500;
+                    line-height: 16px;
+                    letter-spacing: 0.08em;
+                    text-transform: uppercase;
+                    text-align: start;
+                    color: var(--secondary-text-color);
+                    background: none;
+                    border: 0;
+                    overflow-wrap: anywhere;
+                }
+
+                .gh.folding {
+                    min-height: 36px;
+                    padding: 4px 12px 4px 16px;
+                    font-size: 14px;
+                    line-height: 20px;
+                    letter-spacing: normal;
+                    text-transform: none;
+                    color: var(--primary-text-color);
+                    cursor: pointer;
+                }
+
+                .gh-name {
+                    flex: 1 1 auto;
+                    min-width: 0;
+                }
+
+                .count {
+                    flex: none;
+                    font-size: 12px;
+                    font-weight: 400;
+                    color: var(--secondary-text-color);
+                }
+
+                .dot {
+                    flex: none;
+                    width: 8px;
+                    height: 8px;
+                    border-radius: 2px;
+                    background: var(--secondary-text-color);
+                }
+
+                .dot.tone-warning {
+                    background: var(--lc-warning);
+                }
+
+                .dot.tone-highlight {
+                    background: var(--lc-highlight);
+                }
+
+                .dot.tone-dimmed {
+                    opacity: 0.5;
+                }
+
+                .chev {
+                    flex: none;
+                    --mdc-icon-size: 20px;
+                    color: var(--secondary-text-color);
+                    transition: transform var(--ha-animation-duration-normal, 250ms) ease;
+                }
+
+                .gh[aria-expanded="false"] .chev {
+                    transform: rotate(-90deg);
+                }
+
+                .item.open .act .chev {
+                    transform: rotate(180deg);
+                }
+
+                .chev.idle {
+                    visibility: hidden;
+                }
+
+                .item {
+                    position: relative;
+                    padding: 4px 8px 4px 16px;
+                }
+
+                /* The tap that opens an item covers it, and its texts let the tap through. The source link lies over it. */
+                .cover {
+                    position: absolute;
+                    inset: 0;
+                    width: 100%;
+                    padding: 0;
+                    border: 0;
+                    background: none;
+                    cursor: pointer;
+                }
+
+                .cover:focus-visible {
+                    outline: 2px solid var(--primary-color);
+                    outline-offset: -2px;
+                    border-radius: 4px;
+                }
+
+                .item.can > :not(.cover) {
+                    pointer-events: none;
+                }
+
+                .item .src {
+                    pointer-events: auto;
+                }
+
+                .tone-dimmed > :not(.cover) {
+                    opacity: 0.6;
+                }
+
+                /* The date and the buttons go to a line of their own when the title has too little room beside them. */
+                .line {
+                    display: flex;
+                    flex-wrap: wrap;
+                    justify-content: flex-end;
+                    align-items: flex-start;
+                    gap: 0 8px;
+                    min-height: 24px;
+                }
+
+                .ic {
+                    flex: none;
+                    width: 24px;
+                    line-height: 24px;
+                    text-align: center;
+                    color: var(--state-icon-color);
+                    --mdc-icon-size: 20px;
+                }
+
+                .emoji {
+                    font-size: 17px;
+                }
+
+                .no-icons .ic {
+                    display: none;
+                }
+
+                .no-icons .sub {
+                    padding-left: 0;
+                }
+
+                .ti {
+                    flex: 1 1 130px;
+                    min-width: 0;
+                    font-weight: 500;
+                    line-height: 20px;
+                    padding: 2px 0;
+                    overflow-wrap: anywhere;
+                }
+
+                .inl {
+                    font-weight: 400;
+                    font-size: 12px;
+                    color: var(--secondary-text-color);
+                }
+
+                .when {
+                    flex: none;
+                    font-size: 12px;
+                    line-height: 24px;
+                    white-space: nowrap;
+                    color: var(--secondary-text-color);
+                }
+
+                .tone-warning .when {
+                    color: var(--lc-warning);
+                }
+
+                .tone-highlight .when {
+                    color: var(--lc-highlight);
+                }
+
+                .act {
+                    flex: none;
+                    display: flex;
+                    align-items: center;
+                    height: 24px;
+                }
+
+                .src {
+                    position: relative;
+                    display: grid;
+                    place-items: center;
+                    width: 28px;
+                    height: 28px;
+                    margin: -2px 0;
+                    border-radius: 50%;
+                    color: var(--secondary-text-color);
+                    --mdc-icon-size: 18px;
+                }
+
+                .src:hover {
+                    background: rgba(var(--rgb-primary-text-color, 33, 33, 33), 0.06);
+                    color: var(--primary-color);
+                }
+
+                .sub {
+                    padding: 0 8px 0 32px;
+                }
+
+                .lb {
+                    font-size: 12px;
+                    line-height: 16px;
+                    color: var(--secondary-text-color);
+                    overflow-wrap: anywhere;
+                }
+
+                .tx {
+                    font-size: 13px;
+                    line-height: 18px;
+                    color: var(--secondary-text-color);
+                    overflow-wrap: anywhere;
+                }
+
+                .tx.clamp {
+                    display: -webkit-box;
+                    -webkit-line-clamp: 2;
+                    -webkit-box-orient: vertical;
+                    overflow: hidden;
+                }
+
+                /* The timeline: a date badge, with a line running from each badge to the next. */
+                .item.timeline {
+                    display: flex;
+                    align-items: flex-start;
+                    gap: 12px;
+                    padding-top: 0;
+                    padding-bottom: 0;
+                }
+
+                .item.timeline::before {
+                    content: "";
+                    position: absolute;
+                    left: 39.5px;
+                    top: 0;
+                    bottom: 0;
+                    width: 1px;
+                    background: var(--divider-color, rgba(0, 0, 0, 0.12));
+                }
+
+                .item.timeline:first-child::before {
+                    top: 12px;
+                }
+
+                .item.timeline:last-child::before {
+                    bottom: calc(100% - 12px);
+                }
+
+                .badge {
+                    flex: none;
+                    position: relative;
+                    width: 48px;
+                    box-sizing: border-box;
+                    margin: 6px 0;
+                    text-align: center;
+                    border-radius: 6px;
+                    padding: 3px 0 2px;
+                    line-height: 1.15;
+                    background: var(--card-background-color, #fff);
+                    box-shadow: inset 0 0 0 1px var(--divider-color, rgba(0, 0, 0, 0.12));
+                }
+
+                .tone-warning .badge {
+                    box-shadow: inset 0 0 0 1.5px var(--lc-warning);
+                }
+
+                .tone-highlight .badge {
+                    box-shadow: inset 0 0 0 1.5px var(--lc-highlight);
+                }
+
+                .day {
+                    font-size: 15px;
+                    font-weight: 500;
+                    white-space: nowrap;
+                }
+
+                .month,
+                .year {
+                    font-size: 10px;
+                    text-transform: uppercase;
+                    letter-spacing: 0.04em;
+                    color: var(--secondary-text-color);
+                }
+
+                .body {
+                    flex: 1 1 auto;
+                    min-width: 0;
+                    padding: 7px 0;
+                }
+
+                .timeline .ti {
+                    padding: 0;
+                }
+
+                .ti-icon {
+                    margin-right: 5px;
+                    --mdc-icon-size: 18px;
+                    color: var(--state-icon-color);
+                }
+
+                .timeline .act {
+                    margin-top: 6px;
+                }
+
+                .timeline .lb .when {
+                    line-height: inherit;
+                }
+
+                .more,
+                .empty {
+                    padding: 4px 16px 2px;
+                    font-size: 12px;
+                    color: var(--secondary-text-color);
+                }
+
+                .empty {
+                    font-size: 13px;
+                    padding-top: 8px;
+                }
+
+                .fold {
+                    display: grid;
+                    grid-template-rows: 0fr;
+                    transition: grid-template-rows var(--ha-animation-duration-normal, 250ms) ease;
+                }
+
+                .fold.open {
+                    grid-template-rows: 1fr;
+                }
+
+                .fold-in {
+                    min-height: 0;
+                    overflow: hidden;
+                }
+
+                /* Held to a height, the header keeps to one line and the lists scroll, measured the same whether they do or not. */
+                .held .hd-title,
+                .held .ti,
+                .held .lb,
+                .held .gh-name,
+                .held .gh:not(.folding) {
+                    white-space: nowrap;
+                    overflow: hidden;
+                    text-overflow: ellipsis;
+                }
+
+                .held .gh:not(.folding) {
+                    display: block;
+                }
+
+                .held .line {
+                    flex-wrap: nowrap;
+                }
+
+                .held .ti {
+                    flex-basis: 0;
+                }
+
+                .held .list {
+                    overflow-y: auto;
+                    scrollbar-width: thin;
+                    scrollbar-gutter: stable;
+                }
+
+                .sliding.held .list {
+                    overflow-y: hidden;
+                }
+
+                /* The rows the card fills, and the spare room above the lists, change along with a slide, not on ha-card's own timing. */
+                ha-card.sliding {
+                    transition: min-height var(--ha-animation-duration-normal, 250ms) ease;
+                }
+
+                ha-card.sliding > .list {
+                    transition: padding var(--ha-animation-duration-normal, 250ms) ease;
+                }
+
+                @media (prefers-reduced-motion: reduce) {
+                    .fold,
+                    .chev,
+                    ha-card.sliding,
+                    ha-card.sliding > .list {
+                        transition: none;
+                    }
+                }
+            `,
+      fadeStyles
+    ];
+  }
+};
+__decorateClass([
+  n4({ attribute: false })
+], ListsCard.prototype, "hass", 2);
+__decorateClass([
+  n4({ attribute: false })
+], ListsCard.prototype, "layout", 2);
+__decorateClass([
+  r5()
+], ListsCard.prototype, "config", 2);
+__decorateClass([
+  r5()
+], ListsCard.prototype, "opened", 2);
+__decorateClass([
+  r5()
+], ListsCard.prototype, "shut", 2);
+__decorateClass([
+  r5()
+], ListsCard.prototype, "cut", 2);
+__decorateClass([
+  r5()
+], ListsCard.prototype, "sliding", 2);
+__decorateClass([
+  r5()
+], ListsCard.prototype, "filled", 2);
+__decorateClass([
+  r5()
+], ListsCard.prototype, "spare", 2);
+if (!customElements.get("lists-card")) {
+  customElements.define("lists-card", ListsCard);
+  console.info(
+    `%c  LISTS-CARD 
+%c  ${CARD_VERSION}    `,
+    "color: orange; font-weight: bold; background: black",
+    "color: white; font-weight: bold; background: dimgray"
+  );
+  const registry = window;
+  registry.customCards = registry.customCards ?? [];
+  registry.customCards.push({
+    type: "lists-card",
+    name: translate(browserLanguage(), "common.name"),
+    description: translate(browserLanguage(), "common.description"),
+    documentationURL: "https://github.com/jesmak/lists-card",
+    preview: true
+  });
+}
+export {
+  ListsCard,
+  endHeight
+};
