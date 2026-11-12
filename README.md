@@ -158,8 +158,8 @@ them.
 
 Held to a height, by rows set in the layout tab or by `height` or `max_height`, the header stays where it is and the
 lists scroll under it. Titles, labels and headings then keep to one line each, cut short with their whole text as a
-tooltip. The card never gets lower than its header, one heading and one item with two lines of text need, which is 168
-pixels with a header and 124 without.
+tooltip. The card never gets lower than its header, one heading and one item with two lines of text need, which is 174
+pixels with a header and 130 without.
 
 ## Examples
 

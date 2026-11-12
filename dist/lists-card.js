@@ -1,4 +1,4 @@
-/*! lists-card 1.0.0 | MIT License */
+/*! lists-card 1.0.1 | MIT License */
 var __defProp = Object.defineProperty;
 var __getOwnPropDesc = Object.getOwnPropertyDescriptor;
 var __decorateClass = (decorators, target, key, kind) => {
@@ -711,7 +711,7 @@ var c4 = e5(class extends i5 {
 });
 
 // src/const.ts
-var CARD_VERSION = "1.0.0";
+var CARD_VERSION = "1.0.1";
 
 // src/localize/languages/en.json
 var en_default = {
@@ -1509,7 +1509,7 @@ var HEADER_PX = 44;
 var HEADING_PX = 24;
 var ITEM_PX = 88;
 var BORDER_PX = 2;
-var LIST_BOTTOM_PX = 6;
+var LIST_BOTTOM_PX = 12;
 var px = (value) => parseFloat(value) || 0;
 var CARD_PARTS = [".hd", ".list"].map((part) => `:scope > ${part}`).join(", ");
 var ICON_NAME = /^[a-z0-9-]+:[a-z0-9-]+$/i;
@@ -2080,7 +2080,7 @@ var ListsCard = class extends i4 {
                 .list {
                     flex: 1 1 auto;
                     min-height: 0;
-                    padding: calc(4px + var(--lc-spare, 0px)) 0 6px;
+                    padding: calc(4px + var(--lc-spare, 0px)) 0 12px;
                 }
 
                 .grp + .grp {
@@ -2172,7 +2172,7 @@ var ListsCard = class extends i4 {
 
                 .item {
                     position: relative;
-                    padding: 4px 8px 4px 16px;
+                    padding: 4px 16px;
                 }
 
                 /* The tap that opens an item covers it, and its texts let the tap through. The source link lies over it. */
@@ -2210,7 +2210,7 @@ var ListsCard = class extends i4 {
                     flex-wrap: wrap;
                     justify-content: flex-end;
                     align-items: flex-start;
-                    gap: 0 8px;
+                    gap: 0 10px;
                     min-height: 24px;
                 }
 
@@ -2266,11 +2266,13 @@ var ListsCard = class extends i4 {
                     color: var(--lc-highlight);
                 }
 
+                /* The buttons' icons are smaller than the buttons, so the row is pulled out until the last icon ends where the texts do. */
                 .act {
                     flex: none;
                     display: flex;
                     align-items: center;
                     height: 24px;
+                    margin-right: -5px;
                 }
 
                 .src {
@@ -2291,7 +2293,7 @@ var ListsCard = class extends i4 {
                 }
 
                 .sub {
-                    padding: 0 8px 0 32px;
+                    padding: 0 0 0 34px;
                 }
 
                 .lb {
