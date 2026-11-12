@@ -1,0 +1,332 @@
+# Lists card
+
+Home Assistant dashboard card for any list an entity holds, such as tasks, events or notices, grouped by time or by a
+key of your choosing.
+
+[![GitHub Release][releases-shield]][releases] [![GitHub Release Date][release-date-shield]][releases] [![Downloads][downloads-shield]][releases] [![Marketplace][marketplace-shield]][marketplace] [![License][license-shield]](LICENSE)
+
+<p>
+<img src="https://raw.githubusercontent.com/jesmak/lists-card/main/docs/images/tasks-light.png#gh-light-mode-only" width="400" alt="Household tasks in three groups, late, today and coming, each with an emoji, whose turn it is and its day">
+<img src="https://raw.githubusercontent.com/jesmak/lists-card/main/docs/images/tasks-dark.png#gh-dark-mode-only" width="400" alt="Household tasks in three groups, late, today and coming, each with an emoji, whose turn it is and its day">
+<img src="https://raw.githubusercontent.com/jesmak/lists-card/main/docs/images/notices-light.png#gh-light-mode-only" width="400" alt="Town notices as a timeline, each with a date badge, a text cut to two lines and a link, those already over dimmed">
+<img src="https://raw.githubusercontent.com/jesmak/lists-card/main/docs/images/notices-dark.png#gh-dark-mode-only" width="400" alt="Town notices as a timeline, each with a date badge, a text cut to two lines and a link, those already over dimmed">
+</p>
+
+## What is it?
+
+A custom card for the lists that sensors carry around in their attributes and that no card shows well, such as the
+tasks of a chore app, the notices of a town, the events of a club or the parcels of a shop. You tell the card which entity holds the
+list and which key of an item is its title, its date, its text and so on, and it draws the list. Nothing has to write
+a format of the card's own, and no integration is needed.
+
+The items are grouped by their dates into what is over, what is going on today and what is to come, by one of their
+keys, or not at all. One card can show several lists, each under its own name. The look is rows or a timeline with a
+date badge, and an item's text is shown whole, cut to two lines or folded away until you tap the item.
+
+The card shows what its entity holds and remembers nothing itself. It has no buttons that change anything.
+
+## Installation
+
+### With the Marketplace
+
+1. Open Settings › Marketplace, choose Add from link and paste `https://github.com/jesmak/lists-card`
+2. Open Lists card in the Marketplace and choose Install
+3. Refresh your browser
+
+### Manual
+
+1. Take `dist/lists-card.js` from the source code of the [latest release][releases] and copy it to the `config/www`
+   folder of your Home Assistant installation
+2. In Home Assistant settings, open dashboards, click the three dots at the top right and open resources
+3. Add a new resource with the path `/local/lists-card.js` and type JavaScript
+4. Refresh your browser
+
+## Options
+
+| Name          | Type   | Description                                                                                                                                                                                                                                                         | Default  |
+| ------------- | ------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | -------- |
+| `type`        | string | `custom:lists-card`                                                                                                                                                                                                                                                 | required |
+| `lists`       | list   | The lists, each as described under [A list](#a-list)                                                                                                                                                                                                                | required |
+| `title`       | string | Shown at the top of the card, with a count beside it. Without a title and an icon the card has no header                                                                                                                                                            |          |
+| `icon`        | string | An icon before the title                                                                                                                                                                                                                                            |          |
+| `layout`      | string | `rows`, or `timeline` with each item's date as a badge                                                                                                                                                                                                              | `rows`   |
+| `text`        | string | How an item's text is shown. `full` shows it whole, `clamp` cuts it to two lines, `fold` hides it. Cut or hidden, a tap on the item opens it                                                                                                                        | `clamp`  |
+| `headings`    | string | The groups' headings. `plain`, or `fold` for headings that fold their group away                                                                                                                                                                                    | `plain`  |
+| `height_mode` | string | How tall the card is. `auto` fits its content, `fixed` keeps it at `height`, `max` lets it grow up to `max_height`. In `fixed` and `max` the lists scroll. A height in grid rows, set in the layout tab of a sections view, is used instead of these                | `auto`   |
+| `height`      | number | The card's height in pixels, for `fixed`                                                                                                                                                                                                                            |          |
+| `max_height`  | number | The card's greatest height in pixels, for `max`                                                                                                                                                                                                                     |          |
+| `row_step`    | string | How the card rounds its height on automatic rows in a sections view, with `height_mode` at `auto` or `max`. `full` ends it on whole rows, `half` on half rows, which saves up to half a row but can leave the cards under it half a row off those in other sections | `full`   |
+
+### A list
+
+| Name        | Type   | Description                                                                                                                                      | Default                |
+| ----------- | ------ | ------------------------------------------------------------------------------------------------------------------------------------------------ | ---------------------- |
+| `entity`    | string | The entity that holds the list                                                                                                                   | required               |
+| `attribute` | string | The attribute the items are in. Without one they are read from the entity's state, as JSON                                                       |                        |
+| `path`      | string | A path to the items inside the attribute, such as `data.items`, when they aren't at its top                                                      |                        |
+| `name`      | string | The list's heading on a card with several lists                                                                                                  | the entity's name      |
+| `fields`    | object | Which key of an item holds each of the card's fields, as described under [Keys](#keys)                                                           | each field's own name  |
+| `group`     | string | What the list's groups are made from. `time` for its items' dates, `key` for the values of the `group` field, `none` for one list without groups | `time`                 |
+| `limit`     | number | The most items shown. The card says how many were left out. `0` shows them all                                                                   | `0`                    |
+| `order`     | list   | The time groups shown, in order, of `before`, `now` and `after`. The items of one left out aren't shown                                          | `[before, now, after]` |
+| `before`    | object | The group of items that are over, as described under [A time group](#a-time-group)                                                               |                        |
+| `now`       | object | The group of items going on today, and of items with no date                                                                                     |                        |
+| `after`     | object | The group of items still to come                                                                                                                 |                        |
+| `empty`     | string | What the card says when the list has no items                                                                                                    | the card's own text    |
+
+### Keys
+
+Each of the card's fields is read from the key of the same name, unless `fields` names another. A key can be a path
+into the item, such as `attributes.title`.
+
+| Field   | What the card does with it                                                       |
+| ------- | -------------------------------------------------------------------------------- |
+| `title` | The item's title. An item without one is left out                                |
+| `text`  | A longer text under the title. HTML is stripped from it                          |
+| `start` | The item's date, or the first day of a period                                    |
+| `end`   | The last day of a period                                                         |
+| `label` | A short text set apart from the title, such as a person or a place               |
+| `icon`  | An icon by its name, such as `mdi:broom`, or any short text, such as an emoji    |
+| `link`  | An http or https address, opened by a button of its own on the item              |
+| `group` | The value a list grouped by `key` is split on                                    |
+| `id`    | What tells the item apart from the others. Without it the title and the dates do |
+
+### A time group
+
+| Name             | Type    | Description                                                                                                                        | Default              |
+| ---------------- | ------- | ---------------------------------------------------------------------------------------------------------------------------------- | -------------------- |
+| `name`           | string  | The group's heading                                                                                                                | Earlier, Now, Coming |
+| `tone`           | string  | How the group's items are set off. `plain`, `warning`, `highlight` or `dimmed`                                                     | `plain`              |
+| `days`           | number  | How many days back or ahead the group reaches. Items further away are left out                                                     |                      |
+| `farthest_first` | boolean | The items furthest from today first. Usually the nearest come first, the latest of what is over and the soonest of what is to come | `false`              |
+
+Every option is in the visual editor, except `height_mode`, `height` and `max_height`, which are set in YAML. In a
+sections view the layout tab sets the card's height. They are for where there is no layout tab, such as a masonry or
+panel view, or a stack or other card the card is inside, even in a sections view.
+
+## What it shows
+
+Under the title come the groups, each with its heading and its items. An item has its icon, its title, its label and
+its date, and under them its text. With a link, it has a button that opens the link in a new tab.
+
+### Groups
+
+A list grouped by time has up to three groups. An item is over when its last day is before today, to come when its
+first day is after today, and going on otherwise, which is where an item with no date goes too. Each group's name,
+tone, reach and order are yours to set, so the same three groups are "Late, Today, Coming" for tasks and "Going on,
+Coming, Over" for events.
+
+A tone sets a group's items off. `warning` and `highlight` colour the date, `dimmed` fades the whole item, and a past
+day in a `warning` group is written as how long ago it was, such as "3 days ago". On a card with one list whose
+first group has a `warning` or `highlight` tone, the count beside the title is that group's, with its name, such as "2 late". Otherwise it is the
+number of items on the card.
+
+A list grouped by `key` has a group for each value of the `group` field, in the order the values first come up. Items
+without one are together in a group with no heading.
+
+With several lists on a card, the headings are the lists, and a list's own groups only decide the order of its items.
+
+<img src="https://raw.githubusercontent.com/jesmak/lists-card/main/docs/images/several-light.png#gh-light-mode-only" width="490" alt="Two lists on one card, household tasks under Home and town notices under Town, with their texts folded away">
+<img src="https://raw.githubusercontent.com/jesmak/lists-card/main/docs/images/several-dark.png#gh-dark-mode-only" width="490" alt="Two lists on one card, household tasks under Home and town notices under Town, with their texts folded away">
+
+### Dates
+
+A date is a day or a time, and a period has a first and a last one. In rows the date is written beside the title, a
+period as a range, today as "today", and any other day with its weekday. The year is written only when it isn't this
+year's. In the timeline the date is a badge, the day large and the month under it, and a period within one month shows
+both its days. What the badge can't say, such as a period across two months or a time of day, is written under the
+title.
+
+The dates are written by the browser in Home Assistant's language, and the day is the one in the time zone your Home
+Assistant profile is set to show.
+
+### Texts and folding
+
+With `text: fold` an item is a single line until you tap it, and with `headings: fold` each group folds away under
+its heading, which then shows how many items it has. With `text: clamp` only an item whose text was actually cut opens
+on a tap.
+
+<img src="https://raw.githubusercontent.com/jesmak/lists-card/main/docs/images/folded-light.png#gh-light-mode-only" width="490" alt="Notices on one line each under foldable headings with their counts, and a line saying one more was left out">
+<img src="https://raw.githubusercontent.com/jesmak/lists-card/main/docs/images/folded-dark.png#gh-dark-mode-only" width="490" alt="Notices on one line each under foldable headings with their counts, and a line saying one more was left out">
+
+### Sizes
+
+In a sections view the card takes 12 columns by default and at least 6, and grows as tall as its lists. On automatic
+rows it ends on whole rows, and any room left over goes under the title. With `row_step: half` it ends on half rows
+instead. On a narrow card, an item's date and buttons go under its title when the title has too little room beside
+them.
+
+Held to a height, by rows set in the layout tab or by `height` or `max_height`, the header stays where it is and the
+lists scroll under it. Titles, labels and headings then keep to one line each, cut short with their whole text as a
+tooltip. The card never gets lower than its header, one heading and one item with two lines of text need, which is 168
+pixels with a header and 124 without.
+
+## Examples
+
+### Household tasks
+
+A chore app's sensor with a `tasks` attribute, each task with a `title`, an `icon`, a `due` day and `who` is to do it.
+The most overdue task comes first, and tasks more than a week away are left out.
+
+```yaml
+type: custom:lists-card
+title: Home
+icon: mdi:checkbox-marked-circle-outline
+lists:
+  - entity: sensor.chores
+    attribute: tasks
+    fields:
+      start: due
+      label: who
+    before:
+      name: Late
+      tone: warning
+      farthest_first: true
+    now:
+      name: Today
+      tone: highlight
+    after:
+      name: Coming
+      days: 7
+    empty: Nothing to do right now.
+```
+
+### Notices as a timeline
+
+What is going on first, then what is to come, then the latest of what is over, five in all.
+
+```yaml
+type: custom:lists-card
+title: Riverside
+icon: mdi:bullhorn-outline
+layout: timeline
+lists:
+  - entity: sensor.town_notices
+    attribute: notices
+    fields:
+      start: from
+      end: to
+      link: url
+    order: [now, after, before]
+    now:
+      name: Going on
+      tone: highlight
+    before:
+      name: Over
+      tone: dimmed
+    limit: 5
+```
+
+### A list nested in an answer
+
+A REST sensor that keeps an API's whole answer in an attribute, with the items under `features` and each item's
+values under `attributes`.
+
+```yaml
+type: custom:lists-card
+title: Road works
+lists:
+  - entity: sensor.road_works
+    attribute: answer
+    path: features
+    fields:
+      title: attributes.name
+      text: attributes.description
+      start: attributes.starts
+      end: attributes.ends
+```
+
+### Grouped by a key, without dates
+
+```yaml
+type: custom:lists-card
+title: Shopping
+text: full
+lists:
+  - entity: sensor.shopping_list
+    attribute: items
+    group: key
+    fields:
+      title: name
+      group: shop
+```
+
+## Data
+
+The card reads its items from an entity in Home Assistant and fetches nothing itself. The items can be:
+
+- a list of objects in an attribute
+- a list deeper inside an attribute, reached with `path`
+- an object whose keys are ids and whose values are the items
+- any of those as JSON text, in an attribute or, with no `attribute` set, in the entity's state
+- a list of plain texts, each then an item's title
+
+A date is one of these. Anything else is not taken for a date, and the item then has none.
+
+| Form                               | Example                     | Read as        |
+| ---------------------------------- | --------------------------- | -------------- |
+| A day, ISO 8601                    | `2026-03-01`                | That whole day |
+| A day, day first with full stops   | `1.3.2026`                  | That whole day |
+| A time with its date               | `2026-03-01T10:30:00+02:00` | That moment    |
+| Seconds or milliseconds since 1970 | `1772361000`                | That moment    |
+
+A text with no four-digit year is left out, as a browser would make up a year of its own for it. A link that isn't an
+http or https address is left out too, as the items come from outside Home Assistant.
+
+A REST sensor turns an XML answer into the same objects by itself, so the card reads such a list like any other. A
+list that needs shaping first, such as one filtered or put together from several entities, is best made by a template
+sensor with the list in an attribute.
+
+## Translating
+
+The card's texts are in `src/localize/languages/`, one JSON file per language, named by its language code, such as
+`en.json` and `fi.json`. To add a language, copy `en.json` to the new language's code, such as `sv.json`, and
+translate the values. Nothing else needs changing. The card finds the file by itself and uses it when Home Assistant
+is set to that language. A text left out falls back to English. The items' own texts are shown as they are.
+
+## Development
+
+Requires Node 22.13 or newer.
+
+```
+npm install
+npm run check
+```
+
+`npm run check` typechecks, lints, checks formatting, runs the tests and builds `dist/lists-card.js`, which is the file
+the Marketplace installs and is committed to the repository.
+
+| Path                       | What it contains                                                              |
+| -------------------------- | ----------------------------------------------------------------------------- |
+| `src/lists-card.ts`        | The card itself                                                               |
+| `src/editor.ts`            | The visual editor                                                             |
+| `src/lists.ts`             | Reading a list's items from an entity, and arranging them into groups         |
+| `src/types.ts`             | The card's options and the shapes of what it shows                            |
+| `src/const.ts`             | The card's version                                                            |
+| `src/hass.ts`              | The few Home Assistant types the card needs                                   |
+| `src/height.ts`            | The height mode, shared with the author's other cards                         |
+| `src/rows.ts`              | Rounding to the rows of a sections view, shared with the author's other cards |
+| `src/fade.ts`              | The fading edges of what scrolls, shared with the author's other cards        |
+| `src/localize/localize.ts` | Finding the viewer's language and its texts                                   |
+| `scripts/build.mjs`        | The esbuild build                                                             |
+| `src/localize/languages/`  | The card's texts, one JSON file per language                                  |
+| `docs/screenshots.json`    | The made-up data the README's screenshots are taken from                      |
+| `tests/`                   | Tests, run with vitest                                                        |
+
+## Support
+
+Hey dude! Help me out for a couple of :beers: or a :coffee:!
+
+[![coffee](https://www.buymeacoffee.com/assets/img/custom_images/black_img.png)](https://www.buymeacoffee.com/jesmak)
+
+## License
+
+MIT, see [LICENSE](LICENSE).
+
+[releases-shield]: https://img.shields.io/github/release/jesmak/lists-card.svg?style=for-the-badge
+[release-date-shield]: https://img.shields.io/github/release-date/jesmak/lists-card?style=for-the-badge
+[releases]: https://github.com/jesmak/lists-card/releases
+[downloads-shield]: https://img.shields.io/github/downloads/jesmak/lists-card/total.svg?style=for-the-badge
+[marketplace-shield]: https://img.shields.io/badge/Marketplace-Custom-orange.svg?style=for-the-badge
+[marketplace]: https://my.home-assistant.io/redirect/marketplace_repository/?owner=jesmak&repository=lists-card&category=plugin
+[license-shield]: https://img.shields.io/github/license/jesmak/lists-card.svg?style=for-the-badge

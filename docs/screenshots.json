@@ -1,0 +1,158 @@
+{
+    "clock": "2026-11-12T09:30:00+02:00",
+    "states": {
+        "sensor.chores": {
+            "state": "3",
+            "attributes": {
+                "friendly_name": "Chores",
+                "icon": "mdi:broom",
+                "tasks": [
+                    { "title": "Water the plants", "icon": "🌿", "due": "2026-11-09", "who": "Maija" },
+                    { "title": "Take out the recycling", "icon": "♻️", "due": "2026-11-11", "who": "Matti" },
+                    { "title": "Vacuum the living room", "icon": "🧹", "due": "2026-11-12", "who": "Maija" },
+                    { "title": "Change the sheets", "icon": "🛏️", "due": "2026-11-14", "who": "Matti" },
+                    { "title": "Clean the sauna", "icon": "🧼", "due": "2026-11-17", "who": "Maija" },
+                    { "title": "Wash the windows", "icon": "🪟", "due": "2026-11-30", "who": "Matti" }
+                ]
+            }
+        },
+        "sensor.town_notices": {
+            "state": "5",
+            "attributes": {
+                "friendly_name": "Town notices",
+                "icon": "mdi:bullhorn-outline",
+                "notices": [
+                    {
+                        "id": "n1",
+                        "title": "Mill Bridge closed for repairs",
+                        "from": "2026-11-10",
+                        "to": "2026-11-13",
+                        "text": "<p>Mill Bridge is closed to cars from Tuesday to Friday.</p><p>Walkers and cyclists get across on the north side. Buses 4 and 7 go round by Station Road and skip the stops at the bridge.</p>",
+                        "url": "https://example.com/notices/n1"
+                    },
+                    {
+                        "id": "n2",
+                        "title": "Water supply interrupted on Lake Road",
+                        "from": "2026-11-19",
+                        "text": "<p>The water is off on Lake Road from 9 to 14 while a valve is replaced. Fill a few bottles the evening before.</p>",
+                        "url": "https://example.com/notices/n2"
+                    },
+                    {
+                        "id": "n3",
+                        "title": "Christmas market in the old town square",
+                        "from": "2026-12-11",
+                        "to": "2026-12-13",
+                        "text": "<p>Forty stalls, a choir on Saturday at 15 and the square closed to cars for all three days.</p>",
+                        "url": "https://example.com/notices/n3"
+                    },
+                    {
+                        "id": "n4",
+                        "title": "Autumn fair at the harbour",
+                        "from": "2026-10-02",
+                        "to": "2026-10-04",
+                        "text": "<p>Harbour Street was closed to cars for the weekend of the fair.</p>",
+                        "url": "https://example.com/notices/n4"
+                    },
+                    {
+                        "id": "n5",
+                        "title": "Recycling station at the harbour reopened",
+                        "from": "2025-12-15",
+                        "text": "<p>The renovated station takes glass, metal, cardboard and small electronics.</p>"
+                    }
+                ]
+            }
+        }
+    },
+    "shots": [
+        {
+            "name": "tasks",
+            "width": 480,
+            "card": {
+                "type": "custom:lists-card",
+                "title": "Home",
+                "icon": "mdi:checkbox-marked-circle-outline",
+                "lists": [
+                    {
+                        "entity": "sensor.chores",
+                        "attribute": "tasks",
+                        "fields": { "start": "due", "label": "who" },
+                        "before": { "name": "Late", "tone": "warning", "farthest_first": true },
+                        "now": { "name": "Today", "tone": "highlight" },
+                        "after": { "name": "Coming", "days": 7 }
+                    }
+                ]
+            }
+        },
+        {
+            "name": "notices",
+            "width": 480,
+            "card": {
+                "type": "custom:lists-card",
+                "title": "Riverside",
+                "icon": "mdi:bullhorn-outline",
+                "layout": "timeline",
+                "lists": [
+                    {
+                        "entity": "sensor.town_notices",
+                        "attribute": "notices",
+                        "fields": { "start": "from", "end": "to", "link": "url" },
+                        "order": ["now", "after", "before"],
+                        "now": { "name": "Going on", "tone": "highlight" },
+                        "before": { "name": "Over", "tone": "dimmed" }
+                    }
+                ]
+            }
+        },
+        {
+            "name": "folded",
+            "width": 480,
+            "card": {
+                "type": "custom:lists-card",
+                "title": "Riverside",
+                "icon": "mdi:bullhorn-outline",
+                "text": "fold",
+                "headings": "fold",
+                "lists": [
+                    {
+                        "entity": "sensor.town_notices",
+                        "attribute": "notices",
+                        "fields": { "start": "from", "end": "to", "link": "url" },
+                        "order": ["now", "after", "before"],
+                        "now": { "name": "Going on", "tone": "highlight" },
+                        "before": { "name": "Over", "tone": "dimmed" },
+                        "limit": 4
+                    }
+                ]
+            }
+        },
+        {
+            "name": "several",
+            "width": 480,
+            "card": {
+                "type": "custom:lists-card",
+                "title": "Riverside",
+                "icon": "mdi:format-list-bulleted",
+                "text": "fold",
+                "lists": [
+                    {
+                        "entity": "sensor.chores",
+                        "attribute": "tasks",
+                        "name": "Home",
+                        "fields": { "start": "due", "label": "who" },
+                        "before": { "tone": "warning", "farthest_first": true },
+                        "now": { "tone": "highlight" },
+                        "after": { "days": 7 }
+                    },
+                    {
+                        "entity": "sensor.town_notices",
+                        "attribute": "notices",
+                        "name": "Town",
+                        "fields": { "start": "from", "end": "to", "link": "url" },
+                        "order": ["now", "after"],
+                        "now": { "tone": "highlight" }
+                    }
+                ]
+            }
+        }
+    ]
+}
