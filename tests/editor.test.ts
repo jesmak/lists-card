@@ -1,16 +1,58 @@
 import { describe, expect, it } from "vitest";
 
-import { configFromForm, formData, tidyList } from "../src/editor";
+import { configFromForm, formData, listFormData, listKind, listSchema, tidyList } from "../src/editor";
 import type { ListsCardConfig } from "../src/types";
 
 const TYPE = "custom:lists-card";
 
 describe("formData", () => {
-    it("shows the defaults a configuration leaves out, for the card and for each list", () => {
+    it("shows the defaults a configuration leaves out, and leaves the lists to their own section", () => {
         const data = formData({ type: TYPE, title: null as unknown as string, lists: [{ entity: "sensor.chores", limit: 3 }] });
-        expect(data).toMatchObject({ layout: "rows", text: "clamp", headings: "plain" });
+        expect(data).toMatchObject({ layout: "rows", text: "clamp", headings: "plain", editing: "full" });
         expect(data).not.toHaveProperty("title");
-        expect(data.lists).toEqual([{ entity: "sensor.chores", group: "time", limit: 3, order: ["before", "now", "after", "done"] }]);
+        expect(data).not.toHaveProperty("lists");
+    });
+});
+
+describe("a list's page", () => {
+    const names = (schema: Array<{ name: string }>) => schema.map((entry) => entry.name);
+    const text = (key: string) => key;
+
+    it("knows a list's kind by its entity, an attribute making any entity's list one of keys", () => {
+        expect(listKind({ entity: "calendar.home" })).toBe("calendar");
+        expect(listKind({ entity: "todo.chores" })).toBe("todo");
+        expect(listKind({ entity: "sensor.chores", attribute: "tasks" })).toBe("attribute");
+        expect(listKind({ entity: "todo.chores", attribute: "items" })).toBe("attribute");
+    });
+
+    it("has only the fields its kind can use", () => {
+        const calendar = names(listSchema("calendar", text));
+        expect(calendar).toContain("entities");
+        expect(calendar).not.toContain("attribute");
+        expect(calendar).not.toContain("fields");
+        expect(calendar).not.toContain("done");
+        const todo = names(listSchema("todo", text));
+        expect(todo).toContain("done");
+        expect(todo).not.toContain("entities");
+        const attribute = names(listSchema("attribute", text));
+        expect(attribute).toEqual(expect.arrayContaining(["attribute", "path", "fields"]));
+        expect(attribute).not.toContain("entities");
+    });
+
+    it("offers grouping by key only where the items have keys, and by month everywhere", () => {
+        const groupings = (kind: "calendar" | "attribute") =>
+            (
+                listSchema(kind, text).find((entry) => entry.name === "group") as unknown as {
+                    selector: { select: { options: Array<{ value: string }> } };
+                }
+            ).selector.select.options.map((option) => option.value);
+        expect(groupings("calendar")).toEqual(["time", "month", "none"]);
+        expect(groupings("attribute")).toEqual(["time", "key", "month", "none"]);
+    });
+
+    it("shows the time groups its kind has as the default order", () => {
+        expect(listFormData({ entity: "calendar.home" }).order).toEqual(["before", "now", "after"]);
+        expect(listFormData({ entity: "todo.chores" }).order).toEqual(["before", "now", "after", "done"]);
     });
 });
 
@@ -46,6 +88,15 @@ describe("tidyList", () => {
         expect(tidyList({ entity: "todo.chores", before: { tone: "dimmed" } })).toEqual({
             entity: "todo.chores",
             before: { tone: "dimmed" },
+        });
+    });
+
+    it("drops the order a calendar's page shows by default, which has no done group", () => {
+        expect(tidyList({ entity: "calendar.home", order: ["before", "now", "after"] })).toEqual({ entity: "calendar.home" });
+        // On a to-do list the same order leaves the done items out.
+        expect(tidyList({ entity: "todo.chores", order: ["before", "now", "after"] })).toEqual({
+            entity: "todo.chores",
+            order: ["before", "now", "after"],
         });
     });
 
@@ -103,6 +154,7 @@ describe("configFromForm", () => {
             layout: "timeline",
             lists: [{ entity: "sensor.chores", attribute: "tasks", fields: { start: "due" }, after: { days: 7 }, order: ["now", "after"] }],
         };
-        expect(configFromForm(formData(config) as unknown as ListsCardConfig)).toEqual(config);
+        const form = { ...formData(config), lists: config.lists.map(listFormData) } as unknown as ListsCardConfig;
+        expect(configFromForm(form)).toEqual(config);
     });
 });

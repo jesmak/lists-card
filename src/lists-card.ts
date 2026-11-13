@@ -404,7 +404,8 @@ export class ListsCard extends LitElement {
                 : isCalendarList(config)
                   ? this.calendarItems(config)
                   : { items: readItems(entity, config), loading: false };
-            const arrangeBy = (list: ListConfig) => items && arrange(items, list, Date.now(), names, { timeZone: this.timeZone(), whole });
+            const arrangeBy = (list: ListConfig) =>
+                items && arrange(items, list, Date.now(), names, { timeZone: this.timeZone(), whole, monthName: this.monthName });
             const limited = arrangeBy(config);
             const cut = limited?.hidden ?? 0;
             const open = cut > 0 && !config.hide_more && this.expanded.has(index);
@@ -428,6 +429,14 @@ export class ListsCard extends LitElement {
             loading: false,
         };
     }
+
+    /** A month's heading in the viewer's language, such as "Marraskuu", with its year when that isn't this one. */
+    private readonly monthName = (year: number, month: number): string => {
+        const thisYear = Number(new Intl.DateTimeFormat("en", { year: "numeric", timeZone: this.timeZone() }).format(Date.now()));
+        const options: Intl.DateTimeFormatOptions = year === thisYear ? { month: "long" } : { month: "long", year: "numeric" };
+        const name = new Intl.DateTimeFormat(this.language(), { ...options, timeZone: "UTC" }).format(Date.UTC(year, month, 1));
+        return name.charAt(0).toLocaleUpperCase(this.language()) + name.slice(1);
+    };
 
     /** A to-do list's items, those just ticked still where they were, or undefined until they have come. */
     private todoItems(entity: string): ReturnType<typeof todoItems> | undefined {

@@ -776,11 +776,18 @@ var en_default = {
     editing_helper: "With ticks only, items can be ticked and unticked, but not added, edited or deleted.",
     lists: "Lists",
     lists_helper: "A card with one list shows that list's groups. With several lists, each list is shown under its own name instead, with no groups inside it.",
+    add_list: "Add a list",
+    add_list_helper: "Pick the entity whose list is shown. A calendar or a to-do list is read as it is, otherwise the list's keys are set on its page.",
+    edit_list: "Edit the list",
+    delete_list: "Delete the list",
+    move_up: "Move up",
+    move_down: "Move down",
+    back: "Back",
     entity: "Entity",
     entities: "Other calendars",
-    entities_helper: "For a calendar's list only. These calendars' events are shown in the same list, such as the public holidays among your own events.",
+    entities_helper: "These calendars' events are shown in the same list, such as the public holidays among your own events.",
     attribute: "Attribute",
-    attribute_helper: "The attribute that holds the list's items. Left empty, the items are read from the entity's state as JSON, or from the to-do list or calendar itself when the entity is one.",
+    attribute_helper: "The attribute that holds the list's items. Left empty, the items are read from the entity's state as JSON.",
     path: "Path to the list's items",
     path_helper: "Only when the items are deeper inside the attribute, for example data.items.",
     name: "Name",
@@ -799,13 +806,15 @@ var en_default = {
     group: "Groups",
     group_time: "By time",
     group_key: "By the group key",
+    group_month: "By month",
     group_none: "None, one list",
     limit: "Most items shown",
     limit_helper: "0 shows them all. The card says how many were left out, and a tap on that shows them.",
     hide_more: "Hide how many were left out",
     hide_more_helper: "The list shows only its most items, and doesn't say how many were left out.",
     order: "Time groups shown, in order",
-    order_helper: "The items of a group left out aren't shown. Ticked holds the items ticked on a to-do list.",
+    order_helper: "The items of a group left out aren't shown.",
+    order_todo_helper: "The items of a group left out aren't shown. Ticked holds the items ticked on a to-do list.",
     before: "Earlier",
     now: "Now",
     after: "Coming",
@@ -891,11 +900,18 @@ var fi_default = {
     editing_helper: "Vain rasteilla rivej\xE4 voi merkit\xE4 ja poistaa merkinn\xE4n, mutta ei lis\xE4t\xE4, muokata eik\xE4 poistaa.",
     lists: "Listat",
     lists_helper: "Yhden listan kortti n\xE4ytt\xE4\xE4 listan omat ryhm\xE4t. Kun listoja on useita, jokainen lista n\xE4kyy oman nimens\xE4 alla, eik\xE4 sen sis\xE4ll\xE4 ole ryhmi\xE4.",
+    add_list: "Lis\xE4\xE4 lista",
+    add_list_helper: "Valitse entiteetti, jonka lista n\xE4ytet\xE4\xE4n. Kortti lukee kalenterin ja teht\xE4v\xE4listan sellaisenaan, muun listan avaimet asetetaan listan omalla sivulla.",
+    edit_list: "Muokkaa listaa",
+    delete_list: "Poista lista",
+    move_up: "Siirr\xE4 yl\xF6s",
+    move_down: "Siirr\xE4 alas",
+    back: "Takaisin",
     entity: "Entiteetti",
     entities: "Muut kalenterit",
-    entities_helper: "Vain kalenterilistalle. N\xE4iden kalenterien tapahtumat n\xE4ytet\xE4\xE4n samassa listassa, esimerkiksi juhlapyh\xE4t omien menojen joukossa.",
+    entities_helper: "N\xE4iden kalenterien tapahtumat n\xE4ytet\xE4\xE4n samassa listassa, esimerkiksi juhlapyh\xE4t omien menojen joukossa.",
     attribute: "Attribuutti",
-    attribute_helper: "Attribuutti, jossa listan rivit ovat. Tyhj\xE4ksi j\xE4tettyn\xE4 rivit luetaan entiteetin tilasta JSON-muodossa, tai teht\xE4v\xE4listasta tai kalenterista itsest\xE4\xE4n, jos entiteetti on sellainen.",
+    attribute_helper: "Attribuutti, jossa listan rivit ovat. Tyhj\xE4ksi j\xE4tettyn\xE4 rivit luetaan entiteetin tilasta JSON-muodossa.",
     path: "Polku listan riveihin",
     path_helper: "Vain kun rivit ovat attribuutin sis\xE4ll\xE4 syvemm\xE4ll\xE4, esimerkiksi data.items.",
     name: "Nimi",
@@ -914,13 +930,15 @@ var fi_default = {
     group: "Ryhm\xE4t",
     group_time: "Ajan mukaan",
     group_key: "Ryhm\xE4n avaimen mukaan",
+    group_month: "Kuukausittain",
     group_none: "Ei ryhmi\xE4, yksi lista",
     limit: "Rivej\xE4 enint\xE4\xE4n",
     limit_helper: "0 n\xE4ytt\xE4\xE4 kaikki. Kortti kertoo, montako j\xE4tettiin pois, ja ne saa n\xE4kyviin napauttamalla.",
     hide_more: "Piilota pois j\xE4tettyjen m\xE4\xE4r\xE4",
     hide_more_helper: "Lista n\xE4ytt\xE4\xE4 vain enimm\xE4ism\xE4\xE4r\xE4n rivej\xE4, eik\xE4 kerro, montako j\xE4tettiin pois.",
     order: "N\xE4ytett\xE4v\xE4t aikaryhm\xE4t j\xE4rjestyksess\xE4",
-    order_helper: "Pois j\xE4tetyn ryhm\xE4n rivej\xE4 ei n\xE4ytet\xE4. Merkityiss\xE4 ovat teht\xE4v\xE4listan merkityt rivit.",
+    order_helper: "Pois j\xE4tetyn ryhm\xE4n rivej\xE4 ei n\xE4ytet\xE4.",
+    order_todo_helper: "Pois j\xE4tetyn ryhm\xE4n rivej\xE4 ei n\xE4ytet\xE4. Merkityiss\xE4 ovat teht\xE4v\xE4listan merkityt rivit.",
     before: "Aiemmat",
     now: "Nyt",
     after: "Tulossa",
@@ -972,7 +990,7 @@ var LAYOUTS = ["rows", "timeline"];
 var TEXT_MODES = ["full", "clamp", "fold"];
 var HEADINGS = ["plain", "fold"];
 var EDITING = ["full", "tick", "none"];
-var GROUPINGS = ["time", "key", "none"];
+var GROUPINGS = ["time", "key", "month", "none"];
 var BUCKETS = ["before", "now", "after", "done"];
 var TONES = ["plain", "warning", "highlight", "dimmed"];
 var FIELDS = ["title", "text", "start", "end", "label", "icon", "link", "group", "id"];
@@ -1165,7 +1183,12 @@ function validList(list) {
   return config !== null && typeof config === "object" && typeof config.entity === "string" && config.entity !== "" && // More entities are merged only into a calendar's list.
   (config.entities == null || Array.isArray(config.entities) && config.entities.every((entity) => typeof entity === "string" && entity.startsWith("calendar.")) && config.entity.startsWith("calendar.") && !config.attribute) && textOrUnset(config.attribute) && textOrUnset(config.path) && textOrUnset(config.name) && textOrUnset(config.empty) && (config.fields == null || typeof config.fields === "object" && Object.values(config.fields).every(textOrUnset)) && (config.group == null || GROUPINGS.includes(config.group)) && (config.limit == null || count(config.limit)) && (config.hide_more == null || typeof config.hide_more === "boolean") && (config.order == null || Array.isArray(config.order) && config.order.every((b3) => BUCKETS.includes(b3))) && bucket(config.before) && bucket(config.now) && bucket(config.after) && bucket(config.done);
 }
-function arrange(items, list, now, names, { timeZone, whole = false } = {}) {
+function arrange(items, list, now, names, {
+  timeZone,
+  whole = false,
+  monthName = (year, month) => `${month + 1}/${year}`
+} = {}) {
+  const grouping = whole ? "none" : list.group ?? "time";
   const today = zoneDay(now, timeZone);
   const order = list.order?.length ? list.order : BUCKETS;
   const placed = [];
@@ -1181,22 +1204,24 @@ function arrange(items, list, now, names, { timeZone, whole = false } = {}) {
     const nearest = past && days ? -(item.end ?? item.start).time : (item.start ?? item.end)?.time ?? 0;
     const near = list[bucket]?.farthest_first ? -nearest : nearest;
     const tone = list[bucket]?.tone ?? DEFAULT_TONES[bucket];
-    placed.push({ item: { ...item, bucket, tone }, index, near: days ? near : 0, undated: !days });
+    const time = (item.start ?? item.end)?.time ?? 0;
+    placed.push({ item: { ...item, bucket, tone }, index, near: days ? near : 0, undated: !days, first: days ? days[0] : 0, time });
   });
   placed.sort(
-    (a3, b3) => order.indexOf(a3.item.bucket) - order.indexOf(b3.item.bucket) || Number(a3.undated) - Number(b3.undated) || a3.near - b3.near || a3.index - b3.index
+    grouping === "month" ? (a3, b3) => Number(a3.undated) - Number(b3.undated) || a3.first - b3.first || a3.time - b3.time || a3.index - b3.index : (a3, b3) => order.indexOf(a3.item.bucket) - order.indexOf(b3.item.bucket) || Number(a3.undated) - Number(b3.undated) || a3.near - b3.near || a3.index - b3.index
   );
+  const monthOf = new Map(placed.map(({ item, undated, first }) => [item, undated ? void 0 : new Date(first * DAY_MS)]));
   const shown = (list.limit ? placed.slice(0, list.limit) : placed).map(({ item }) => item);
-  const grouping = whole ? "none" : list.group ?? "time";
   const groups = [];
   if (grouping === "none") {
     groups.push({ key: "all", tone: "plain", items: shown });
   } else {
     for (const item of shown) {
-      const key = grouping === "time" ? item.bucket : item.group ?? "";
+      const month = monthOf.get(item);
+      const key = grouping === "time" ? item.bucket : grouping === "month" ? month?.toISOString().slice(0, 7) ?? "" : item.group ?? "";
       let group = groups.find((g2) => g2.key === key);
       if (!group) {
-        const name = grouping === "time" ? list[item.bucket]?.name || names[item.bucket] : item.group;
+        const name = grouping === "time" ? list[item.bucket]?.name || names[item.bucket] : grouping === "month" ? month && monthName(month.getUTCFullYear(), month.getUTCMonth()) : item.group;
         group = { key, name, tone: grouping === "time" ? item.tone : "plain", items: [] };
         groups.push(group);
       }
@@ -1328,9 +1353,20 @@ function lookSchema(text2) {
     { name: "editing", selector: { select: select("editing", EDITING, text2) } }
   ];
 }
-function listsSchema(text2) {
+function listKind(list) {
+  const entity = list.entity ?? "";
+  if (!list.attribute && entity.startsWith("calendar.")) {
+    return "calendar";
+  }
+  if (!list.attribute && entity.startsWith("todo.")) {
+    return "todo";
+  }
+  return "attribute";
+}
+var bucketsOf = (kind) => kind === "todo" ? BUCKETS : BUCKETS.filter((bucket) => bucket !== "done");
+function listSchema(kind, text2) {
   const bucket = (name) => ({
-    label: text2(`editor.${name}`),
+    name,
     selector: {
       object: {
         fields: {
@@ -1350,76 +1386,50 @@ function listsSchema(text2) {
       }
     }
   });
+  const groupings = GROUPINGS.filter((grouping) => grouping !== "key" || kind === "attribute");
   return [
-    {
-      name: "lists",
-      selector: {
-        object: {
-          multiple: true,
-          label_field: "entity",
-          description_field: "attribute",
-          fields: {
-            entity: { label: text2("editor.entity"), required: true, selector: { entity: {} } },
-            entities: {
-              label: text2("editor.entities"),
-              description: text2("editor.entities_helper"),
-              selector: { entity: { multiple: true, filter: { domain: "calendar" } } }
-            },
-            attribute: {
-              label: text2("editor.attribute"),
-              description: text2("editor.attribute_helper"),
-              selector: { text: {} }
-            },
-            path: { label: text2("editor.path"), description: text2("editor.path_helper"), selector: { text: {} } },
-            name: { label: text2("editor.name"), description: text2("editor.name_helper"), selector: { text: {} } },
-            fields: {
-              label: text2("editor.fields"),
-              description: text2("editor.fields_helper"),
-              selector: {
-                object: {
-                  fields: Object.fromEntries(
-                    FIELDS.map((field) => [field, { label: text2(`editor.field_${field}`), selector: { text: {} } }])
-                  )
-                }
-              }
-            },
-            group: { label: text2("editor.group"), selector: { select: select("group", GROUPINGS, text2) } },
-            limit: {
-              label: text2("editor.limit"),
-              description: text2("editor.limit_helper"),
-              selector: { number: { min: 0, step: 1, mode: "box" } }
-            },
-            hide_more: {
-              label: text2("editor.hide_more"),
-              description: text2("editor.hide_more_helper"),
-              selector: { boolean: {} }
-            },
-            order: {
-              label: text2("editor.order"),
-              description: text2("editor.order_helper"),
-              selector: {
-                select: {
-                  multiple: true,
-                  reorder: true,
-                  options: BUCKETS.map((value) => ({ value, label: text2(`editor.${value}`) }))
-                }
-              }
-            },
-            before: bucket("before"),
-            now: bucket("now"),
-            after: bucket("after"),
-            done: bucket("done"),
-            empty: { label: text2("editor.empty"), selector: { text: {} } }
+    { name: "entity", required: true, selector: { entity: {} } },
+    ...kind === "calendar" ? [{ name: "entities", selector: { entity: { multiple: true, filter: { domain: "calendar" } } } }] : [],
+    ...kind === "attribute" ? [
+      { name: "attribute", selector: { text: {} } },
+      { name: "path", selector: { text: {} } }
+    ] : [],
+    { name: "name", selector: { text: {} } },
+    ...kind === "attribute" ? [
+      {
+        name: "fields",
+        selector: {
+          object: {
+            fields: Object.fromEntries(
+              FIELDS.map((field) => [field, { label: text2(`editor.field_${field}`), selector: { text: {} } }])
+            )
           }
         }
       }
-    }
+    ] : [],
+    { name: "group", selector: { select: select("group", groupings, text2) } },
+    { name: "limit", selector: { number: { min: 0, step: 1, mode: "box" } } },
+    { name: "hide_more", selector: { boolean: {} } },
+    {
+      name: "order",
+      selector: {
+        select: {
+          multiple: true,
+          reorder: true,
+          options: bucketsOf(kind).map((value) => ({ value, label: text2(`editor.${value}`) }))
+        }
+      }
+    },
+    ...bucketsOf(kind).map(bucket),
+    { name: "empty", selector: { text: {} } }
   ];
 }
+function listFormData(list) {
+  return { ...LIST_DEFAULTS, order: bucketsOf(listKind(list)), ...list };
+}
 function formData(config) {
-  const set = Object.fromEntries(Object.entries(config).filter(([, value]) => value != null));
-  const lists = (config.lists ?? []).map((list) => ({ ...LIST_DEFAULTS, order: BUCKETS, ...list }));
-  return { ...DEFAULTS, ...set, lists };
+  const set = Object.fromEntries(Object.entries(config).filter(([name, value]) => value != null && name !== "lists"));
+  return { ...DEFAULTS, ...set };
 }
 var blank = (value) => value === void 0 || value === null || value === "" || value === false;
 function tidy(value) {
@@ -1447,7 +1457,7 @@ function tidyList(list) {
   if (list.limit) {
     tidied.limit = list.limit;
   }
-  if (list.order?.length && list.order.join() !== BUCKETS.join()) {
+  if (list.order?.length && list.order.join() !== BUCKETS.join() && list.order.join() !== bucketsOf(listKind(list)).join()) {
     tidied.order = list.order;
   }
   for (const bucket of BUCKETS) {
@@ -1473,35 +1483,127 @@ function configFromForm(value) {
   }
   return config;
 }
+var KIND_ICONS = {
+  calendar: "mdi:calendar",
+  todo: "mdi:checkbox-marked-circle-outline",
+  attribute: "mdi:format-list-bulleted"
+};
 var ListsCardEditor = class extends i4 {
   constructor() {
     super(...arguments);
     this.config = { type: "custom:lists-card", lists: [] };
+    /** A list added by picking its entity, its page opened at once. */
+    this.addList = (event) => {
+      const entity = event.detail.value.add_list;
+      if (!entity) {
+        return;
+      }
+      const lists = [...this.lists(), { entity }];
+      this.setLists(lists);
+      this.open = lists.length - 1;
+    };
+    this.valueChanged = (event) => {
+      this.emit({ ...this.config, ...event.detail.value, lists: this.lists() });
+    };
   }
   setConfig(config) {
     this.config = { ...config };
+    if (this.open !== void 0 && this.open >= (config.lists?.length ?? 0)) {
+      this.open = void 0;
+    }
   }
   render() {
     if (!this.hass) {
       return A;
     }
-    const data = formData(rowStepData(this.config));
+    const lists = this.config.lists ?? [];
+    if (this.open !== void 0 && lists[this.open]) {
+      return this.listPage(lists[this.open], this.open);
+    }
     const text2 = (key) => this.text(key);
-    const form = (schema) => b2`
-            <ha-form
-                .hass=${this.hass}
-                .data=${data}
-                .schema=${schema}
-                .computeLabel=${(entry) => this.text(`editor.${entry.name}`)}
-                .computeHelper=${(entry) => this.helper(entry.name)}
-                @value-changed=${this.valueChanged}
-            ></ha-form>
-        `;
     return b2`
-            ${form(lookSchema(text2))} ${form(listsSchema(text2))}
-            <p class="helper">${this.text("editor.lists_helper")}</p>
-            ${form(rowStepSchema(this.config, text2))}
+            ${this.form(formData(rowStepData(this.config)), lookSchema(text2), this.valueChanged)}
+            <div class="lists">
+                <div class="lists-title">${this.text("editor.lists")}</div>
+                ${lists.map((list, index) => this.listRow(list, index, lists.length))}
+                ${this.form({}, [{ name: "add_list", selector: { entity: {} } }], this.addList)}
+                <p class="helper">${this.text("editor.lists_helper")}</p>
+            </div>
+            ${this.form(formData(rowStepData(this.config)), rowStepSchema(this.config, text2), this.valueChanged)}
         `;
+  }
+  form(data, schema, changed, kind) {
+    const helper = (name) => this.helper(name === "order" && kind === "todo" ? "order_todo" : name);
+    return b2`<ha-form
+            .hass=${this.hass}
+            .data=${data}
+            .schema=${schema}
+            .computeLabel=${(entry) => this.text(`editor.${entry.name}`)}
+            .computeHelper=${(entry) => helper(entry.name)}
+            @value-changed=${changed}
+        ></ha-form>`;
+  }
+  /** A list's row: what it reads, its name, and buttons that move it, open its page and delete it. */
+  listRow(list, index, count) {
+    const state = this.hass?.states[list.entity];
+    const name = list.name || state?.attributes.friendly_name || list.entity;
+    const button = (icon, label, action, disabled = false) => b2`<button class="icon-button" title=${label} aria-label=${label} ?disabled=${disabled} @click=${action}>
+                <ha-icon icon=${icon}></ha-icon>
+            </button>`;
+    return b2`<div class="list-row">
+            <ha-icon class="kind" icon=${KIND_ICONS[listKind(list)]}></ha-icon>
+            <div class="list-name">
+                <div>${name}</div>
+                ${name !== list.entity ? b2`<div class="list-entity">${list.entity}</div>` : A}
+            </div>
+            ${count > 1 ? b2`${button("mdi:arrow-up", this.text("editor.move_up"), () => this.moveList(index, -1), index === 0)}
+                      ${button("mdi:arrow-down", this.text("editor.move_down"), () => this.moveList(index, 1), index === count - 1)}` : A}
+            ${button("mdi:pencil", this.text("editor.edit_list"), () => this.open = index)}
+            ${button("mdi:delete-outline", this.text("editor.delete_list"), () => this.setLists(this.lists().filter((_2, i7) => i7 !== index)))}
+        </div>`;
+  }
+  /** A list's own page, with the fields its kind can use, and a way back to the card's settings. */
+  listPage(list, index) {
+    const text2 = (key) => this.text(key);
+    const state = this.hass?.states[list.entity];
+    const name = list.name || state?.attributes.friendly_name || list.entity;
+    const changed = (event) => {
+      const lists = this.lists();
+      lists[index] = event.detail.value;
+      this.setLists(lists);
+    };
+    return b2`
+            <div class="page-head">
+                <button
+                    class="icon-button"
+                    title=${this.text("editor.back")}
+                    aria-label=${this.text("editor.back")}
+                    @click=${() => this.open = void 0}
+                >
+                    <ha-icon icon="mdi:arrow-left"></ha-icon>
+                </button>
+                <ha-icon class="kind" icon=${KIND_ICONS[listKind(list)]}></ha-icon>
+                <div class="page-title">${name}</div>
+            </div>
+            ${this.form(listFormData(list), listSchema(listKind(list), text2), changed, listKind(list))}
+        `;
+  }
+  lists() {
+    return [...this.config.lists ?? []];
+  }
+  moveList(index, by) {
+    const lists = this.lists();
+    const [list] = lists.splice(index, 1);
+    lists.splice(index + by, 0, list);
+    this.setLists(lists);
+  }
+  setLists(lists) {
+    this.emit({ ...this.config, lists });
+  }
+  emit(value) {
+    const config = configFromForm(value);
+    this.config = config;
+    this.dispatchEvent(new CustomEvent("config-changed", { detail: { config }, bubbles: true, composed: true }));
   }
   static get styles() {
     return i`
@@ -1511,16 +1613,79 @@ var ListsCardEditor = class extends i4 {
             }
 
             .helper {
-                margin: -8px 0 16px;
+                margin: 4px 0 16px;
                 padding: 0 16px;
                 color: var(--secondary-text-color);
                 font-size: 12px;
             }
+
+            .lists-title {
+                margin: 0 0 8px;
+                font-weight: 500;
+            }
+
+            .list-row {
+                display: flex;
+                align-items: center;
+                gap: 8px;
+                min-height: 48px;
+                padding: 0 4px 0 12px;
+                margin-bottom: 8px;
+                border: 1px solid var(--divider-color);
+                border-radius: var(--ha-card-border-radius, 12px);
+            }
+
+            .kind {
+                flex: none;
+                color: var(--secondary-text-color);
+            }
+
+            .list-name {
+                flex: 1 1 auto;
+                min-width: 0;
+                overflow-wrap: anywhere;
+            }
+
+            .list-entity {
+                font-size: 12px;
+                color: var(--secondary-text-color);
+            }
+
+            .icon-button {
+                flex: none;
+                display: grid;
+                place-items: center;
+                width: 40px;
+                height: 40px;
+                padding: 0;
+                border: 0;
+                border-radius: 50%;
+                background: none;
+                color: var(--primary-text-color);
+                cursor: pointer;
+            }
+
+            .icon-button:hover:not(:disabled) {
+                background: rgba(var(--rgb-primary-text-color, 33, 33, 33), 0.06);
+            }
+
+            .icon-button:disabled {
+                opacity: 0.35;
+                cursor: default;
+            }
+
+            .page-head {
+                display: flex;
+                align-items: center;
+                gap: 8px;
+                margin: 0 0 16px -8px;
+            }
+
+            .page-title {
+                font-size: 18px;
+                overflow-wrap: anywhere;
+            }
         `;
-  }
-  valueChanged(event) {
-    const config = configFromForm({ ...this.config, ...event.detail.value });
-    this.dispatchEvent(new CustomEvent("config-changed", { detail: { config }, bubbles: true, composed: true }));
   }
   text(key) {
     return translate(this.language(), key);
@@ -1540,6 +1705,9 @@ __decorateClass([
 __decorateClass([
   r5()
 ], ListsCardEditor.prototype, "config", 2);
+__decorateClass([
+  r5()
+], ListsCardEditor.prototype, "open", 2);
 ListsCardEditor = __decorateClass([
   t3("lists-card-editor")
 ], ListsCardEditor);
@@ -1757,6 +1925,13 @@ var ListsCard = class extends i4 {
     this.subscriptions = /* @__PURE__ */ new Map();
     this.tickTimers = /* @__PURE__ */ new Map();
     this.lists = [];
+    /** A month's heading in the viewer's language, such as "Marraskuu", with its year when that isn't this one. */
+    this.monthName = (year, month) => {
+      const thisYear = Number(new Intl.DateTimeFormat("en", { year: "numeric", timeZone: this.timeZone() }).format(Date.now()));
+      const options = year === thisYear ? { month: "long" } : { month: "long", year: "numeric" };
+      const name = new Intl.DateTimeFormat(this.language(), { ...options, timeZone: "UTC" }).format(Date.UTC(year, month, 1));
+      return name.charAt(0).toLocaleUpperCase(this.language()) + name.slice(1);
+    };
     /**
      * How wide the buttons on a title's row are at most on the card, in rows: a link's button, and with the texts folded
      * away, the chevron that opens one. Every row makes that room at its end, so the dates end at the same place.
@@ -1965,7 +2140,7 @@ var ListsCard = class extends i4 {
         items: this.todoItems(config.entity),
         loading: !this.todos.has(config.entity) && !this.failed.has(todoKey(config.entity))
       } : isCalendarList(config) ? this.calendarItems(config) : { items: readItems(entity, config), loading: false };
-      const arrangeBy = (list) => items && arrange(items, list, Date.now(), names, { timeZone: this.timeZone(), whole });
+      const arrangeBy = (list) => items && arrange(items, list, Date.now(), names, { timeZone: this.timeZone(), whole, monthName: this.monthName });
       const limited = arrangeBy(config);
       const cut = limited?.hidden ?? 0;
       const open = cut > 0 && !config.hide_more && this.expanded.has(index);

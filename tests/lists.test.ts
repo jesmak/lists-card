@@ -359,6 +359,30 @@ describe("arrange", () => {
         expect(titles(arrange(todos, { ...list, order: ["before", "now", "after"] }, NOW, NAMES, UTC))).toEqual([["Earlier", ["open"]]]);
     });
 
+    it("groups by month in the order of the days, past months first, named by the card", () => {
+        const months = arrange(
+            [
+                item("April", "2026-04-02"),
+                item("March late", "2026-03-20"),
+                item("No date"),
+                item("February", "2026-02-27"),
+                item("March", "2026-03-10"),
+            ],
+            { ...list, group: "month" },
+            NOW,
+            NAMES,
+            { timeZone: "UTC", monthName: (year, month) => `${month + 1}.${year}` },
+        );
+        expect(titles(months)).toEqual([
+            ["2.2026", ["February"]],
+            ["3.2026", ["March", "March late"]],
+            ["4.2026", ["April"]],
+            [undefined, ["No date"]],
+        ]);
+        // The time groups still decide each item's tone.
+        expect(months.groups[1].items[0].tone).toBe("plain");
+    });
+
     it("turns a bucket round when it asks for the furthest first", () => {
         const arranged = arrange(items, { ...list, before: { farthest_first: true }, after: { farthest_first: true } }, NOW, NAMES, UTC);
         expect(titles(arranged)).toEqual([

@@ -63,23 +63,23 @@ The card shows what its entity holds and remembers nothing itself. The only list
 
 ### A list
 
-| Name        | Type    | Description                                                                                                                                                         | Default                      |
-| ----------- | ------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ---------------------------- |
-| `entity`    | string  | The entity that holds the list                                                                                                                                      | required                     |
-| `entities`  | list    | More [calendars](#calendars) whose events are merged into a calendar's list                                                                                         |                              |
-| `attribute` | string  | The attribute the items are in. Without one they are read from the entity's state, as JSON, or from a [to-do list](#to-do-lists) or a [calendar](#calendars) itself |                              |
-| `path`      | string  | A path to the items inside the attribute, such as `data.items`, when they aren't at its top                                                                         |                              |
-| `name`      | string  | The list's heading on a card with several lists                                                                                                                     | the entity's name            |
-| `fields`    | object  | Which key of an item holds each of the card's fields, as described under [Keys](#keys)                                                                              | each field's own name        |
-| `group`     | string  | What the list's groups are made from. `time` for its items' dates, `key` for the values of the `group` field, `none` for one list without groups                    | `time`                       |
-| `limit`     | number  | The most items shown. The card says how many were left out, and a tap on that shows them and hides them again. `0` shows them all                                   | `0`                          |
-| `hide_more` | boolean | With `limit`, the list is only its first items, with nothing said about the rest                                                                                    | `false`                      |
-| `order`     | list    | The time groups shown, in order, of `before`, `now`, `after` and `done`. The items of one left out aren't shown                                                     | `[before, now, after, done]` |
-| `before`    | object  | The group of items that are over, as described under [A time group](#a-time-group)                                                                                  |                              |
-| `now`       | object  | The group of items going on today, and of items with no date                                                                                                        |                              |
-| `after`     | object  | The group of items still to come                                                                                                                                    |                              |
-| `done`      | object  | The group of a to-do list's ticked items                                                                                                                            |                              |
-| `empty`     | string  | What the card says when the list has no items                                                                                                                       | the card's own text          |
+| Name        | Type    | Description                                                                                                                                                                                  | Default                      |
+| ----------- | ------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ---------------------------- |
+| `entity`    | string  | The entity that holds the list                                                                                                                                                               | required                     |
+| `entities`  | list    | More [calendars](#calendars) whose events are merged into a calendar's list                                                                                                                  |                              |
+| `attribute` | string  | The attribute the items are in. Without one they are read from the entity's state, as JSON, or from a [to-do list](#to-do-lists) or a [calendar](#calendars) itself                          |                              |
+| `path`      | string  | A path to the items inside the attribute, such as `data.items`, when they aren't at its top                                                                                                  |                              |
+| `name`      | string  | The list's heading on a card with several lists                                                                                                                                              | the entity's name            |
+| `fields`    | object  | Which key of an item holds each of the card's fields, as described under [Keys](#keys)                                                                                                       | each field's own name        |
+| `group`     | string  | What the list's groups are made from. `time` for its items' dates, `key` for the values of the `group` field, `month` for the months of its items' dates, `none` for one list without groups | `time`                       |
+| `limit`     | number  | The most items shown. The card says how many were left out, and a tap on that shows them and hides them again. `0` shows them all                                                            | `0`                          |
+| `hide_more` | boolean | With `limit`, the list is only its first items, with nothing said about the rest                                                                                                             | `false`                      |
+| `order`     | list    | The time groups shown, in order, of `before`, `now`, `after` and `done`. The items of one left out aren't shown                                                                              | `[before, now, after, done]` |
+| `before`    | object  | The group of items that are over, as described under [A time group](#a-time-group)                                                                                                           |                              |
+| `now`       | object  | The group of items going on today, and of items with no date                                                                                                                                 |                              |
+| `after`     | object  | The group of items still to come                                                                                                                                                             |                              |
+| `done`      | object  | The group of a to-do list's ticked items                                                                                                                                                     |                              |
+| `empty`     | string  | What the card says when the list has no items                                                                                                                                                | the card's own text          |
 
 ### Keys
 
@@ -130,6 +130,10 @@ number of items on the card that aren't done.
 
 A list grouped by `key` has a group for each value of the `group` field, in the order the values first come up. Items
 without one are together in a group with no heading.
+
+A list grouped by `month` has a group for each month its items begin in, named by the month, such as "November", with
+its year when that isn't this one. The items are in the order of their days, past months first, as a calendar reads.
+The time groups still decide which items are shown and how each is set off, so today's can still be highlighted.
 
 With several lists on a card, the headings are the lists, and a list's own groups only decide the order of its items.
 

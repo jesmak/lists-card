@@ -16,8 +16,8 @@ export type Editing = "full" | "tick" | "none";
 export const EDITING: Editing[] = ["full", "tick", "none"];
 
 /** What a list's groups are made from: its items' dates, one of their keys, or nothing. */
-export type Grouping = "time" | "key" | "none";
-export const GROUPINGS: Grouping[] = ["time", "key", "none"];
+export type Grouping = "time" | "key" | "month" | "none";
+export const GROUPINGS: Grouping[] = ["time", "key", "month", "none"];
 
 /** Where an item's dates put it: over, going on today, or still to come. A ticked to-do item is done, whatever its dates. */
 export type Bucket = "before" | "now" | "after" | "done";

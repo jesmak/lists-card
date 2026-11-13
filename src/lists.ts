@@ -305,11 +305,16 @@ export function arrange(
     list: ListConfig,
     now: number,
     names: Record<Bucket, string>,
-    { timeZone, whole = false }: { timeZone?: string; whole?: boolean } = {},
+    {
+        timeZone,
+        whole = false,
+        monthName = (year, month) => `${month + 1}/${year}`,
+    }: { timeZone?: string; whole?: boolean; monthName?: (year: number, month: number) => string } = {},
 ): Arranged {
+    const grouping = whole ? "none" : (list.group ?? "time");
     const today = zoneDay(now, timeZone);
     const order = list.order?.length ? list.order : BUCKETS;
-    const placed: Array<{ item: Placed; index: number; near: number; undated: boolean }> = [];
+    const placed: Array<{ item: Placed; index: number; near: number; undated: boolean; first: number; time: number }> = [];
     items.forEach((item, index) => {
         const bucket = bucketOf(item, today, timeZone);
         const days = span(item, timeZone);
@@ -325,27 +330,38 @@ export function arrange(
         const nearest = past && days ? -(item.end ?? item.start)!.time : ((item.start ?? item.end)?.time ?? 0);
         const near = list[bucket]?.farthest_first ? -nearest : nearest;
         const tone = list[bucket]?.tone ?? DEFAULT_TONES[bucket];
-        placed.push({ item: { ...item, bucket, tone }, index, near: days ? near : 0, undated: !days });
+        const time = (item.start ?? item.end)?.time ?? 0;
+        placed.push({ item: { ...item, bucket, tone }, index, near: days ? near : 0, undated: !days, first: days ? days[0] : 0, time });
     });
+    // By month, the items are in the order of their days, as a calendar reads, past months first.
     placed.sort(
-        (a, b) =>
-            order.indexOf(a.item.bucket) - order.indexOf(b.item.bucket) ||
-            Number(a.undated) - Number(b.undated) ||
-            a.near - b.near ||
-            a.index - b.index,
+        grouping === "month"
+            ? (a, b) => Number(a.undated) - Number(b.undated) || a.first - b.first || a.time - b.time || a.index - b.index
+            : (a, b) =>
+                  order.indexOf(a.item.bucket) - order.indexOf(b.item.bucket) ||
+                  Number(a.undated) - Number(b.undated) ||
+                  a.near - b.near ||
+                  a.index - b.index,
     );
+    const monthOf = new Map(placed.map(({ item, undated, first }) => [item, undated ? undefined : new Date(first * DAY_MS)]));
     const shown = (list.limit ? placed.slice(0, list.limit) : placed).map(({ item }) => item);
 
-    const grouping = whole ? "none" : (list.group ?? "time");
     const groups: Group[] = [];
     if (grouping === "none") {
         groups.push({ key: "all", tone: "plain", items: shown });
     } else {
         for (const item of shown) {
-            const key = grouping === "time" ? item.bucket : (item.group ?? "");
+            const month = monthOf.get(item);
+            const key =
+                grouping === "time" ? item.bucket : grouping === "month" ? (month?.toISOString().slice(0, 7) ?? "") : (item.group ?? "");
             let group = groups.find((g) => g.key === key);
             if (!group) {
-                const name = grouping === "time" ? list[item.bucket]?.name || names[item.bucket] : item.group;
+                const name =
+                    grouping === "time"
+                        ? list[item.bucket]?.name || names[item.bucket]
+                        : grouping === "month"
+                          ? month && monthName(month.getUTCFullYear(), month.getUTCMonth())
+                          : item.group;
                 group = { key, name, tone: grouping === "time" ? item.tone : "plain", items: [] };
                 groups.push(group);
             }
