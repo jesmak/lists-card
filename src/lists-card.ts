@@ -3,7 +3,8 @@
  * of their keys the card reads. One list is grouped by its items' dates (over, going on, to come), by one of their keys,
  * or not at all. Several lists are a group each. Held to a height, the header stays and the lists scroll under it.
  *
- * The card shows what its sources give and remembers nothing itself.
+ * The card shows what its sources give and remembers nothing itself. The one thing it changes is a to-do item, ticked
+ * done or open again.
  */
 import { LitElement, css, html, nothing } from "lit";
 import type { CSSResultGroup, PropertyValues, TemplateResult } from "lit";
@@ -15,11 +16,11 @@ import "./editor";
 import { ScrollFade, fadeStyles } from "./fade";
 import type { HomeAssistant } from "./hass";
 import { gridMinRows, heightCardSize, heightStyle, validHeight } from "./height";
-import { arrange, dayOf, readItems, validList, zoneDay } from "./lists";
+import { arrange, dayOf, isTodoList, readItems, todoItems, validList, zoneDay } from "./lists";
 import { browserLanguage, translate } from "./localize/localize";
 import { drawnScale, fillLimit, filledHeight, filledStyle, spareRoom, validRowStep } from "./rows";
-import { HEADINGS, LAYOUTS, TEXT_MODES } from "./types";
-import type { Arranged, Bucket, Group, Headings, Layout, ListConfig, ListsCardConfig, Placed, TextMode, When } from "./types";
+import { BUCKETS, HEADINGS, LAYOUTS, TEXT_MODES } from "./types";
+import type { Arranged, Bucket, Group, Headings, Layout, ListConfig, ListsCardConfig, Placed, TextMode, TodoItem, When } from "./types";
 
 interface CardRegistration {
     type: string;
@@ -34,7 +35,21 @@ interface Shown {
     config: ListConfig;
     name: string;
     arranged?: Arranged;
+    /** A to-do list whose items haven't come yet. */
+    loading?: boolean;
 }
+
+/** A ticked to-do item, by its list's entity and its uid: as it was, which keeps its place and its date, and whether it is shown done. */
+interface Ticking {
+    held: TodoItem;
+    to: boolean;
+}
+
+/** How long a ticked item stays in its place, so a tick by mistake can be undone where it was made. */
+const TICK_HOLD_MS = 1000;
+
+/** The to-do list feature that lets an item be ticked. */
+const UPDATE_TODO_ITEM = 4;
 
 /** The list's own room at its top, above which the spare room of a filled row goes. */
 const LIST_TOP_PX = 4;
@@ -105,6 +120,13 @@ export class ListsCard extends LitElement {
     @state() private sliding = false;
     @state() private filled = 0;
     @state() private spare = 0;
+    /** The to-do lists' items as they last came, those whose subscription failed, and the items just ticked. */
+    @state() private todos = new Map<string, TodoItem[]>();
+    @state() private failed = new Set<string>();
+    @state() private ticking = new Map<string, Ticking>();
+
+    private subscriptions = new Map<string, Promise<() => Promise<void>>>();
+    private tickTimers = new Map<string, number>();
 
     private lists: Shown[] = [];
     private resizes?: ResizeObserver;
@@ -122,7 +144,7 @@ export class ListsCard extends LitElement {
         return document.createElement("lists-card-editor");
     }
 
-    /** The first entity with a list of objects in an attribute, with the key that looks most like a title. */
+    /** The first entity with a list of objects in an attribute, with the key that looks most like a title, else the first to-do list. */
     public static getStubConfig(hass?: HomeAssistant): Record<string, unknown> {
         for (const entity of Object.values(hass?.states ?? {})) {
             for (const [attribute, value] of Object.entries(entity?.attributes ?? {})) {
@@ -137,7 +159,8 @@ export class ListsCard extends LitElement {
                 }
             }
         }
-        return { lists: [] };
+        const todo = Object.keys(hass?.states ?? {}).find((entity) => entity.startsWith("todo."));
+        return { lists: todo ? [{ entity: todo }] : [] };
     }
 
     public setConfig(config: ListsCardConfig): void {
@@ -212,6 +235,45 @@ export class ListsCard extends LitElement {
         this.sliding = false;
         this.resizes?.disconnect();
         cancelAnimationFrame(this.frame ?? 0);
+        this.watchTodos();
+        this.tickTimers.forEach((timer) => window.clearTimeout(timer));
+        this.tickTimers.clear();
+        this.ticking = new Map();
+    }
+
+    /**
+     * Subscribes to the items of each to-do list on the card while it is on the page, and lets go of those it no longer
+     * shows. Home Assistant sends a list's items whole, at once and on every change.
+     */
+    private watchTodos(): void {
+        const connection = this.isConnected ? this.hass?.connection : undefined;
+        const wanted = new Set(connection ? (this.config?.lists ?? []).filter(isTodoList).map((list) => list.entity) : []);
+        for (const [entity, subscription] of this.subscriptions) {
+            if (!wanted.has(entity)) {
+                this.subscriptions.delete(entity);
+                subscription.then((unsubscribe) => unsubscribe()).catch(() => undefined);
+                this.todos.delete(entity);
+                this.failed.delete(entity);
+            }
+        }
+        for (const entity of wanted) {
+            if (this.subscriptions.has(entity)) {
+                continue;
+            }
+            const subscription = connection!.subscribeMessage<{ items: TodoItem[] }>(
+                (message) => {
+                    this.todos = new Map(this.todos).set(entity, Array.isArray(message?.items) ? message.items : []);
+                },
+                { type: "todo/item/subscribe", entity_id: entity },
+            );
+            // No such list, or not a to-do list after all.
+            subscription.catch(() => {
+                if (this.subscriptions.get(entity) === subscription) {
+                    this.failed = new Set(this.failed).add(entity);
+                }
+            });
+            this.subscriptions.set(entity, subscription);
+        }
     }
 
     /** The items change buckets when the day does, with no change in any entity, so the card is drawn again then. */
@@ -246,9 +308,8 @@ export class ListsCard extends LitElement {
         if (!this.hass || !this.config) {
             return;
         }
-        const names = Object.fromEntries(
-            (["before", "now", "after"] as Bucket[]).map((bucket) => [bucket, this.text(`common.bucket_${bucket}`)]),
-        ) as Record<Bucket, string>;
+        this.watchTodos();
+        const names = Object.fromEntries(BUCKETS.map((bucket) => [bucket, this.text(`common.bucket_${bucket}`)])) as Record<Bucket, string>;
         const whole = this.config.lists.length > 1;
         this.lists = this.config.lists.map((config) => {
             const entity = this.hass?.states[config.entity];
@@ -257,9 +318,64 @@ export class ListsCard extends LitElement {
                 (entity && this.hass?.formatEntityName?.(entity, [{ type: "device" }, { type: "entity" }])) ||
                 (entity?.attributes.friendly_name as string | undefined) ||
                 config.entity;
-            const items = readItems(entity, config);
-            return { config, name, arranged: items && arrange(items, config, Date.now(), names, { timeZone: this.timeZone(), whole }) };
+            const todo = isTodoList(config);
+            const items = todo ? this.todoItems(config.entity) : readItems(entity, config);
+            const loading = todo && !items && !this.failed.has(config.entity);
+            const arranged = items && arrange(items, config, Date.now(), names, { timeZone: this.timeZone(), whole });
+            return { config, name, arranged, loading };
         });
+    }
+
+    /** A to-do list's items, those just ticked still where they were, or undefined until they have come. */
+    private todoItems(entity: string): ReturnType<typeof todoItems> | undefined {
+        const raw = this.todos.get(entity);
+        return raw && todoItems(raw.map((todo) => this.ticking.get(`${entity} ${todo.uid}`)?.held ?? todo));
+    }
+
+    /** Whether the item is shown done: as it was just ticked, or as its list has it. */
+    private shownDone(list: ListConfig, item: Placed): boolean {
+        return this.ticking.get(`${list.entity} ${item.uid}`)?.to ?? Boolean(item.done);
+    }
+
+    private canTick(list: ListConfig): boolean {
+        const features = Number(this.hass?.states[list.entity]?.attributes.supported_features ?? 0);
+        return Boolean(this.hass?.callService) && (features & UPDATE_TODO_ITEM) !== 0;
+    }
+
+    /** Ticks an item done, or open again. It is shown so at once, and keeps its place a moment before it moves. */
+    private async tick(list: ListConfig, item: Placed): Promise<void> {
+        const key = `${list.entity} ${item.uid}`;
+        const current = this.ticking.get(key);
+        const held = current?.held ?? this.todos.get(list.entity)?.find((todo) => todo.uid === item.uid);
+        if (!held) {
+            return;
+        }
+        const to = !(current?.to ?? Boolean(item.done));
+        this.ticking = new Map(this.ticking).set(key, { held, to });
+        window.clearTimeout(this.tickTimers.get(key));
+        this.tickTimers.set(
+            key,
+            window.setTimeout(() => this.settle(key), TICK_HOLD_MS),
+        );
+        try {
+            await this.hass?.callService?.(
+                "todo",
+                "update_item",
+                { item: item.uid, status: to ? "completed" : "needs_action" },
+                { entity_id: list.entity },
+            );
+        } catch {
+            // Home Assistant tells the user why. The item goes back to what its list says.
+            this.settle(key);
+        }
+    }
+
+    private settle(key: string): void {
+        window.clearTimeout(this.tickTimers.get(key));
+        this.tickTimers.delete(key);
+        const ticking = new Map(this.ticking);
+        ticking.delete(key);
+        this.ticking = ticking;
     }
 
     protected updated(): void {
@@ -303,11 +419,12 @@ export class ListsCard extends LitElement {
 
     /**
      * Beside the title: how many items the first group has, with its name, when its tone says it matters, as "2 late"
-     * does. Otherwise the number of items on the card.
+     * does. Otherwise the number of items on the card that aren't done.
      */
     private pill(): TemplateResult | typeof nothing {
+        // What is done is not counted.
         const groups = this.lists.flatMap((list) => list.arranged?.groups ?? []);
-        const count = groups.reduce((sum, group) => sum + group.items.length, 0);
+        const count = groups.reduce((sum, group) => sum + group.items.filter((item) => item.bucket !== "done").length, 0);
         if (count === 0) {
             return nothing;
         }
@@ -319,7 +436,10 @@ export class ListsCard extends LitElement {
     }
 
     /** One list on the card: its groups are the card's groups. */
-    private listGroups(list: Shown, index: number): TemplateResult {
+    private listGroups(list: Shown, index: number): TemplateResult | typeof nothing {
+        if (list.loading) {
+            return nothing;
+        }
         const groups = list.arranged?.groups ?? [];
         if (groups.length === 0) {
             return html`<div class="empty">${this.emptyText(list)}</div>`;
@@ -331,7 +451,7 @@ export class ListsCard extends LitElement {
     private listAsGroup(list: Shown, index: number): TemplateResult {
         const items = list.arranged?.groups.flatMap((group) => group.items) ?? [];
         const group: Group = { key: "list", name: list.name, tone: "plain", items };
-        const rest = items.length === 0 ? html`<div class="empty">${this.emptyText(list)}</div>` : this.more(list);
+        const rest = list.loading ? nothing : items.length === 0 ? html`<div class="empty">${this.emptyText(list)}</div>` : this.more(list);
         return this.group(group, `${index} list`, index, rest);
     }
 
@@ -352,7 +472,7 @@ export class ListsCard extends LitElement {
             ${repeat(
                 group.items,
                 (item) => item.key,
-                (item) => this.item(item, `${list} ${item.key}`),
+                (item) => this.item(item, `${list} ${item.key}`, this.lists[list].config),
             )}
         </div>`;
         if (group.name === undefined) {
@@ -376,12 +496,16 @@ export class ListsCard extends LitElement {
         </div>`;
     }
 
-    private item(item: Placed, key: string): TemplateResult {
+    private item(item: Placed, key: string, list: ListConfig): TemplateResult {
         const mode = this.textMode();
         const open = this.opened.has(key);
         // A tap opens what isn't in sight: a folded text, or the rest of one cut to two lines.
         const can = Boolean(item.text) && (mode === "fold" || (mode === "clamp" && (open || this.cut.has(key))));
-        const classes = ["item", this.layoutMode(), `tone-${item.tone}`, open && "open", can && "can"].filter(Boolean).join(" ");
+        const done = item.uid !== undefined && this.shownDone(list, item);
+        const classes = ["item", this.layoutMode(), `tone-${item.tone}`, open && "open", can && "can", done && "done"]
+            .filter(Boolean)
+            .join(" ");
+        const tick = item.uid === undefined ? nothing : this.tickBox(list, item, done);
         const cover = can
             ? html`<button
                   class="cover"
@@ -416,7 +540,7 @@ export class ListsCard extends LitElement {
             return html`<div class=${classes}>
                 ${cover} ${this.badge(item)}
                 <div class="body">
-                    <div class="ti" title=${item.title}>${this.icon(item, "ti-icon")}${item.title}</div>
+                    <div class="ti" title=${item.title}>${tick}${this.icon(item, "ti-icon")}${item.title}</div>
                     ${line} ${mode === "fold" ? this.fold(open, text) : text}
                 </div>
                 ${actions}
@@ -427,7 +551,7 @@ export class ListsCard extends LitElement {
         return html`<div class=${classes}>
             ${cover}
             <div class="line">
-                <span class="ic">${this.icon(item)}</span>
+                <span class="ic">${tick === nothing ? this.icon(item) : tick}</span>
                 <span class="ti" title=${item.title}
                     >${item.title}${folded && !open && item.label ? html`<span class="inl"> · ${item.label}</span>` : nothing}</span
                 >
@@ -435,6 +559,24 @@ export class ListsCard extends LitElement {
             </div>
             ${folded ? this.fold(open, html`<div class="sub">${label}${text}</div>`) : label !== nothing || text !== nothing ? html`<div class="sub">${label}${text}</div>` : nothing}
         </div>`;
+    }
+
+    /** A to-do item's round tick. On a list that can't be changed it only shows whether the item is done. */
+    private tickBox(list: ListConfig, item: Placed, done: boolean): TemplateResult {
+        const icon = html`<ha-icon icon="mdi:check"></ha-icon>`;
+        if (!this.canTick(list)) {
+            return html`<span class="tick ${done ? "on" : ""}">${icon}</span>`;
+        }
+        return html`<button
+            class="tick ${done ? "on" : ""}"
+            role="checkbox"
+            aria-checked=${done ? "true" : "false"}
+            aria-label=${item.title}
+            title=${this.text(done ? "common.mark_open" : "common.mark_done")}
+            @click=${() => this.tick(list, item)}
+        >
+            ${icon}
+        </button>`;
     }
 
     private icon(item: Placed, classes = ""): TemplateResult | typeof nothing {
@@ -673,8 +815,8 @@ export class ListsCard extends LitElement {
     }
 
     private cardClass(): string {
-        // Without a single icon on the card, the rows give its column up.
-        const icons = this.lists.some((list) => list.arranged?.groups.some((group) => group.items.some((item) => item.icon)));
+        // Without a single icon or tick on the card, the rows give its column up.
+        const icons = this.lists.some((list) => list.arranged?.groups.some((group) => group.items.some((item) => item.icon || item.uid)));
         return [this.heightStyle() && "held", this.sliding && "sliding", !icons && "no-icons"].filter(Boolean).join(" ");
     }
 
@@ -867,7 +1009,8 @@ export class ListsCard extends LitElement {
                     pointer-events: none;
                 }
 
-                .item .src {
+                .item .src,
+                .item .tick {
                     pointer-events: auto;
                 }
 
@@ -965,6 +1108,57 @@ export class ListsCard extends LitElement {
                     border-radius: 50%;
                     color: var(--secondary-text-color);
                     --mdc-icon-size: 18px;
+                }
+
+                /* A to-do item's tick: a ring, filled in the highlight colour once done. It lies over the tap that opens the item. */
+                .tick {
+                    position: relative;
+                    flex: none;
+                    box-sizing: border-box;
+                    display: inline-grid;
+                    place-items: center;
+                    width: 20px;
+                    height: 20px;
+                    margin: 2px;
+                    padding: 0;
+                    border: 2px solid var(--secondary-text-color);
+                    border-radius: 50%;
+                    background: none;
+                    color: var(--card-background-color, #fff);
+                    font: inherit;
+                    vertical-align: top;
+                    --mdc-icon-size: 15px;
+                }
+
+                button.tick {
+                    cursor: pointer;
+                }
+
+                button.tick:focus-visible {
+                    outline: 2px solid var(--primary-color);
+                    outline-offset: 2px;
+                }
+
+                .tick ha-icon {
+                    visibility: hidden;
+                }
+
+                .tick.on {
+                    border-color: var(--lc-highlight);
+                    background: var(--lc-highlight);
+                }
+
+                .tick.on ha-icon {
+                    visibility: visible;
+                }
+
+                /* In the timeline the tick is before the title, in its line's height. */
+                .timeline .ti .tick {
+                    margin: -2px 8px -2px 0;
+                }
+
+                .done .ti {
+                    text-decoration: line-through;
                 }
 
                 .src:hover {

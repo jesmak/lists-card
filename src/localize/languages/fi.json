@@ -2,7 +2,7 @@
     "common": {
         "name": "Listakortti",
         "description": "Mikä tahansa entiteetin lista, kuten tehtävät, tapahtumat tai tiedotteet, ryhmiteltynä ajan tai avaimen mukaan",
-        "invalid_configuration": "Virheelliset asetukset. Jokainen lista kohdassa lists tarvitsee entiteetin (entity). Ryhmittelyn (group) on oltava time, key tai none, rajan (limit) kokonaisluku, järjestyksen (order) lista arvoista before, now ja after, ja sävyn (tone) plain, warning, highlight tai dimmed.",
+        "invalid_configuration": "Virheelliset asetukset. Jokainen lista kohdassa lists tarvitsee entiteetin (entity). Ryhmittelyn (group) on oltava time, key tai none, rajan (limit) kokonaisluku, järjestyksen (order) lista arvoista before, now, after ja done, ja sävyn (tone) plain, warning, highlight tai dimmed.",
         "invalid_layout": "Virheellinen asettelu. Asettelun (layout) on oltava rows tai timeline.",
         "invalid_text": "Virheellinen tekstin tapa. Tekstin (text) on oltava full, clamp tai fold.",
         "invalid_headings": "Virheelliset otsikot. Otsikoiden (headings) on oltava plain tai fold.",
@@ -15,7 +15,10 @@
         "open_source": "Avaa lähde",
         "bucket_before": "Aiemmat",
         "bucket_now": "Nyt",
-        "bucket_after": "Tulossa"
+        "bucket_after": "Tulossa",
+        "bucket_done": "Tehdyt",
+        "mark_done": "Merkitse tehdyksi",
+        "mark_open": "Merkitse tekemättömäksi"
     },
     "editor": {
         "title": "Otsikko",
@@ -35,7 +38,7 @@
         "lists_helper": "Yhden listan kortti näyttää listan omat ryhmät. Kun listoja on useita, jokainen lista näkyy oman nimensä alla, eikä sen sisällä ole ryhmiä.",
         "entity": "Entiteetti",
         "attribute": "Attribuutti",
-        "attribute_helper": "Attribuutti, jossa listan rivit ovat. Tyhjäksi jätettynä rivit luetaan entiteetin tilasta JSON-muodossa.",
+        "attribute_helper": "Attribuutti, jossa listan rivit ovat. Tyhjäksi jätettynä rivit luetaan entiteetin tilasta JSON-muodossa, tai tehtävälistasta itsestään, jos entiteetti on tehtävälista.",
         "path": "Polku listan riveihin",
         "path_helper": "Vain kun rivit ovat attribuutin sisällä syvemmällä, esimerkiksi data.items.",
         "name": "Nimi",
@@ -58,10 +61,11 @@
         "limit": "Rivejä enintään",
         "limit_helper": "0 näyttää kaikki. Kortti kertoo, montako jätettiin pois.",
         "order": "Näytettävät aikaryhmät järjestyksessä",
-        "order_helper": "Pois jätetyn ryhmän rivejä ei näytetä.",
+        "order_helper": "Pois jätetyn ryhmän rivejä ei näytetä. Tehdyissä ovat tehtävälistan rastitetut tehtävät.",
         "before": "Aiemmat",
         "now": "Nyt",
         "after": "Tulossa",
+        "done": "Tehdyt",
         "bucket_name": "Otsikko",
         "bucket_tone": "Sävy",
         "bucket_days": "Ulottuma päivinä",

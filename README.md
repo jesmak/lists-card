@@ -17,13 +17,15 @@ key of your choosing.
 A custom card for the lists that sensors carry around in their attributes and that no card shows well, such as the
 tasks of a chore app, the notices of a town, the events of a club or the parcels of a shop. You tell the card which entity holds the
 list and which key of an item is its title, its date, its text and so on, and it draws the list. Nothing has to write
-a format of the card's own, and no integration is needed.
+a format of the card's own, and no integration is needed. Home Assistant's own to-do lists are read as they are, with
+a tick on each item.
 
 The items are grouped by their dates into what is over, what is going on today and what is to come, by one of their
 keys, or not at all. One card can show several lists, each under its own name. The look is rows or a timeline with a
 date badge, and an item's text is shown whole, cut to two lines or folded away until you tap the item.
 
-The card shows what its entity holds and remembers nothing itself. It has no buttons that change anything.
+The card shows what its entity holds and remembers nothing itself. The only thing it changes is a to-do item, ticked
+done or open again.
 
 ## Installation
 
@@ -59,20 +61,21 @@ The card shows what its entity holds and remembers nothing itself. It has no but
 
 ### A list
 
-| Name        | Type   | Description                                                                                                                                      | Default                |
-| ----------- | ------ | ------------------------------------------------------------------------------------------------------------------------------------------------ | ---------------------- |
-| `entity`    | string | The entity that holds the list                                                                                                                   | required               |
-| `attribute` | string | The attribute the items are in. Without one they are read from the entity's state, as JSON                                                       |                        |
-| `path`      | string | A path to the items inside the attribute, such as `data.items`, when they aren't at its top                                                      |                        |
-| `name`      | string | The list's heading on a card with several lists                                                                                                  | the entity's name      |
-| `fields`    | object | Which key of an item holds each of the card's fields, as described under [Keys](#keys)                                                           | each field's own name  |
-| `group`     | string | What the list's groups are made from. `time` for its items' dates, `key` for the values of the `group` field, `none` for one list without groups | `time`                 |
-| `limit`     | number | The most items shown. The card says how many were left out. `0` shows them all                                                                   | `0`                    |
-| `order`     | list   | The time groups shown, in order, of `before`, `now` and `after`. The items of one left out aren't shown                                          | `[before, now, after]` |
-| `before`    | object | The group of items that are over, as described under [A time group](#a-time-group)                                                               |                        |
-| `now`       | object | The group of items going on today, and of items with no date                                                                                     |                        |
-| `after`     | object | The group of items still to come                                                                                                                 |                        |
-| `empty`     | string | What the card says when the list has no items                                                                                                    | the card's own text    |
+| Name        | Type   | Description                                                                                                                                      | Default                      |
+| ----------- | ------ | ------------------------------------------------------------------------------------------------------------------------------------------------ | ---------------------------- |
+| `entity`    | string | The entity that holds the list                                                                                                                   | required                     |
+| `attribute` | string | The attribute the items are in. Without one they are read from the entity's state, as JSON, or from a [to-do list](#to-do-lists) itself          |                              |
+| `path`      | string | A path to the items inside the attribute, such as `data.items`, when they aren't at its top                                                      |                              |
+| `name`      | string | The list's heading on a card with several lists                                                                                                  | the entity's name            |
+| `fields`    | object | Which key of an item holds each of the card's fields, as described under [Keys](#keys)                                                           | each field's own name        |
+| `group`     | string | What the list's groups are made from. `time` for its items' dates, `key` for the values of the `group` field, `none` for one list without groups | `time`                       |
+| `limit`     | number | The most items shown. The card says how many were left out. `0` shows them all                                                                   | `0`                          |
+| `order`     | list   | The time groups shown, in order, of `before`, `now`, `after` and `done`. The items of one left out aren't shown                                  | `[before, now, after, done]` |
+| `before`    | object | The group of items that are over, as described under [A time group](#a-time-group)                                                               |                              |
+| `now`       | object | The group of items going on today, and of items with no date                                                                                     |                              |
+| `after`     | object | The group of items still to come                                                                                                                 |                              |
+| `done`      | object | The group of a to-do list's ticked items                                                                                                         |                              |
+| `empty`     | string | What the card says when the list has no items                                                                                                    | the card's own text          |
 
 ### Keys
 
@@ -93,12 +96,12 @@ into the item, such as `attributes.title`.
 
 ### A time group
 
-| Name             | Type    | Description                                                                                                                        | Default              |
-| ---------------- | ------- | ---------------------------------------------------------------------------------------------------------------------------------- | -------------------- |
-| `name`           | string  | The group's heading                                                                                                                | Earlier, Now, Coming |
-| `tone`           | string  | How the group's items are set off. `plain`, `warning`, `highlight` or `dimmed`                                                     | `plain`              |
-| `days`           | number  | How many days back or ahead the group reaches. Items further away are left out                                                     |                      |
-| `farthest_first` | boolean | The items furthest from today first. Usually the nearest come first, the latest of what is over and the soonest of what is to come | `false`              |
+| Name             | Type    | Description                                                                                                                        | Default                      |
+| ---------------- | ------- | ---------------------------------------------------------------------------------------------------------------------------------- | ---------------------------- |
+| `name`           | string  | The group's heading                                                                                                                | Earlier, Now, Coming, Done   |
+| `tone`           | string  | How the group's items are set off. `plain`, `warning`, `highlight` or `dimmed`                                                     | `plain`, for `done` `dimmed` |
+| `days`           | number  | How many days back or ahead the group reaches. Items further away are left out                                                     |                              |
+| `farthest_first` | boolean | The items furthest from today first. Usually the nearest come first, the latest of what is over and the soonest of what is to come | `false`                      |
 
 Every option is in the visual editor, except `height_mode`, `height` and `max_height`, which are set in YAML. In a
 sections view the layout tab sets the card's height. They are for where there is no layout tab, such as a masonry or
@@ -111,15 +114,27 @@ its date, and under them its text. With a link, it has a button that opens the l
 
 ### Groups
 
-A list grouped by time has up to three groups. An item is over when its last day is before today, to come when its
-first day is after today, and going on otherwise, which is where an item with no date goes too. Each group's name,
-tone, reach and order are yours to set, so the same three groups are "Late, Today, Coming" for tasks and "Going on,
-Coming, Over" for events.
+A list grouped by time has up to three groups, and a to-do list a fourth one, `done`. An item is over when its last day
+is before today, to come when its first day is after today, and going on otherwise, which is where an item with no
+date goes too. A ticked to-do item is done, whatever its dates. Each group's name, tone, reach and order are yours to
+set, so the same groups are "Late, Today, Coming" for tasks and "Going on, Coming, Over" for events.
 
 A tone sets a group's items off. `warning` and `highlight` colour the date, `dimmed` fades the whole item, and a past
 day in a `warning` group is written as how long ago it was, such as "3 days ago". On a card with one list whose
 first group has a `warning` or `highlight` tone, the count beside the title is that group's, with its name, such as "2 late". Otherwise it is the
-number of items on the card.
+number of items on the card that aren't done.
+
+### To-do lists
+
+An entity of Home Assistant's own to-do lists, such as `todo.shopping_list`, given with no `attribute`, is read as a
+to-do list. Its items need no keys. An item's summary is its title, its description its text, and the day it is due
+its date. A done item is dated by when it was ticked, where the list keeps that, so `days` in the `done` group says
+for how many days a ticked item stays in sight.
+
+Each item has a round tick before its title. A tap on it ticks the item done or open again, and the item is struck
+through at once. It stays where it is for a moment before it moves, so a tick by mistake can be undone where it was
+made. On a list whose integration lets no item be changed, the tick only shows whether the item is done. To leave the
+done items out, leave `done` out of `order`.
 
 A list grouped by `key` has a group for each value of the `group` field, in the order the values first come up. Items
 without one are together in a group with no heading.
@@ -217,6 +232,27 @@ lists:
     limit: 5
 ```
 
+### A to-do list
+
+What is late first, the most overdue at the top, and what was ticked in the past week dimmed at the bottom.
+
+```yaml
+type: custom:lists-card
+title: Upkeep
+icon: mdi:wrench-clock
+lists:
+  - entity: todo.upkeep
+    before:
+      name: Late
+      tone: warning
+      farthest_first: true
+    now:
+      name: Today
+      tone: highlight
+    done:
+      days: 7
+```
+
 ### A list nested in an answer
 
 A REST sensor that keeps an API's whole answer in an attribute, with the items under `features` and each item's
@@ -260,6 +296,7 @@ The card reads its items from an entity in Home Assistant and fetches nothing it
 - an object whose keys are ids and whose values are the items
 - any of those as JSON text, in an attribute or, with no `attribute` set, in the entity's state
 - a list of plain texts, each then an item's title
+- a to-do list's items, which the card subscribes to, as the entity itself holds only how many are open
 
 A date is one of these. Anything else is not taken for a date, and the item then has none.
 

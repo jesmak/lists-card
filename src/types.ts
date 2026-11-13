@@ -15,9 +15,9 @@ export const HEADINGS: Headings[] = ["plain", "fold"];
 export type Grouping = "time" | "key" | "none";
 export const GROUPINGS: Grouping[] = ["time", "key", "none"];
 
-/** Where an item's dates put it: over, going on today, or still to come. */
-export type Bucket = "before" | "now" | "after";
-export const BUCKETS: Bucket[] = ["before", "now", "after"];
+/** Where an item's dates put it: over, going on today, or still to come. A ticked to-do item is done, whatever its dates. */
+export type Bucket = "before" | "now" | "after" | "done";
+export const BUCKETS: Bucket[] = ["before", "now", "after", "done"];
 
 export type Tone = "plain" | "warning" | "highlight" | "dimmed";
 export const TONES: Tone[] = ["plain", "warning", "highlight", "dimmed"];
@@ -62,6 +62,7 @@ export interface ListConfig {
     before?: BucketConfig;
     now?: BucketConfig;
     after?: BucketConfig;
+    done?: BucketConfig;
     /** The buckets in the order they are shown. One left out is not shown at all. */
     order?: Bucket[];
     /** What the card says when the list has no items, in place of its own text. */
@@ -97,6 +98,21 @@ export interface Item {
     icon?: string;
     link?: string;
     group?: string;
+    /** A to-do item's own id, which ticking it names, and whether it is done. Other items have neither. */
+    uid?: string;
+    done?: boolean;
+}
+
+/** An item of a to-do list, as Home Assistant's `todo/item/subscribe` gives it. */
+export interface TodoItem {
+    uid: string;
+    summary: string;
+    status: "needs_action" | "completed" | null;
+    description?: string | null;
+    /** A day, or a time with its date. */
+    due?: string | null;
+    /** When the item was ticked, where the list keeps it. */
+    completed?: string | null;
 }
 
 /** An item with the bucket its dates put it in, and that bucket's tone. */

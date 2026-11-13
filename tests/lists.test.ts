@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
 
 import type { HassEntity } from "../src/hass";
-import { arrange, bucketOf, dig, parseWhen, plainText, readItems, validList, zoneDay } from "../src/lists";
+import { arrange, bucketOf, dig, isTodoList, parseWhen, plainText, readItems, todoItems, validList, zoneDay } from "../src/lists";
 import type { Bucket, Item, ListConfig } from "../src/types";
 
 const entity = (state: string, attributes: Record<string, unknown> = {}): HassEntity => ({
@@ -11,7 +11,7 @@ const entity = (state: string, attributes: Record<string, unknown> = {}): HassEn
     attributes,
 });
 
-const NAMES: Record<Bucket, string> = { before: "Earlier", now: "Now", after: "Coming" };
+const NAMES: Record<Bucket, string> = { before: "Earlier", now: "Now", after: "Coming", done: "Done" };
 // Noon on 10 March 2026 in UTC, so the day is the same in any zone the tests run in.
 const NOW = Date.UTC(2026, 2, 10, 12);
 const UTC = { timeZone: "UTC" };
@@ -170,6 +170,28 @@ describe("readItems", () => {
     });
 });
 
+describe("to-do lists", () => {
+    it("are entities in the to-do domain with no attribute", () => {
+        expect(isTodoList({ entity: "todo.chores" })).toBe(true);
+        expect(isTodoList({ entity: "todo.chores", attribute: "items" })).toBe(false);
+        expect(isTodoList({ entity: "sensor.chores" })).toBe(false);
+    });
+
+    it("read open items by when they are due and done ones by when they were ticked", () => {
+        const items = todoItems([
+            { uid: "1", summary: " Dishes ", status: "needs_action", due: "2026-03-12", description: "Both sinks." },
+            { uid: "2", summary: "Laundry", status: "completed", due: "2026-03-01", completed: "2026-03-09T18:00:00+00:00" },
+            { uid: "3", summary: "Fix the gate", status: "needs_action", due: "2026-03-10T15:00:00+02:00", description: " " },
+            { uid: "4", summary: "", status: "needs_action" },
+        ]);
+        expect(items).toEqual([
+            { key: "1", uid: "1", title: "Dishes", done: false, text: "Both sinks.", start: { time: Date.UTC(2026, 2, 12), allDay: true } },
+            { key: "2", uid: "2", title: "Laundry", done: true, start: { time: Date.UTC(2026, 2, 9, 18), allDay: false } },
+            { key: "3", uid: "3", title: "Fix the gate", done: false, start: { time: Date.UTC(2026, 2, 10, 13), allDay: false } },
+        ]);
+    });
+});
+
 describe("bucketOf", () => {
     const today = zoneDay(NOW, "UTC");
 
@@ -233,6 +255,26 @@ describe("arrange", () => {
         expect(arranged.groups.map((g) => g.tone)).toEqual(["highlight", "dimmed"]);
         expect(arranged.groups[1].items[0].tone).toBe("dimmed");
         expect(arranged.hidden).toBe(0);
+    });
+
+    it("puts done items in a bucket of their own, dimmed, the latest first, within its reach", () => {
+        const todos = [
+            item("open", "2026-03-08"),
+            item("done long ago", "2026-02-01", undefined, { done: true }),
+            item("done undated", undefined, undefined, { done: true }),
+            item("done yesterday", "2026-03-09", undefined, { done: true }),
+        ];
+        const arranged = arrange(todos, list, NOW, NAMES, UTC);
+        expect(titles(arranged)).toEqual([
+            ["Earlier", ["open"]],
+            ["Done", ["done yesterday", "done long ago", "done undated"]],
+        ]);
+        expect(arranged.groups[1].tone).toBe("dimmed");
+        expect(titles(arrange(todos, { ...list, done: { days: 7, tone: "plain" } }, NOW, NAMES, UTC))[1]).toEqual([
+            "Done",
+            ["done yesterday", "done undated"],
+        ]);
+        expect(titles(arrange(todos, { ...list, order: ["before", "now", "after"] }, NOW, NAMES, UTC))).toEqual([["Earlier", ["open"]]]);
     });
 
     it("turns a bucket round when it asks for the furthest first", () => {

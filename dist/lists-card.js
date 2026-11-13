@@ -1,4 +1,4 @@
-/*! lists-card 1.0.2 | MIT License */
+/*! lists-card 1.1.0 | MIT License */
 var __defProp = Object.defineProperty;
 var __getOwnPropDesc = Object.getOwnPropertyDescriptor;
 var __decorateClass = (decorators, target, key, kind) => {
@@ -711,14 +711,14 @@ var c4 = e5(class extends i5 {
 });
 
 // src/const.ts
-var CARD_VERSION = "1.0.2";
+var CARD_VERSION = "1.1.0";
 
 // src/localize/languages/en.json
 var en_default = {
   common: {
     name: "Lists card",
     description: "Any list an entity holds, such as tasks, events or notices, grouped by time or by a key",
-    invalid_configuration: "Invalid configuration. Each entry under lists needs an entity, group must be time, key or none, limit a whole number, order a list of before, now and after, and a tone plain, warning, highlight or dimmed.",
+    invalid_configuration: "Invalid configuration. Each entry under lists needs an entity, group must be time, key or none, limit a whole number, order a list of before, now, after and done, and a tone plain, warning, highlight or dimmed.",
     invalid_layout: "Invalid layout. Layout must be rows or timeline.",
     invalid_text: "Invalid text mode. Text must be full, clamp or fold.",
     invalid_headings: "Invalid headings. Headings must be plain or fold.",
@@ -731,7 +731,10 @@ var en_default = {
     open_source: "Open the source",
     bucket_before: "Earlier",
     bucket_now: "Now",
-    bucket_after: "Coming"
+    bucket_after: "Coming",
+    bucket_done: "Done",
+    mark_done: "Mark as done",
+    mark_open: "Mark as not done"
   },
   editor: {
     title: "Title",
@@ -751,7 +754,7 @@ var en_default = {
     lists_helper: "A card with one list shows that list's groups. With several lists, each list is shown under its own name instead, with no groups inside it.",
     entity: "Entity",
     attribute: "Attribute",
-    attribute_helper: "The attribute that holds the list's items. Left empty, the items are read from the entity's state as JSON.",
+    attribute_helper: "The attribute that holds the list's items. Left empty, the items are read from the entity's state as JSON, or from the list itself when the entity is a to-do list.",
     path: "Path to the list's items",
     path_helper: "Only when the items are deeper inside the attribute, for example data.items.",
     name: "Name",
@@ -774,10 +777,11 @@ var en_default = {
     limit: "Most items shown",
     limit_helper: "0 shows them all. The card says how many were left out.",
     order: "Time groups shown, in order",
-    order_helper: "The items of a group left out aren't shown.",
+    order_helper: "The items of a group left out aren't shown. Done holds the items ticked on a to-do list.",
     before: "Earlier",
     now: "Now",
     after: "Coming",
+    done: "Done",
     bucket_name: "Heading",
     bucket_tone: "Tone",
     bucket_days: "Reach in days",
@@ -801,7 +805,7 @@ var fi_default = {
   common: {
     name: "Listakortti",
     description: "Mik\xE4 tahansa entiteetin lista, kuten teht\xE4v\xE4t, tapahtumat tai tiedotteet, ryhmiteltyn\xE4 ajan tai avaimen mukaan",
-    invalid_configuration: "Virheelliset asetukset. Jokainen lista kohdassa lists tarvitsee entiteetin (entity). Ryhmittelyn (group) on oltava time, key tai none, rajan (limit) kokonaisluku, j\xE4rjestyksen (order) lista arvoista before, now ja after, ja s\xE4vyn (tone) plain, warning, highlight tai dimmed.",
+    invalid_configuration: "Virheelliset asetukset. Jokainen lista kohdassa lists tarvitsee entiteetin (entity). Ryhmittelyn (group) on oltava time, key tai none, rajan (limit) kokonaisluku, j\xE4rjestyksen (order) lista arvoista before, now, after ja done, ja s\xE4vyn (tone) plain, warning, highlight tai dimmed.",
     invalid_layout: "Virheellinen asettelu. Asettelun (layout) on oltava rows tai timeline.",
     invalid_text: "Virheellinen tekstin tapa. Tekstin (text) on oltava full, clamp tai fold.",
     invalid_headings: "Virheelliset otsikot. Otsikoiden (headings) on oltava plain tai fold.",
@@ -814,7 +818,10 @@ var fi_default = {
     open_source: "Avaa l\xE4hde",
     bucket_before: "Aiemmat",
     bucket_now: "Nyt",
-    bucket_after: "Tulossa"
+    bucket_after: "Tulossa",
+    bucket_done: "Tehdyt",
+    mark_done: "Merkitse tehdyksi",
+    mark_open: "Merkitse tekem\xE4tt\xF6m\xE4ksi"
   },
   editor: {
     title: "Otsikko",
@@ -834,7 +841,7 @@ var fi_default = {
     lists_helper: "Yhden listan kortti n\xE4ytt\xE4\xE4 listan omat ryhm\xE4t. Kun listoja on useita, jokainen lista n\xE4kyy oman nimens\xE4 alla, eik\xE4 sen sis\xE4ll\xE4 ole ryhmi\xE4.",
     entity: "Entiteetti",
     attribute: "Attribuutti",
-    attribute_helper: "Attribuutti, jossa listan rivit ovat. Tyhj\xE4ksi j\xE4tettyn\xE4 rivit luetaan entiteetin tilasta JSON-muodossa.",
+    attribute_helper: "Attribuutti, jossa listan rivit ovat. Tyhj\xE4ksi j\xE4tettyn\xE4 rivit luetaan entiteetin tilasta JSON-muodossa, tai teht\xE4v\xE4listasta itsest\xE4\xE4n, jos entiteetti on teht\xE4v\xE4lista.",
     path: "Polku listan riveihin",
     path_helper: "Vain kun rivit ovat attribuutin sis\xE4ll\xE4 syvemm\xE4ll\xE4, esimerkiksi data.items.",
     name: "Nimi",
@@ -857,10 +864,11 @@ var fi_default = {
     limit: "Rivej\xE4 enint\xE4\xE4n",
     limit_helper: "0 n\xE4ytt\xE4\xE4 kaikki. Kortti kertoo, montako j\xE4tettiin pois.",
     order: "N\xE4ytett\xE4v\xE4t aikaryhm\xE4t j\xE4rjestyksess\xE4",
-    order_helper: "Pois j\xE4tetyn ryhm\xE4n rivej\xE4 ei n\xE4ytet\xE4.",
+    order_helper: "Pois j\xE4tetyn ryhm\xE4n rivej\xE4 ei n\xE4ytet\xE4. Tehdyiss\xE4 ovat teht\xE4v\xE4listan rastitetut teht\xE4v\xE4t.",
     before: "Aiemmat",
     now: "Nyt",
     after: "Tulossa",
+    done: "Tehdyt",
     bucket_name: "Otsikko",
     bucket_tone: "S\xE4vy",
     bucket_days: "Ulottuma p\xE4ivin\xE4",
@@ -901,6 +909,206 @@ function read(table, key) {
 }
 function browserLanguage() {
   return document.documentElement.lang || navigator.language || "en";
+}
+
+// src/types.ts
+var LAYOUTS = ["rows", "timeline"];
+var TEXT_MODES = ["full", "clamp", "fold"];
+var HEADINGS = ["plain", "fold"];
+var GROUPINGS = ["time", "key", "none"];
+var BUCKETS = ["before", "now", "after", "done"];
+var TONES = ["plain", "warning", "highlight", "dimmed"];
+var FIELDS = ["title", "text", "start", "end", "label", "icon", "link", "group", "id"];
+
+// src/lists.ts
+var DAY_MS = 864e5;
+var DEFAULT_TONES = { before: "plain", now: "plain", after: "plain", done: "dimmed" };
+function dig(value, path) {
+  if (!path) {
+    return value;
+  }
+  for (const part of path.split(".")) {
+    if (value === null || typeof value !== "object") {
+      return void 0;
+    }
+    value = value[part];
+  }
+  return value;
+}
+function parsed(value) {
+  if (typeof value !== "string") {
+    return value;
+  }
+  try {
+    return JSON.parse(value);
+  } catch {
+    return void 0;
+  }
+}
+function parseWhen(value) {
+  if (typeof value === "number") {
+    return Number.isFinite(value) ? { time: value < 1e11 ? value * 1e3 : value, allDay: false } : void 0;
+  }
+  if (typeof value !== "string") {
+    return void 0;
+  }
+  const text2 = value.trim();
+  const day = /^(\d{4})-(\d{2})-(\d{2})$/.exec(text2) ?? /^(\d{1,2})\.(\d{1,2})\.(\d{4})$/.exec(text2);
+  if (day) {
+    const [year, month, date] = day[1].length === 4 ? [day[1], day[2], day[3]] : [day[3], day[2], day[1]];
+    const time2 = Date.UTC(Number(year), Number(month) - 1, Number(date));
+    return new Date(time2).getUTCDate() === Number(date) ? { time: time2, allDay: true } : void 0;
+  }
+  const time = /\d{4}/.test(text2) ? Date.parse(text2) : NaN;
+  return Number.isNaN(time) ? void 0 : { time, allDay: false };
+}
+function plainText(value) {
+  if (!/[<&]/.test(value)) {
+    return value.replace(/\s+/g, " ").trim();
+  }
+  const spaced = value.replace(/<\/(p|div|li|h\d|tr)>|<br\s*\/?>/gi, " $&");
+  const text2 = new DOMParser().parseFromString(spaced, "text/html").body.textContent ?? "";
+  return text2.replace(/\s+/g, " ").trim();
+}
+function text(value) {
+  if (typeof value === "number" && Number.isFinite(value)) {
+    return String(value);
+  }
+  return typeof value === "string" && value.trim() ? value.trim() : void 0;
+}
+function webLink(value) {
+  const link = text(value);
+  if (!link) {
+    return void 0;
+  }
+  try {
+    return ["http:", "https:"].includes(new URL(link).protocol) ? link : void 0;
+  } catch {
+    return void 0;
+  }
+}
+function readItem(raw, fields, fallbackId) {
+  const source = raw !== null && typeof raw === "object" ? raw : { [fields.title ?? "title"]: raw };
+  const field = (name) => dig(source, fields[name] ?? name);
+  const title = text(field("title"));
+  if (!title) {
+    return void 0;
+  }
+  const item = { key: "", title: plainText(title) };
+  const body = text(field("text"));
+  if (body) {
+    item.text = plainText(body);
+  }
+  item.start = parseWhen(field("start"));
+  item.end = parseWhen(field("end"));
+  item.label = text(field("label"));
+  item.icon = text(field("icon"));
+  item.link = webLink(field("link"));
+  item.group = text(field("group"));
+  item.key = text(field("id")) ?? fallbackId ?? [item.title, item.start?.time ?? "", item.end?.time ?? ""].join("|");
+  return item;
+}
+function readItems(state, list) {
+  if (!state) {
+    return void 0;
+  }
+  const source = dig(parsed(list.attribute ? state.attributes[list.attribute] : state.state), list.path);
+  if (source === null || typeof source !== "object") {
+    return void 0;
+  }
+  const fields = list.fields ?? {};
+  const items = Array.isArray(source) ? source.map((raw) => readItem(raw, fields, void 0)) : Object.entries(source).map(([id, raw]) => readItem(raw, fields, id));
+  const seen = /* @__PURE__ */ new Map();
+  return items.filter((item) => item !== void 0).map((item) => {
+    const count = seen.get(item.key) ?? 0;
+    seen.set(item.key, count + 1);
+    return count === 0 ? item : { ...item, key: `${item.key} #${count + 1}` };
+  });
+}
+function isTodoList(list) {
+  return list.entity.startsWith("todo.") && !list.attribute;
+}
+function todoItems(items) {
+  return items.filter((todo) => typeof todo.summary === "string" && todo.summary.trim()).map((todo) => {
+    const done = todo.status === "completed";
+    const item = { key: todo.uid, uid: todo.uid, title: todo.summary.trim(), done };
+    if (todo.description?.trim()) {
+      item.text = todo.description.trim();
+    }
+    item.start = parseWhen(done ? todo.completed : todo.due);
+    return item;
+  });
+}
+function zoneDay(time, timeZone) {
+  const parts = new Intl.DateTimeFormat("en-CA", { timeZone, year: "numeric", month: "2-digit", day: "2-digit" }).formatToParts(time);
+  const part = (type) => Number(parts.find((p4) => p4.type === type)?.value);
+  return Date.UTC(part("year"), part("month") - 1, part("day")) / DAY_MS;
+}
+var dayOf = (when, timeZone) => when.allDay ? Math.round(when.time / DAY_MS) : zoneDay(when.time, timeZone);
+function span(item, timeZone) {
+  const start = item.start ?? item.end;
+  const end = item.end ?? item.start;
+  return start && end ? [dayOf(start, timeZone), dayOf(end, timeZone)] : void 0;
+}
+function bucketOf(item, today, timeZone) {
+  if (item.done) {
+    return "done";
+  }
+  const days = span(item, timeZone);
+  if (!days) {
+    return "now";
+  }
+  return days[1] < today ? "before" : days[0] > today ? "after" : "now";
+}
+function validList(list) {
+  const config = list;
+  const bucket = (value) => {
+    const b3 = value;
+    return b3 == null || typeof b3 === "object" && (b3.tone == null || TONES.includes(b3.tone)) && (b3.days == null || count(b3.days)) && (b3.farthest_first == null || typeof b3.farthest_first === "boolean");
+  };
+  const count = (value) => typeof value === "number" && Number.isInteger(value) && value >= 0;
+  const textOrUnset = (value) => value == null || typeof value === "string";
+  return config !== null && typeof config === "object" && typeof config.entity === "string" && config.entity !== "" && textOrUnset(config.attribute) && textOrUnset(config.path) && textOrUnset(config.name) && textOrUnset(config.empty) && (config.fields == null || typeof config.fields === "object" && Object.values(config.fields).every(textOrUnset)) && (config.group == null || GROUPINGS.includes(config.group)) && (config.limit == null || count(config.limit)) && (config.order == null || Array.isArray(config.order) && config.order.every((b3) => BUCKETS.includes(b3))) && bucket(config.before) && bucket(config.now) && bucket(config.after) && bucket(config.done);
+}
+function arrange(items, list, now, names, { timeZone, whole = false } = {}) {
+  const today = zoneDay(now, timeZone);
+  const order = list.order?.length ? list.order : BUCKETS;
+  const placed = [];
+  items.forEach((item, index) => {
+    const bucket = bucketOf(item, today, timeZone);
+    const days = span(item, timeZone);
+    const past = bucket === "before" || bucket === "done";
+    const away = !days || bucket === "now" ? 0 : past ? today - days[1] : days[0] - today;
+    const reach = list[bucket]?.days;
+    if (!order.includes(bucket) || reach != null && away > reach) {
+      return;
+    }
+    const nearest = past && days ? -(item.end ?? item.start).time : (item.start ?? item.end)?.time ?? 0;
+    const near = list[bucket]?.farthest_first ? -nearest : nearest;
+    const tone = list[bucket]?.tone ?? DEFAULT_TONES[bucket];
+    placed.push({ item: { ...item, bucket, tone }, index, near: days ? near : 0, undated: !days });
+  });
+  placed.sort(
+    (a3, b3) => order.indexOf(a3.item.bucket) - order.indexOf(b3.item.bucket) || Number(a3.undated) - Number(b3.undated) || a3.near - b3.near || a3.index - b3.index
+  );
+  const shown = (list.limit ? placed.slice(0, list.limit) : placed).map(({ item }) => item);
+  const grouping = whole ? "none" : list.group ?? "time";
+  const groups = [];
+  if (grouping === "none") {
+    groups.push({ key: "all", tone: "plain", items: shown });
+  } else {
+    for (const item of shown) {
+      const key = grouping === "time" ? item.bucket : item.group ?? "";
+      let group = groups.find((g2) => g2.key === key);
+      if (!group) {
+        const name = grouping === "time" ? list[item.bucket]?.name || names[item.bucket] : item.group;
+        group = { key, name, tone: grouping === "time" ? item.tone : "plain", items: [] };
+        groups.push(group);
+      }
+      group.items.push(item);
+    }
+  }
+  return { groups: groups.filter((group) => group.items.length > 0), hidden: placed.length - shown.length };
 }
 
 // src/height.ts
@@ -1002,15 +1210,6 @@ function tidyRowStep(config) {
   return tidied;
 }
 
-// src/types.ts
-var LAYOUTS = ["rows", "timeline"];
-var TEXT_MODES = ["full", "clamp", "fold"];
-var HEADINGS = ["plain", "fold"];
-var GROUPINGS = ["time", "key", "none"];
-var BUCKETS = ["before", "now", "after"];
-var TONES = ["plain", "warning", "highlight", "dimmed"];
-var FIELDS = ["title", "text", "start", "end", "label", "icon", "link", "group", "id"];
-
 // src/editor.ts
 var DEFAULTS = { layout: "rows", text: "clamp", headings: "plain" };
 var LIST_DEFAULTS = { group: "time", limit: 0 };
@@ -1103,6 +1302,7 @@ function listsSchema(text2) {
             before: bucket("before"),
             now: bucket("now"),
             after: bucket("after"),
+            done: bucket("done"),
             empty: { label: text2("editor.empty"), selector: { text: {} } }
           }
         }
@@ -1142,7 +1342,7 @@ function tidyList(list) {
   }
   for (const bucket of BUCKETS) {
     const config = tidy(list[bucket]);
-    if (config && !(Object.keys(config).length === 1 && config.tone === "plain")) {
+    if (config && !(Object.keys(config).length === 1 && config.tone === DEFAULT_TONES[bucket])) {
       tidied[bucket] = config;
     }
   }
@@ -1332,178 +1532,9 @@ var ScrollFade = class {
   }
 };
 
-// src/lists.ts
-var DAY_MS = 864e5;
-function dig(value, path) {
-  if (!path) {
-    return value;
-  }
-  for (const part of path.split(".")) {
-    if (value === null || typeof value !== "object") {
-      return void 0;
-    }
-    value = value[part];
-  }
-  return value;
-}
-function parsed(value) {
-  if (typeof value !== "string") {
-    return value;
-  }
-  try {
-    return JSON.parse(value);
-  } catch {
-    return void 0;
-  }
-}
-function parseWhen(value) {
-  if (typeof value === "number") {
-    return Number.isFinite(value) ? { time: value < 1e11 ? value * 1e3 : value, allDay: false } : void 0;
-  }
-  if (typeof value !== "string") {
-    return void 0;
-  }
-  const text2 = value.trim();
-  const day = /^(\d{4})-(\d{2})-(\d{2})$/.exec(text2) ?? /^(\d{1,2})\.(\d{1,2})\.(\d{4})$/.exec(text2);
-  if (day) {
-    const [year, month, date] = day[1].length === 4 ? [day[1], day[2], day[3]] : [day[3], day[2], day[1]];
-    const time2 = Date.UTC(Number(year), Number(month) - 1, Number(date));
-    return new Date(time2).getUTCDate() === Number(date) ? { time: time2, allDay: true } : void 0;
-  }
-  const time = /\d{4}/.test(text2) ? Date.parse(text2) : NaN;
-  return Number.isNaN(time) ? void 0 : { time, allDay: false };
-}
-function plainText(value) {
-  if (!/[<&]/.test(value)) {
-    return value.replace(/\s+/g, " ").trim();
-  }
-  const spaced = value.replace(/<\/(p|div|li|h\d|tr)>|<br\s*\/?>/gi, " $&");
-  const text2 = new DOMParser().parseFromString(spaced, "text/html").body.textContent ?? "";
-  return text2.replace(/\s+/g, " ").trim();
-}
-function text(value) {
-  if (typeof value === "number" && Number.isFinite(value)) {
-    return String(value);
-  }
-  return typeof value === "string" && value.trim() ? value.trim() : void 0;
-}
-function webLink(value) {
-  const link = text(value);
-  if (!link) {
-    return void 0;
-  }
-  try {
-    return ["http:", "https:"].includes(new URL(link).protocol) ? link : void 0;
-  } catch {
-    return void 0;
-  }
-}
-function readItem(raw, fields, fallbackId) {
-  const source = raw !== null && typeof raw === "object" ? raw : { [fields.title ?? "title"]: raw };
-  const field = (name) => dig(source, fields[name] ?? name);
-  const title = text(field("title"));
-  if (!title) {
-    return void 0;
-  }
-  const item = { key: "", title: plainText(title) };
-  const body = text(field("text"));
-  if (body) {
-    item.text = plainText(body);
-  }
-  item.start = parseWhen(field("start"));
-  item.end = parseWhen(field("end"));
-  item.label = text(field("label"));
-  item.icon = text(field("icon"));
-  item.link = webLink(field("link"));
-  item.group = text(field("group"));
-  item.key = text(field("id")) ?? fallbackId ?? [item.title, item.start?.time ?? "", item.end?.time ?? ""].join("|");
-  return item;
-}
-function readItems(state, list) {
-  if (!state) {
-    return void 0;
-  }
-  const source = dig(parsed(list.attribute ? state.attributes[list.attribute] : state.state), list.path);
-  if (source === null || typeof source !== "object") {
-    return void 0;
-  }
-  const fields = list.fields ?? {};
-  const items = Array.isArray(source) ? source.map((raw) => readItem(raw, fields, void 0)) : Object.entries(source).map(([id, raw]) => readItem(raw, fields, id));
-  const seen = /* @__PURE__ */ new Map();
-  return items.filter((item) => item !== void 0).map((item) => {
-    const count = seen.get(item.key) ?? 0;
-    seen.set(item.key, count + 1);
-    return count === 0 ? item : { ...item, key: `${item.key} #${count + 1}` };
-  });
-}
-function zoneDay(time, timeZone) {
-  const parts = new Intl.DateTimeFormat("en-CA", { timeZone, year: "numeric", month: "2-digit", day: "2-digit" }).formatToParts(time);
-  const part = (type) => Number(parts.find((p4) => p4.type === type)?.value);
-  return Date.UTC(part("year"), part("month") - 1, part("day")) / DAY_MS;
-}
-var dayOf = (when, timeZone) => when.allDay ? Math.round(when.time / DAY_MS) : zoneDay(when.time, timeZone);
-function span(item, timeZone) {
-  const start = item.start ?? item.end;
-  const end = item.end ?? item.start;
-  return start && end ? [dayOf(start, timeZone), dayOf(end, timeZone)] : void 0;
-}
-function bucketOf(item, today, timeZone) {
-  const days = span(item, timeZone);
-  if (!days) {
-    return "now";
-  }
-  return days[1] < today ? "before" : days[0] > today ? "after" : "now";
-}
-function validList(list) {
-  const config = list;
-  const bucket = (value) => {
-    const b3 = value;
-    return b3 == null || typeof b3 === "object" && (b3.tone == null || TONES.includes(b3.tone)) && (b3.days == null || count(b3.days)) && (b3.farthest_first == null || typeof b3.farthest_first === "boolean");
-  };
-  const count = (value) => typeof value === "number" && Number.isInteger(value) && value >= 0;
-  const textOrUnset = (value) => value == null || typeof value === "string";
-  return config !== null && typeof config === "object" && typeof config.entity === "string" && config.entity !== "" && textOrUnset(config.attribute) && textOrUnset(config.path) && textOrUnset(config.name) && textOrUnset(config.empty) && (config.fields == null || typeof config.fields === "object" && Object.values(config.fields).every(textOrUnset)) && (config.group == null || GROUPINGS.includes(config.group)) && (config.limit == null || count(config.limit)) && (config.order == null || Array.isArray(config.order) && config.order.every((b3) => BUCKETS.includes(b3))) && bucket(config.before) && bucket(config.now) && bucket(config.after);
-}
-function arrange(items, list, now, names, { timeZone, whole = false } = {}) {
-  const today = zoneDay(now, timeZone);
-  const order = list.order?.length ? list.order : BUCKETS;
-  const placed = [];
-  items.forEach((item, index) => {
-    const bucket = bucketOf(item, today, timeZone);
-    const days = span(item, timeZone);
-    const away = !days || bucket === "now" ? 0 : bucket === "before" ? today - days[1] : days[0] - today;
-    const reach = list[bucket]?.days;
-    if (!order.includes(bucket) || reach != null && away > reach) {
-      return;
-    }
-    const nearest = bucket === "before" ? -(item.end ?? item.start).time : (item.start ?? item.end)?.time ?? 0;
-    const near = list[bucket]?.farthest_first ? -nearest : nearest;
-    placed.push({ item: { ...item, bucket, tone: list[bucket]?.tone ?? "plain" }, index, near: days ? near : 0, undated: !days });
-  });
-  placed.sort(
-    (a3, b3) => order.indexOf(a3.item.bucket) - order.indexOf(b3.item.bucket) || Number(a3.undated) - Number(b3.undated) || a3.near - b3.near || a3.index - b3.index
-  );
-  const shown = (list.limit ? placed.slice(0, list.limit) : placed).map(({ item }) => item);
-  const grouping = whole ? "none" : list.group ?? "time";
-  const groups = [];
-  if (grouping === "none") {
-    groups.push({ key: "all", tone: "plain", items: shown });
-  } else {
-    for (const item of shown) {
-      const key = grouping === "time" ? item.bucket : item.group ?? "";
-      let group = groups.find((g2) => g2.key === key);
-      if (!group) {
-        const name = grouping === "time" ? list[item.bucket]?.name || names[item.bucket] : item.group;
-        group = { key, name, tone: grouping === "time" ? item.tone : "plain", items: [] };
-        groups.push(group);
-      }
-      group.items.push(item);
-    }
-  }
-  return { groups: groups.filter((group) => group.items.length > 0), hidden: placed.length - shown.length };
-}
-
 // src/lists-card.ts
+var TICK_HOLD_MS = 1e3;
+var UPDATE_TODO_ITEM = 4;
 var LIST_TOP_PX = 4;
 var HEADER_PX = 44;
 var HEADING_PX = 24;
@@ -1546,6 +1577,11 @@ var ListsCard = class extends i4 {
     this.sliding = false;
     this.filled = 0;
     this.spare = 0;
+    this.todos = /* @__PURE__ */ new Map();
+    this.failed = /* @__PURE__ */ new Set();
+    this.ticking = /* @__PURE__ */ new Map();
+    this.subscriptions = /* @__PURE__ */ new Map();
+    this.tickTimers = /* @__PURE__ */ new Map();
     this.lists = [];
     this.slid = (event) => {
       const fold = event.target;
@@ -1563,7 +1599,7 @@ var ListsCard = class extends i4 {
   static getConfigElement() {
     return document.createElement("lists-card-editor");
   }
-  /** The first entity with a list of objects in an attribute, with the key that looks most like a title. */
+  /** The first entity with a list of objects in an attribute, with the key that looks most like a title, else the first to-do list. */
   static getStubConfig(hass) {
     for (const entity of Object.values(hass?.states ?? {})) {
       for (const [attribute, value] of Object.entries(entity?.attributes ?? {})) {
@@ -1578,7 +1614,8 @@ var ListsCard = class extends i4 {
         }
       }
     }
-    return { lists: [] };
+    const todo = Object.keys(hass?.states ?? {}).find((entity) => entity.startsWith("todo."));
+    return { lists: todo ? [{ entity: todo }] : [] };
   }
   setConfig(config) {
     const invalid = (key) => new Error(translate(browserLanguage(), `common.${key}`));
@@ -1642,6 +1679,43 @@ var ListsCard = class extends i4 {
     this.sliding = false;
     this.resizes?.disconnect();
     cancelAnimationFrame(this.frame ?? 0);
+    this.watchTodos();
+    this.tickTimers.forEach((timer) => window.clearTimeout(timer));
+    this.tickTimers.clear();
+    this.ticking = /* @__PURE__ */ new Map();
+  }
+  /**
+   * Subscribes to the items of each to-do list on the card while it is on the page, and lets go of those it no longer
+   * shows. Home Assistant sends a list's items whole, at once and on every change.
+   */
+  watchTodos() {
+    const connection = this.isConnected ? this.hass?.connection : void 0;
+    const wanted = new Set(connection ? (this.config?.lists ?? []).filter(isTodoList).map((list) => list.entity) : []);
+    for (const [entity, subscription] of this.subscriptions) {
+      if (!wanted.has(entity)) {
+        this.subscriptions.delete(entity);
+        subscription.then((unsubscribe) => unsubscribe()).catch(() => void 0);
+        this.todos.delete(entity);
+        this.failed.delete(entity);
+      }
+    }
+    for (const entity of wanted) {
+      if (this.subscriptions.has(entity)) {
+        continue;
+      }
+      const subscription = connection.subscribeMessage(
+        (message) => {
+          this.todos = new Map(this.todos).set(entity, Array.isArray(message?.items) ? message.items : []);
+        },
+        { type: "todo/item/subscribe", entity_id: entity }
+      );
+      subscription.catch(() => {
+        if (this.subscriptions.get(entity) === subscription) {
+          this.failed = new Set(this.failed).add(entity);
+        }
+      });
+      this.subscriptions.set(entity, subscription);
+    }
   }
   /** The items change buckets when the day does, with no change in any entity, so the card is drawn again then. */
   watchDay() {
@@ -1672,16 +1746,64 @@ var ListsCard = class extends i4 {
     if (!this.hass || !this.config) {
       return;
     }
-    const names = Object.fromEntries(
-      ["before", "now", "after"].map((bucket) => [bucket, this.text(`common.bucket_${bucket}`)])
-    );
+    this.watchTodos();
+    const names = Object.fromEntries(BUCKETS.map((bucket) => [bucket, this.text(`common.bucket_${bucket}`)]));
     const whole = this.config.lists.length > 1;
     this.lists = this.config.lists.map((config) => {
       const entity = this.hass?.states[config.entity];
       const name = config.name || entity && this.hass?.formatEntityName?.(entity, [{ type: "device" }, { type: "entity" }]) || entity?.attributes.friendly_name || config.entity;
-      const items = readItems(entity, config);
-      return { config, name, arranged: items && arrange(items, config, Date.now(), names, { timeZone: this.timeZone(), whole }) };
+      const todo = isTodoList(config);
+      const items = todo ? this.todoItems(config.entity) : readItems(entity, config);
+      const loading = todo && !items && !this.failed.has(config.entity);
+      const arranged = items && arrange(items, config, Date.now(), names, { timeZone: this.timeZone(), whole });
+      return { config, name, arranged, loading };
     });
+  }
+  /** A to-do list's items, those just ticked still where they were, or undefined until they have come. */
+  todoItems(entity) {
+    const raw = this.todos.get(entity);
+    return raw && todoItems(raw.map((todo) => this.ticking.get(`${entity} ${todo.uid}`)?.held ?? todo));
+  }
+  /** Whether the item is shown done: as it was just ticked, or as its list has it. */
+  shownDone(list, item) {
+    return this.ticking.get(`${list.entity} ${item.uid}`)?.to ?? Boolean(item.done);
+  }
+  canTick(list) {
+    const features = Number(this.hass?.states[list.entity]?.attributes.supported_features ?? 0);
+    return Boolean(this.hass?.callService) && (features & UPDATE_TODO_ITEM) !== 0;
+  }
+  /** Ticks an item done, or open again. It is shown so at once, and keeps its place a moment before it moves. */
+  async tick(list, item) {
+    const key = `${list.entity} ${item.uid}`;
+    const current = this.ticking.get(key);
+    const held = current?.held ?? this.todos.get(list.entity)?.find((todo) => todo.uid === item.uid);
+    if (!held) {
+      return;
+    }
+    const to = !(current?.to ?? Boolean(item.done));
+    this.ticking = new Map(this.ticking).set(key, { held, to });
+    window.clearTimeout(this.tickTimers.get(key));
+    this.tickTimers.set(
+      key,
+      window.setTimeout(() => this.settle(key), TICK_HOLD_MS)
+    );
+    try {
+      await this.hass?.callService?.(
+        "todo",
+        "update_item",
+        { item: item.uid, status: to ? "completed" : "needs_action" },
+        { entity_id: list.entity }
+      );
+    } catch {
+      this.settle(key);
+    }
+  }
+  settle(key) {
+    window.clearTimeout(this.tickTimers.get(key));
+    this.tickTimers.delete(key);
+    const ticking = new Map(this.ticking);
+    ticking.delete(key);
+    this.ticking = ticking;
   }
   updated() {
     if (!this.isConnected) {
@@ -1721,11 +1843,11 @@ var ListsCard = class extends i4 {
   }
   /**
    * Beside the title: how many items the first group has, with its name, when its tone says it matters, as "2 late"
-   * does. Otherwise the number of items on the card.
+   * does. Otherwise the number of items on the card that aren't done.
    */
   pill() {
     const groups = this.lists.flatMap((list) => list.arranged?.groups ?? []);
-    const count = groups.reduce((sum, group) => sum + group.items.length, 0);
+    const count = groups.reduce((sum, group) => sum + group.items.filter((item) => item.bucket !== "done").length, 0);
     if (count === 0) {
       return A;
     }
@@ -1737,6 +1859,9 @@ var ListsCard = class extends i4 {
   }
   /** One list on the card: its groups are the card's groups. */
   listGroups(list, index) {
+    if (list.loading) {
+      return A;
+    }
     const groups = list.arranged?.groups ?? [];
     if (groups.length === 0) {
       return b2`<div class="empty">${this.emptyText(list)}</div>`;
@@ -1747,7 +1872,7 @@ var ListsCard = class extends i4 {
   listAsGroup(list, index) {
     const items = list.arranged?.groups.flatMap((group2) => group2.items) ?? [];
     const group = { key: "list", name: list.name, tone: "plain", items };
-    const rest = items.length === 0 ? b2`<div class="empty">${this.emptyText(list)}</div>` : this.more(list);
+    const rest = list.loading ? A : items.length === 0 ? b2`<div class="empty">${this.emptyText(list)}</div>` : this.more(list);
     return this.group(group, `${index} list`, index, rest);
   }
   emptyText(list) {
@@ -1765,7 +1890,7 @@ var ListsCard = class extends i4 {
             ${c4(
       group.items,
       (item) => item.key,
-      (item) => this.item(item, `${list} ${item.key}`)
+      (item) => this.item(item, `${list} ${item.key}`, this.lists[list].config)
     )}
         </div>`;
     if (group.name === void 0) {
@@ -1788,11 +1913,13 @@ var ListsCard = class extends i4 {
             ${this.fold(open, b2`${items}${rest}`)}
         </div>`;
   }
-  item(item, key) {
+  item(item, key, list) {
     const mode = this.textMode();
     const open = this.opened.has(key);
     const can = Boolean(item.text) && (mode === "fold" || mode === "clamp" && (open || this.cut.has(key)));
-    const classes = ["item", this.layoutMode(), `tone-${item.tone}`, open && "open", can && "can"].filter(Boolean).join(" ");
+    const done = item.uid !== void 0 && this.shownDone(list, item);
+    const classes = ["item", this.layoutMode(), `tone-${item.tone}`, open && "open", can && "can", done && "done"].filter(Boolean).join(" ");
+    const tick = item.uid === void 0 ? A : this.tickBox(list, item, done);
     const cover = can ? b2`<button
                   class="cover"
                   aria-label=${item.title}
@@ -1815,7 +1942,7 @@ var ListsCard = class extends i4 {
       return b2`<div class=${classes}>
                 ${cover} ${this.badge(item)}
                 <div class="body">
-                    <div class="ti" title=${item.title}>${this.icon(item, "ti-icon")}${item.title}</div>
+                    <div class="ti" title=${item.title}>${tick}${this.icon(item, "ti-icon")}${item.title}</div>
                     ${line} ${mode === "fold" ? this.fold(open, text2) : text2}
                 </div>
                 ${actions}
@@ -1825,7 +1952,7 @@ var ListsCard = class extends i4 {
     return b2`<div class=${classes}>
             ${cover}
             <div class="line">
-                <span class="ic">${this.icon(item)}</span>
+                <span class="ic">${tick === A ? this.icon(item) : tick}</span>
                 <span class="ti" title=${item.title}
                     >${item.title}${folded && !open && item.label ? b2`<span class="inl"> · ${item.label}</span>` : A}</span
                 >
@@ -1833,6 +1960,23 @@ var ListsCard = class extends i4 {
             </div>
             ${folded ? this.fold(open, b2`<div class="sub">${label}${text2}</div>`) : label !== A || text2 !== A ? b2`<div class="sub">${label}${text2}</div>` : A}
         </div>`;
+  }
+  /** A to-do item's round tick. On a list that can't be changed it only shows whether the item is done. */
+  tickBox(list, item, done) {
+    const icon = b2`<ha-icon icon="mdi:check"></ha-icon>`;
+    if (!this.canTick(list)) {
+      return b2`<span class="tick ${done ? "on" : ""}">${icon}</span>`;
+    }
+    return b2`<button
+            class="tick ${done ? "on" : ""}"
+            role="checkbox"
+            aria-checked=${done ? "true" : "false"}
+            aria-label=${item.title}
+            title=${this.text(done ? "common.mark_open" : "common.mark_done")}
+            @click=${() => this.tick(list, item)}
+        >
+            ${icon}
+        </button>`;
   }
   icon(item, classes = "") {
     if (!item.icon) {
@@ -2023,7 +2167,7 @@ var ListsCard = class extends i4 {
     return this.filled ? `${style}; --lc-spare: ${this.spare}px` : style;
   }
   cardClass() {
-    const icons = this.lists.some((list) => list.arranged?.groups.some((group) => group.items.some((item) => item.icon)));
+    const icons = this.lists.some((list) => list.arranged?.groups.some((group) => group.items.some((item) => item.icon || item.uid)));
     return [this.heightStyle() && "held", this.sliding && "sliding", !icons && "no-icons"].filter(Boolean).join(" ");
   }
   text(key, values = {}) {
@@ -2213,7 +2357,8 @@ var ListsCard = class extends i4 {
                     pointer-events: none;
                 }
 
-                .item .src {
+                .item .src,
+                .item .tick {
                     pointer-events: auto;
                 }
 
@@ -2311,6 +2456,57 @@ var ListsCard = class extends i4 {
                     border-radius: 50%;
                     color: var(--secondary-text-color);
                     --mdc-icon-size: 18px;
+                }
+
+                /* A to-do item's tick: a ring, filled in the highlight colour once done. It lies over the tap that opens the item. */
+                .tick {
+                    position: relative;
+                    flex: none;
+                    box-sizing: border-box;
+                    display: inline-grid;
+                    place-items: center;
+                    width: 20px;
+                    height: 20px;
+                    margin: 2px;
+                    padding: 0;
+                    border: 2px solid var(--secondary-text-color);
+                    border-radius: 50%;
+                    background: none;
+                    color: var(--card-background-color, #fff);
+                    font: inherit;
+                    vertical-align: top;
+                    --mdc-icon-size: 15px;
+                }
+
+                button.tick {
+                    cursor: pointer;
+                }
+
+                button.tick:focus-visible {
+                    outline: 2px solid var(--primary-color);
+                    outline-offset: 2px;
+                }
+
+                .tick ha-icon {
+                    visibility: hidden;
+                }
+
+                .tick.on {
+                    border-color: var(--lc-highlight);
+                    background: var(--lc-highlight);
+                }
+
+                .tick.on ha-icon {
+                    visibility: visible;
+                }
+
+                /* In the timeline the tick is before the title, in its line's height. */
+                .timeline .ti .tick {
+                    margin: -2px 8px -2px 0;
+                }
+
+                .done .ti {
+                    text-decoration: line-through;
                 }
 
                 .src:hover {
@@ -2551,6 +2747,15 @@ __decorateClass([
 __decorateClass([
   r5()
 ], ListsCard.prototype, "spare", 2);
+__decorateClass([
+  r5()
+], ListsCard.prototype, "todos", 2);
+__decorateClass([
+  r5()
+], ListsCard.prototype, "failed", 2);
+__decorateClass([
+  r5()
+], ListsCard.prototype, "ticking", 2);
 if (!customElements.get("lists-card")) {
   customElements.define("lists-card", ListsCard);
   console.info(

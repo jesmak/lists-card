@@ -242,6 +242,150 @@ describe("when an item is", () => {
     });
 });
 
+describe("a to-do list", () => {
+    /** A connection that hands each subscription's callback out, so a test can send the list's items. */
+    function todoHass(features = 127) {
+        const send = new Map<string, (message: unknown) => void>();
+        const unsubscribed: string[] = [];
+        const callService = vi.fn(async () => undefined);
+        const hass: HomeAssistant = {
+            ...hassWith({
+                entity_id: "todo.chores",
+                state: "2",
+                last_changed: "",
+                attributes: { friendly_name: "Chores", supported_features: features },
+            }),
+            connection: {
+                subscribeMessage: async <T>(callback: (message: T) => void, message: Record<string, unknown>) => {
+                    expect(message.type).toBe("todo/item/subscribe");
+                    const entity = message.entity_id as string;
+                    send.set(entity, callback as (message: unknown) => void);
+                    return async () => {
+                        unsubscribed.push(entity);
+                    };
+                },
+            },
+            callService,
+        };
+        return { hass, send, unsubscribed, callService };
+    }
+
+    const ITEMS = {
+        items: [
+            { uid: "a", summary: "Dishes", status: "needs_action", due: day(-1) },
+            { uid: "b", summary: "Laundry", status: "needs_action" },
+            { uid: "c", summary: "Plants", status: "completed", completed: new Date().toISOString() },
+        ],
+    };
+
+    async function todoCard(features?: number) {
+        const todo = todoHass(features);
+        const element = await card(todo.hass, { lists: [{ entity: "todo.chores", before: { name: "Late", tone: "warning" } }] });
+        todo.send.get("todo.chores")!(ITEMS);
+        await element.updateComplete;
+        return { ...todo, element };
+    }
+
+    const ticks = (element: ListsCard) => [...element.shadowRoot!.querySelectorAll<HTMLElement>(".tick")];
+
+    it("shows nothing until its items come, then each with a round tick, the done ones struck through in their own group", async () => {
+        const todo = todoHass();
+        const element = await card(todo.hass, { lists: [{ entity: "todo.chores" }] });
+        expect(texts(element, ".item, .empty")).toEqual([]);
+        todo.send.get("todo.chores")!(ITEMS);
+        await element.updateComplete;
+        expect(texts(element, ".gh")).toEqual(["Earlier", "Now", "Done"]);
+        expect(texts(element, ".ti")).toEqual(["Dishes", "Laundry", "Plants"]);
+        expect(ticks(element).map((t) => t.getAttribute("aria-checked"))).toEqual(["false", "false", "true"]);
+        expect([...element.shadowRoot!.querySelectorAll(".item")].map((e) => e.className)).toEqual([
+            "item rows tone-plain",
+            "item rows tone-plain",
+            "item rows tone-dimmed done",
+        ]);
+    });
+
+    it("doesn't count what is done in the pill", async () => {
+        const { element } = await todoCard();
+        element.setConfig({ type: "custom:lists-card", title: "Chores", lists: [{ entity: "todo.chores" }] });
+        await element.updateComplete;
+        expect(texts(element, ".pill")).toEqual(["2"]);
+    });
+
+    it("ticks an item done at once, and moves it to the done group only a moment later", async () => {
+        vi.useFakeTimers({ toFake: ["setTimeout", "clearTimeout"] });
+        const { element, callService, send } = await todoCard();
+        ticks(element)[0].click();
+        await element.updateComplete;
+        expect(callService).toHaveBeenCalledWith("todo", "update_item", { item: "a", status: "completed" }, { entity_id: "todo.chores" });
+        // Home Assistant sends the list as it now is, and the ticked item keeps its place and its date until the moment is over.
+        const ticked = new Date(Date.now() + 1000).toISOString();
+        send.get("todo.chores")!({ items: ITEMS.items.map((i) => (i.uid === "a" ? { ...i, status: "completed", completed: ticked } : i)) });
+        await element.updateComplete;
+        expect(texts(element, ".gh")).toEqual(["Late", "Now", "Done"]);
+        expect(texts(element, ".when")[0]).toBe("yesterday");
+        expect(element.shadowRoot!.querySelectorAll(".item")[0].classList.contains("done")).toBe(true);
+        vi.advanceTimersByTime(1000);
+        await element.updateComplete;
+        expect(texts(element, ".gh")).toEqual(["Now", "Done"]);
+        expect(texts(element, ".ti")).toEqual(["Laundry", "Dishes", "Plants"]);
+    });
+
+    it("unticks a done item, and a tick undone in time leaves the item where it was", async () => {
+        vi.useFakeTimers({ toFake: ["setTimeout", "clearTimeout"] });
+        const { element, callService } = await todoCard();
+        ticks(element)[2].click();
+        await element.updateComplete;
+        expect(callService).toHaveBeenLastCalledWith(
+            "todo",
+            "update_item",
+            { item: "c", status: "needs_action" },
+            { entity_id: "todo.chores" },
+        );
+        ticks(element)[2].click();
+        await element.updateComplete;
+        expect(callService).toHaveBeenLastCalledWith(
+            "todo",
+            "update_item",
+            { item: "c", status: "completed" },
+            { entity_id: "todo.chores" },
+        );
+        vi.advanceTimersByTime(1000);
+        await element.updateComplete;
+        expect(texts(element, ".gh")).toEqual(["Late", "Now", "Done"]);
+    });
+
+    it("shows a tick that can't be pressed when the list can't be changed", async () => {
+        const { element } = await todoCard(0);
+        expect(ticks(element).map((t) => t.tagName)).toEqual(["SPAN", "SPAN", "SPAN"]);
+    });
+
+    it("puts the tick before the title in the timeline", async () => {
+        const { element } = await todoCard();
+        element.setConfig({ type: "custom:lists-card", layout: "timeline", lists: [{ entity: "todo.chores" }] });
+        await element.updateComplete;
+        expect(element.shadowRoot!.querySelectorAll(".ti .tick")).toHaveLength(3);
+    });
+
+    it("lets go of its list when it leaves the page or no longer shows it", async () => {
+        const { element, unsubscribed } = await todoCard();
+        element.setConfig({ type: "custom:lists-card", lists: [CHORES] });
+        await element.updateComplete;
+        await Promise.resolve();
+        expect(unsubscribed).toEqual(["todo.chores"]);
+    });
+
+    it("says it found no list when the subscription is refused", async () => {
+        const hass: HomeAssistant = {
+            ...hassWith(),
+            connection: { subscribeMessage: () => Promise.reject(new Error("not found")) },
+        };
+        const element = await card(hass, { lists: [{ entity: "todo.missing" }] });
+        await new Promise((resolve) => setTimeout(resolve));
+        await element.updateComplete;
+        expect(texts(element, ".empty")).toEqual(["No list found in todo.missing."]);
+    });
+});
+
 describe("the configuration", () => {
     const set = (config: Record<string, unknown>) => () =>
         (document.createElement("lists-card") as ListsCard).setConfig({
@@ -271,5 +415,12 @@ describe("the configuration", () => {
             ),
         );
         expect(stub).toEqual({ lists: [{ entity: "sensor.news", attribute: "items", fields: { title: "name" } }] });
+    });
+
+    it("starts from the first to-do list when no entity holds a list in an attribute", () => {
+        const stub = (customElements.get("lists-card") as unknown as typeof ListsCard).getStubConfig(
+            hassWith(sensor("sensor.temperature", "Temperature", {}), sensor("todo.shopping", "Shopping", {})),
+        );
+        expect(stub).toEqual({ lists: [{ entity: "todo.shopping" }] });
     });
 });

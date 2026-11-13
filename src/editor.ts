@@ -9,6 +9,7 @@ import { customElement, property, state } from "lit/decorators.js";
 
 import type { HomeAssistant } from "./hass";
 import { browserLanguage, translate } from "./localize/localize";
+import { DEFAULT_TONES } from "./lists";
 import { rowStepData, rowStepSchema, tidyRowStep } from "./rows";
 import { BUCKETS, FIELDS, GROUPINGS, HEADINGS, LAYOUTS, TEXT_MODES, TONES } from "./types";
 import type { BucketConfig, FieldMap, ListConfig, ListsCardConfig } from "./types";
@@ -114,6 +115,7 @@ function listsSchema(text: Text) {
                         before: bucket("before"),
                         now: bucket("now"),
                         after: bucket("after"),
+                        done: bucket("done"),
                         empty: { label: text("editor.empty"), selector: { text: {} } },
                     },
                 },
@@ -162,7 +164,7 @@ export function tidyList(list: ListConfig): ListConfig {
     }
     for (const bucket of BUCKETS) {
         const config = tidy<BucketConfig>(list[bucket]);
-        if (config && !(Object.keys(config).length === 1 && config.tone === "plain")) {
+        if (config && !(Object.keys(config).length === 1 && config.tone === DEFAULT_TONES[bucket])) {
             tidied[bucket] = config;
         }
     }

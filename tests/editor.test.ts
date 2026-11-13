@@ -10,7 +10,7 @@ describe("formData", () => {
         const data = formData({ type: TYPE, title: null as unknown as string, lists: [{ entity: "sensor.chores", limit: 3 }] });
         expect(data).toMatchObject({ layout: "rows", text: "clamp", headings: "plain" });
         expect(data).not.toHaveProperty("title");
-        expect(data.lists).toEqual([{ entity: "sensor.chores", group: "time", limit: 3, order: ["before", "now", "after"] }]);
+        expect(data.lists).toEqual([{ entity: "sensor.chores", group: "time", limit: 3, order: ["before", "now", "after", "done"] }]);
     });
 });
 
@@ -25,10 +25,11 @@ describe("tidyList", () => {
                 fields: { title: "name", text: "", start: undefined },
                 group: "time",
                 limit: 0,
-                order: ["before", "now", "after"],
+                order: ["before", "now", "after", "done"],
                 before: { name: "", tone: "plain", farthest_first: false },
                 now: { name: "Today", tone: "highlight" },
                 after: { days: 0, farthest_first: true },
+                done: { tone: "dimmed" },
                 empty: "",
             }),
         ).toEqual({
@@ -37,6 +38,14 @@ describe("tidyList", () => {
             fields: { title: "name" },
             now: { name: "Today", tone: "highlight" },
             after: { days: 0, farthest_first: true },
+        });
+    });
+
+    it("keeps a done bucket's tone only when it isn't dimmed, which is that bucket's default", () => {
+        expect(tidyList({ entity: "todo.chores", done: { tone: "plain" } })).toEqual({ entity: "todo.chores", done: { tone: "plain" } });
+        expect(tidyList({ entity: "todo.chores", before: { tone: "dimmed" } })).toEqual({
+            entity: "todo.chores",
+            before: { tone: "dimmed" },
         });
     });
 
@@ -60,7 +69,7 @@ describe("configFromForm", () => {
             text: "fold",
             headings: "plain",
             row_step: "full",
-            lists: [{ entity: "sensor.chores", group: "time", limit: 0, order: ["before", "now", "after"] }, { entity: "" }],
+            lists: [{ entity: "sensor.chores", group: "time", limit: 0, order: ["before", "now", "after", "done"] }, { entity: "" }],
         } as unknown as ListsCardConfig;
         expect(configFromForm(form)).toEqual({
             type: TYPE,

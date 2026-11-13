@@ -24,6 +24,7 @@ export interface HomeAssistant {
     config?: { time_zone?: string };
     connection?: Connection;
     callWS?<T>(message: Record<string, unknown>): Promise<T>;
+    callService?(domain: string, service: string, data?: Record<string, unknown>, target?: Record<string, unknown>): Promise<unknown>;
     formatEntityName?(state: HassEntity, parts: NamePart[]): string;
 }
 

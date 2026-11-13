@@ -2,7 +2,7 @@
     "common": {
         "name": "Lists card",
         "description": "Any list an entity holds, such as tasks, events or notices, grouped by time or by a key",
-        "invalid_configuration": "Invalid configuration. Each entry under lists needs an entity, group must be time, key or none, limit a whole number, order a list of before, now and after, and a tone plain, warning, highlight or dimmed.",
+        "invalid_configuration": "Invalid configuration. Each entry under lists needs an entity, group must be time, key or none, limit a whole number, order a list of before, now, after and done, and a tone plain, warning, highlight or dimmed.",
         "invalid_layout": "Invalid layout. Layout must be rows or timeline.",
         "invalid_text": "Invalid text mode. Text must be full, clamp or fold.",
         "invalid_headings": "Invalid headings. Headings must be plain or fold.",
@@ -15,7 +15,10 @@
         "open_source": "Open the source",
         "bucket_before": "Earlier",
         "bucket_now": "Now",
-        "bucket_after": "Coming"
+        "bucket_after": "Coming",
+        "bucket_done": "Done",
+        "mark_done": "Mark as done",
+        "mark_open": "Mark as not done"
     },
     "editor": {
         "title": "Title",
@@ -35,7 +38,7 @@
         "lists_helper": "A card with one list shows that list's groups. With several lists, each list is shown under its own name instead, with no groups inside it.",
         "entity": "Entity",
         "attribute": "Attribute",
-        "attribute_helper": "The attribute that holds the list's items. Left empty, the items are read from the entity's state as JSON.",
+        "attribute_helper": "The attribute that holds the list's items. Left empty, the items are read from the entity's state as JSON, or from the list itself when the entity is a to-do list.",
         "path": "Path to the list's items",
         "path_helper": "Only when the items are deeper inside the attribute, for example data.items.",
         "name": "Name",
@@ -58,10 +61,11 @@
         "limit": "Most items shown",
         "limit_helper": "0 shows them all. The card says how many were left out.",
         "order": "Time groups shown, in order",
-        "order_helper": "The items of a group left out aren't shown.",
+        "order_helper": "The items of a group left out aren't shown. Done holds the items ticked on a to-do list.",
         "before": "Earlier",
         "now": "Now",
         "after": "Coming",
+        "done": "Done",
         "bucket_name": "Heading",
         "bucket_tone": "Tone",
         "bucket_days": "Reach in days",

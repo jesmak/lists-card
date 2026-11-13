@@ -3,13 +3,17 @@
  *
  * The items are a list of objects in an attribute, a list nested deeper inside it, an object keyed by id, or any of
  * those as JSON text in an attribute or in the state. Which of an item's keys the card reads is set per list. Arranged,
- * the items are in their buckets' order (over, going on today, to come), cut to the list's limit, and split into groups.
+ * the items are in their buckets' order (over, going on today, to come, done), cut to the list's limit, and split into groups.
+ * A to-do list's items come from Home Assistant's own subscription instead, as the entity holds only their count.
  */
 import type { HassEntity } from "./hass";
 import { BUCKETS, GROUPINGS, TONES } from "./types";
-import type { Arranged, Bucket, FieldMap, Group, Item, ListConfig, Placed, Tone, When } from "./types";
+import type { Arranged, Bucket, FieldMap, Group, Item, ListConfig, Placed, TodoItem, Tone, When } from "./types";
 
 const DAY_MS = 86_400_000;
+
+/** A bucket's tone when its list sets none. What is done is dimmed. */
+export const DEFAULT_TONES: Record<Bucket, Tone> = { before: "plain", now: "plain", after: "plain", done: "dimmed" };
 
 /** The value at a dotted path, such as `data.items` or `attributes.title`. A number steps into a list. */
 export function dig(value: unknown, path: string | undefined): unknown {
@@ -141,6 +145,26 @@ export function readItems(state: HassEntity | undefined, list: ListConfig): Item
         });
 }
 
+/** A list of an entity in the to-do domain with no attribute given, whose items the card subscribes to. */
+export function isTodoList(list: ListConfig): boolean {
+    return list.entity.startsWith("todo.") && !list.attribute;
+}
+
+/** A to-do list's items: open ones dated by when they are due, done ones by when they were ticked. */
+export function todoItems(items: TodoItem[]): Item[] {
+    return items
+        .filter((todo) => typeof todo.summary === "string" && todo.summary.trim())
+        .map((todo) => {
+            const done = todo.status === "completed";
+            const item: Item = { key: todo.uid, uid: todo.uid, title: todo.summary.trim(), done };
+            if (todo.description?.trim()) {
+                item.text = todo.description.trim();
+            }
+            item.start = parseWhen(done ? todo.completed : todo.due);
+            return item;
+        });
+}
+
 /** A time's day in a time zone, the browser's when none is given, as days since the epoch. */
 export function zoneDay(time: number, timeZone?: string): number {
     const parts = new Intl.DateTimeFormat("en-CA", { timeZone, year: "numeric", month: "2-digit", day: "2-digit" }).formatToParts(time);
@@ -157,8 +181,14 @@ function span(item: Item, timeZone?: string): [number, number] | undefined {
     return start && end ? [dayOf(start, timeZone), dayOf(end, timeZone)] : undefined;
 }
 
-/** Over when its last day is before today, to come when its first is after, otherwise going on. An item with no date is going on. */
+/**
+ * Over when its last day is before today, to come when its first is after, otherwise going on. An item with no date is
+ * going on. A done item is done, whatever its dates.
+ */
 export function bucketOf(item: Item, today: number, timeZone?: string): Bucket {
+    if (item.done) {
+        return "done";
+    }
     const days = span(item, timeZone);
     if (!days) {
         return "now";
@@ -195,7 +225,8 @@ export function validList(list: unknown): list is ListConfig {
         (config.order == null || (Array.isArray(config.order) && config.order.every((b) => BUCKETS.includes(b)))) &&
         bucket(config.before) &&
         bucket(config.now) &&
-        bucket(config.after)
+        bucket(config.after) &&
+        bucket(config.done)
     );
 }
 
@@ -218,16 +249,19 @@ export function arrange(
     items.forEach((item, index) => {
         const bucket = bucketOf(item, today, timeZone);
         const days = span(item, timeZone);
-        const away = !days || bucket === "now" ? 0 : bucket === "before" ? today - days[1] : days[0] - today;
+        // Done items are dated by when they were ticked, so they are counted back from today as what is over is.
+        const past = bucket === "before" || bucket === "done";
+        const away = !days || bucket === "now" ? 0 : past ? today - days[1] : days[0] - today;
         const reach = list[bucket]?.days;
         if (!order.includes(bucket) || (reach != null && away > reach)) {
             return;
         }
-        // Within a bucket: what is over by its end, the latest first, the rest by their start, the soonest first. A bucket
+        // Within a bucket: what is over or done by its end, the latest first, the rest by their start, the soonest first. A bucket
         // may turn that round. Items with no date come after the dated ones either way, in the source's order.
-        const nearest = bucket === "before" ? -(item.end ?? item.start)!.time : ((item.start ?? item.end)?.time ?? 0);
+        const nearest = past && days ? -(item.end ?? item.start)!.time : ((item.start ?? item.end)?.time ?? 0);
         const near = list[bucket]?.farthest_first ? -nearest : nearest;
-        placed.push({ item: { ...item, bucket, tone: list[bucket]?.tone ?? "plain" }, index, near: days ? near : 0, undated: !days });
+        const tone = list[bucket]?.tone ?? DEFAULT_TONES[bucket];
+        placed.push({ item: { ...item, bucket, tone }, index, near: days ? near : 0, undated: !days });
     });
     placed.sort(
         (a, b) =>
