@@ -67,7 +67,31 @@ const bucketsOf = (kind: ListKind) => (kind === "todo" ? BUCKETS : BUCKETS.filte
  * The fields of one list's page, those its kind can use. A field inside an object selector takes its helper from
  * `description`, as ha-form's computeHelper doesn't reach it.
  */
-export function listSchema(kind: ListKind, text: Text) {
+/**
+ * The attributes of an entity that can't hold a list as they are now: those that are neither a list nor an object, nor
+ * text that reads as JSON. An object stays on offer, as a list may be deeper inside it, reached with a path. Only the
+ * value at the moment is known, so an attribute that is empty now is left out too, and the picker takes a name typed in.
+ */
+export function notListAttributes(attributes: Record<string, unknown> | undefined): string[] {
+    const holdsList = (value: unknown) => {
+        if (value !== null && typeof value === "object") {
+            return true;
+        }
+        if (typeof value !== "string" || !/^\s*[[{]/.test(value)) {
+            return false;
+        }
+        try {
+            return typeof JSON.parse(value) === "object";
+        } catch {
+            return false;
+        }
+    };
+    return Object.entries(attributes ?? {})
+        .filter(([, value]) => !holdsList(value))
+        .map(([name]) => name);
+}
+
+export function listSchema(kind: ListKind, text: Text, hiddenAttributes: string[] = []) {
     const bucket = (name: string) => ({
         name,
         selector: {
@@ -95,7 +119,12 @@ export function listSchema(kind: ListKind, text: Text) {
         ...(kind === "calendar" ? [{ name: "entities", selector: { entity: { multiple: true, filter: { domain: "calendar" } } } }] : []),
         ...(kind === "attribute"
             ? [
-                  { name: "attribute", selector: { text: {} } },
+                  // Home Assistant's own attribute picker, offering the attributes of the entity picked above.
+                  {
+                      name: "attribute",
+                      selector: { attribute: { hide_attributes: hiddenAttributes } },
+                      context: { filter_entity: "entity" },
+                  },
                   { name: "path", selector: { text: {} } },
               ]
             : []),
@@ -307,7 +336,17 @@ export class ListsCardEditor extends LitElement {
                 <ha-icon class="kind" icon=${KIND_ICONS[listKind(list)]}></ha-icon>
                 <div class="page-title">${name}</div>
             </div>
-            ${this.form(listFormData(list), listSchema(listKind(list), text), changed, listKind(list))}
+            ${this.form(
+                listFormData(list),
+                listSchema(
+                    listKind(list),
+                    text,
+                    // The list's own attribute stays on offer even when it holds nothing at the moment.
+                    notListAttributes(this.hass?.states[list.entity]?.attributes).filter((name) => name !== list.attribute),
+                ),
+                changed,
+                listKind(list),
+            )}
         `;
     }
 

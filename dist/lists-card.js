@@ -1364,7 +1364,23 @@ function listKind(list) {
   return "attribute";
 }
 var bucketsOf = (kind) => kind === "todo" ? BUCKETS : BUCKETS.filter((bucket) => bucket !== "done");
-function listSchema(kind, text2) {
+function notListAttributes(attributes) {
+  const holdsList = (value) => {
+    if (value !== null && typeof value === "object") {
+      return true;
+    }
+    if (typeof value !== "string" || !/^\s*[[{]/.test(value)) {
+      return false;
+    }
+    try {
+      return typeof JSON.parse(value) === "object";
+    } catch {
+      return false;
+    }
+  };
+  return Object.entries(attributes ?? {}).filter(([, value]) => !holdsList(value)).map(([name]) => name);
+}
+function listSchema(kind, text2, hiddenAttributes = []) {
   const bucket = (name) => ({
     name,
     selector: {
@@ -1391,7 +1407,12 @@ function listSchema(kind, text2) {
     { name: "entity", required: true, selector: { entity: {} } },
     ...kind === "calendar" ? [{ name: "entities", selector: { entity: { multiple: true, filter: { domain: "calendar" } } } }] : [],
     ...kind === "attribute" ? [
-      { name: "attribute", selector: { text: {} } },
+      // Home Assistant's own attribute picker, offering the attributes of the entity picked above.
+      {
+        name: "attribute",
+        selector: { attribute: { hide_attributes: hiddenAttributes } },
+        context: { filter_entity: "entity" }
+      },
       { name: "path", selector: { text: {} } }
     ] : [],
     { name: "name", selector: { text: {} } },
@@ -1585,7 +1606,17 @@ var ListsCardEditor = class extends i4 {
                 <ha-icon class="kind" icon=${KIND_ICONS[listKind(list)]}></ha-icon>
                 <div class="page-title">${name}</div>
             </div>
-            ${this.form(listFormData(list), listSchema(listKind(list), text2), changed, listKind(list))}
+            ${this.form(
+      listFormData(list),
+      listSchema(
+        listKind(list),
+        text2,
+        // The list's own attribute stays on offer even when it holds nothing at the moment.
+        notListAttributes(this.hass?.states[list.entity]?.attributes).filter((name2) => name2 !== list.attribute)
+      ),
+      changed,
+      listKind(list)
+    )}
         `;
   }
   lists() {

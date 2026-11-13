@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 
-import { configFromForm, formData, listFormData, listKind, listSchema, tidyList } from "../src/editor";
+import { configFromForm, formData, listFormData, listKind, listSchema, notListAttributes, tidyList } from "../src/editor";
 import type { ListsCardConfig } from "../src/types";
 
 const TYPE = "custom:lists-card";
@@ -48,6 +48,26 @@ describe("a list's page", () => {
             ).selector.select.options.map((option) => option.value);
         expect(groupings("calendar")).toEqual(["time", "month", "none"]);
         expect(groupings("attribute")).toEqual(["time", "key", "month", "none"]);
+    });
+
+    it("offers the picked entity's attributes that can hold a list, and hides the rest", () => {
+        expect(
+            notListAttributes({
+                friendly_name: "Chores",
+                icon: "mdi:broom",
+                count: 3,
+                tasks: [{ title: "Dishes" }],
+                answer: { features: [] },
+                as_json: '[{"title": "Laundry"}]',
+                not_json: "[nope",
+            }),
+        ).toEqual(["friendly_name", "icon", "count", "not_json"]);
+        const attribute = listSchema("attribute", text, ["friendly_name"]).find((entry) => entry.name === "attribute") as unknown as {
+            selector: { attribute: { hide_attributes: string[] } };
+            context: { filter_entity: string };
+        };
+        expect(attribute.selector.attribute.hide_attributes).toEqual(["friendly_name"]);
+        expect(attribute.context.filter_entity).toBe("entity");
     });
 
     it("shows the time groups its kind has as the default order", () => {
