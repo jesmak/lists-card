@@ -1,7 +1,7 @@
 /**
  * The card's visual editor: the title and its icon, the layout, how an item's text is shown, the group headings, the
  * lists with their sources, keys, grouping and buckets, and how the card rounds its height to the rows of a sections
- * view. Its height mode is set in YAML only.
+ * view, and what the card may change on its to-do lists. Its height mode is set in YAML only.
  */
 import { LitElement, css, html, nothing } from "lit";
 import type { CSSResultGroup, TemplateResult } from "lit";
@@ -11,7 +11,7 @@ import type { HomeAssistant } from "./hass";
 import { browserLanguage, translate } from "./localize/localize";
 import { DEFAULT_TONES } from "./lists";
 import { rowStepData, rowStepSchema, tidyRowStep } from "./rows";
-import { BUCKETS, FIELDS, GROUPINGS, HEADINGS, LAYOUTS, TEXT_MODES, TONES } from "./types";
+import { BUCKETS, EDITING, FIELDS, GROUPINGS, HEADINGS, LAYOUTS, TEXT_MODES, TONES } from "./types";
 import type { BucketConfig, FieldMap, ListConfig, ListsCardConfig } from "./types";
 
 interface SchemaEntry {
@@ -20,7 +20,7 @@ interface SchemaEntry {
 
 type Text = (key: string) => string;
 
-const DEFAULTS: Record<string, unknown> = { layout: "rows", text: "clamp", headings: "plain" };
+const DEFAULTS: Record<string, unknown> = { layout: "rows", text: "clamp", headings: "plain", editing: "full" };
 const LIST_DEFAULTS: Record<string, unknown> = { group: "time", limit: 0 };
 
 const select = (name: string, values: readonly string[], text: Text) => ({
@@ -41,6 +41,7 @@ function lookSchema(text: Text) {
         { name: "layout", selector: { select: select("layout", LAYOUTS, text) } },
         { name: "text", selector: { select: select("text", TEXT_MODES, text) } },
         { name: "headings", selector: { select: select("headings", HEADINGS, text) } },
+        { name: "editing", selector: { select: select("editing", EDITING, text) } },
     ];
 }
 

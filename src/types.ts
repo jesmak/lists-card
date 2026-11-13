@@ -11,6 +11,10 @@ export const TEXT_MODES: TextMode[] = ["full", "clamp", "fold"];
 export type Headings = "plain" | "fold";
 export const HEADINGS: Headings[] = ["plain", "fold"];
 
+/** What a card may change on its to-do lists. */
+export type Editing = "full" | "tick" | "none";
+export const EDITING: Editing[] = ["full", "tick", "none"];
+
 /** What a list's groups are made from: its items' dates, one of their keys, or nothing. */
 export type Grouping = "time" | "key" | "none";
 export const GROUPINGS: Grouping[] = ["time", "key", "none"];
@@ -77,6 +81,8 @@ export interface ListsCardConfig extends LovelaceCardConfig, RowStepConfig {
     layout?: Layout;
     text?: TextMode;
     headings?: Headings;
+    /** What the card may change on a to-do list: everything, only whether an item is ticked, or nothing. */
+    editing?: Editing;
 }
 
 /** A date of an item: an instant, or a whole day held as that day's midnight in UTC. */

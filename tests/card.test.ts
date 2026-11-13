@@ -247,7 +247,8 @@ describe("a to-do list", () => {
     function todoHass(features = 127) {
         const send = new Map<string, (message: unknown) => void>();
         const unsubscribed: string[] = [];
-        const callService = vi.fn(async () => undefined);
+        const callService = vi.fn<(...args: unknown[]) => Promise<undefined>>(async () => undefined);
+        const callWS = vi.fn<(...args: unknown[]) => Promise<undefined>>(async () => undefined);
         const hass: HomeAssistant = {
             ...hassWith({
                 entity_id: "todo.chores",
@@ -266,8 +267,9 @@ describe("a to-do list", () => {
                 },
             },
             callService,
+            callWS: callWS as unknown as HomeAssistant["callWS"],
         };
-        return { hass, send, unsubscribed, callService };
+        return { hass, send, unsubscribed, callService, callWS };
     }
 
     const ITEMS = {
@@ -294,13 +296,13 @@ describe("a to-do list", () => {
         expect(texts(element, ".item, .empty")).toEqual([]);
         todo.send.get("todo.chores")!(ITEMS);
         await element.updateComplete;
-        expect(texts(element, ".gh")).toEqual(["Earlier", "Now", "Done"]);
+        expect(texts(element, ".gh-name")).toEqual(["Earlier", "Now", "Ticked"]);
         expect(texts(element, ".ti")).toEqual(["Dishes", "Laundry", "Plants"]);
         expect(ticks(element).map((t) => t.getAttribute("aria-checked"))).toEqual(["false", "false", "true"]);
         expect([...element.shadowRoot!.querySelectorAll(".item")].map((e) => e.className)).toEqual([
-            "item rows tone-plain",
-            "item rows tone-plain",
-            "item rows tone-dimmed done",
+            "item can rows tone-plain",
+            "item can rows tone-plain",
+            "item can rows tone-dimmed done",
         ]);
     });
 
@@ -321,12 +323,12 @@ describe("a to-do list", () => {
         const ticked = new Date(Date.now() + 1000).toISOString();
         send.get("todo.chores")!({ items: ITEMS.items.map((i) => (i.uid === "a" ? { ...i, status: "completed", completed: ticked } : i)) });
         await element.updateComplete;
-        expect(texts(element, ".gh")).toEqual(["Late", "Now", "Done"]);
+        expect(texts(element, ".gh-name")).toEqual(["Late", "Now", "Ticked"]);
         expect(texts(element, ".when")[0]).toBe("yesterday");
         expect(element.shadowRoot!.querySelectorAll(".item")[0].classList.contains("done")).toBe(true);
         vi.advanceTimersByTime(1000);
         await element.updateComplete;
-        expect(texts(element, ".gh")).toEqual(["Now", "Done"]);
+        expect(texts(element, ".gh-name")).toEqual(["Now", "Ticked"]);
         expect(texts(element, ".ti")).toEqual(["Laundry", "Dishes", "Plants"]);
     });
 
@@ -351,7 +353,7 @@ describe("a to-do list", () => {
         );
         vi.advanceTimersByTime(1000);
         await element.updateComplete;
-        expect(texts(element, ".gh")).toEqual(["Late", "Now", "Done"]);
+        expect(texts(element, ".gh-name")).toEqual(["Late", "Now", "Ticked"]);
     });
 
     it("shows a tick that can't be pressed when the list can't be changed", async () => {
@@ -386,6 +388,177 @@ describe("a to-do list", () => {
     });
 });
 
+describe("editing a to-do list", () => {
+    const LIST = {
+        items: [
+            { uid: "a", summary: "Dishes", status: "needs_action", due: day(-1), description: "Both sinks." },
+            { uid: "b", summary: "Laundry", status: "needs_action" },
+            { uid: "x", summary: "Gutters", status: "needs_action", due: day(3) },
+            { uid: "c", summary: "Plants", status: "needs_action" },
+            { uid: "d", summary: "Windows", status: "completed", completed: new Date().toISOString() },
+            { uid: "e", summary: "Sauna", status: "completed", completed: new Date().toISOString() },
+        ],
+    };
+
+    async function editable(config: Partial<ListsCardConfig> = {}, features = 127) {
+        const send = new Map<string, (message: unknown) => void>();
+        const callService = vi.fn<(...args: unknown[]) => Promise<undefined>>(async () => undefined);
+        const callWS = vi.fn<(...args: unknown[]) => Promise<undefined>>(async () => undefined);
+        const hass: HomeAssistant = {
+            ...hassWith({
+                entity_id: "todo.chores",
+                state: "3",
+                last_changed: "",
+                attributes: { friendly_name: "Chores", supported_features: features },
+            }),
+            connection: {
+                subscribeMessage: async <T>(callback: (message: T) => void, message: Record<string, unknown>) => {
+                    send.set(message.entity_id as string, callback as (message: unknown) => void);
+                    return async () => undefined;
+                },
+            },
+            callService,
+            callWS: callWS as unknown as HomeAssistant["callWS"],
+        };
+        const element = await card(hass, { title: "Chores", lists: [{ entity: "todo.chores" }], ...config });
+        send.get("todo.chores")!(LIST);
+        await element.updateComplete;
+        return { element, callService, callWS };
+    }
+
+    const root = (element: ListsCard) => element.shadowRoot!;
+    const typeInto = async (element: ListsCard, selector: string, value: string) => {
+        const input = root(element).querySelector<HTMLInputElement>(selector)!;
+        input.value = value;
+        input.dispatchEvent(new Event("input"));
+        await element.updateComplete;
+    };
+    const press = async (element: ListsCard, text: string) => {
+        [...root(element).querySelectorAll<HTMLButtonElement>(".editor button, .gh button, .clear-row button")]
+            .find((b) => b.textContent!.trim() === text)!
+            .click();
+        await element.updateComplete;
+    };
+    const openItem = async (element: ListsCard, title: string) => {
+        [...root(element).querySelectorAll<HTMLButtonElement>(".cover")]
+            .find((b) => b.getAttribute("aria-label")!.endsWith(title))!
+            .click();
+        await element.updateComplete;
+    };
+
+    it("adds an item from the header's +, with a day, and closes the editor once Home Assistant takes it", async () => {
+        const { element, callService } = await editable();
+        root(element).querySelector<HTMLButtonElement>(".hd-add")!.click();
+        await element.updateComplete;
+        expect(root(element).querySelector(".item.new .editor")).not.toBeNull();
+        await typeInto(element, ".f-title", "  Vacuum ");
+        await typeInto(element, ".f-day", "2026-12-01");
+        await press(element, "Add");
+        await new Promise((resolve) => setTimeout(resolve));
+        await element.updateComplete;
+        expect(callService).toHaveBeenCalledWith(
+            "todo",
+            "add_item",
+            { item: "Vacuum", due_date: "2026-12-01" },
+            { entity_id: "todo.chores" },
+        );
+        expect(root(element).querySelector(".editor")).toBeNull();
+    });
+
+    it("opens an item on a tap, and saves its changes, a day taken away as null", async () => {
+        const { element, callService } = await editable();
+        await openItem(element, "Dishes");
+        expect(root(element).querySelector<HTMLInputElement>(".f-title")!.value).toBe("Dishes");
+        expect(root(element).querySelector<HTMLTextAreaElement>(".f-text")!.value).toBe("Both sinks.");
+        await typeInto(element, ".f-title", "Dishes and pans");
+        // The day's clear button.
+        root(element).querySelector<HTMLButtonElement>(".when-row .ibtn")!.click();
+        await element.updateComplete;
+        await press(element, "Save");
+        expect(callService).toHaveBeenLastCalledWith(
+            "todo",
+            "update_item",
+            { item: "a", rename: "Dishes and pans", description: "Both sinks.", due_date: null },
+            { entity_id: "todo.chores" },
+        );
+    });
+
+    it("keeps the editor open and says so when a change doesn't go through", async () => {
+        const { element, callService } = await editable();
+        callService.mockRejectedValueOnce(new Error("nope"));
+        await openItem(element, "Laundry");
+        await press(element, "Save");
+        await element.updateComplete;
+        expect(texts(element, ".failed")).toEqual(["The change didn't go through. Try again."]);
+    });
+
+    it("deletes the open item", async () => {
+        const { element, callService } = await editable();
+        await openItem(element, "Laundry");
+        await press(element, "Delete");
+        expect(callService).toHaveBeenCalledWith("todo", "remove_item", { item: ["b"] }, { entity_id: "todo.chores" });
+    });
+
+    it("moves an item with no day one row up or down among those without one", async () => {
+        const { element, callWS } = await editable();
+        await openItem(element, "Plants");
+        const buttons = () => [...root(element).querySelectorAll<HTMLButtonElement>(".btns .ibtn")];
+        expect(buttons().map((b) => [b.title, b.disabled])).toEqual([
+            ["Move up", false],
+            ["Move down", true],
+        ]);
+        buttons()[0].click();
+        // Before Laundry, so after Dishes, which is before it in the whole list.
+        expect(callWS).toHaveBeenCalledWith({ type: "todo/item/move", entity_id: "todo.chores", uid: "c", previous_uid: "a" });
+        await openItem(element, "Gutters");
+        expect(buttons()).toHaveLength(0);
+    });
+
+    it("asks before it deletes what is done", async () => {
+        const { element, callService } = await editable();
+        await press(element, "Delete ticked");
+        expect(texts(element, ".asking > span")).toEqual(["Delete 2 ticked?"]);
+        await press(element, "Cancel");
+        expect(callService).not.toHaveBeenCalled();
+        await press(element, "Delete ticked");
+        await press(element, "Delete");
+        expect(callService).toHaveBeenCalledWith("todo", "remove_item", { item: ["d", "e"] }, { entity_id: "todo.chores" });
+    });
+
+    it("asks about a single done item in the singular", async () => {
+        const { element } = await editable();
+        element.setConfig({ type: "custom:lists-card", title: "Chores", lists: [{ entity: "todo.chores" }] });
+        // Only one done item left on the list.
+        (element as unknown as { todos: Map<string, unknown[]> }).todos = new Map([["todo.chores", LIST.items.slice(0, 5)]]);
+        await element.updateComplete;
+        await press(element, "Delete ticked");
+        expect(texts(element, ".asking > span")).toEqual(["Delete the ticked item?"]);
+    });
+
+    it("shows only the fields the list supports", async () => {
+        const { element } = await editable({}, 1 | 2 | 4);
+        await openItem(element, "Laundry");
+        expect([...root(element).querySelectorAll(".field > span")].map((e) => e.textContent)).toEqual(["Item"]);
+    });
+
+    it("only ticks with editing set to tick: no +, no editor, no deleting, a tap opens the text", async () => {
+        const { element, callService } = await editable({ editing: "tick" });
+        expect(root(element).querySelector(".hd-add")).toBeNull();
+        expect(root(element).querySelector(".clear")).toBeNull();
+        expect([...root(element).querySelectorAll(".cover")].some((b) => b.getAttribute("aria-label")!.startsWith("Edit"))).toBe(false);
+        root(element).querySelector<HTMLButtonElement>("button.tick")!.click();
+        expect(callService).toHaveBeenCalledWith("todo", "update_item", { item: "a", status: "completed" }, { entity_id: "todo.chores" });
+    });
+
+    it("changes nothing with editing set to none: no +, no editor, and ticks that only show", async () => {
+        const { element } = await editable({ editing: "none" });
+        expect(root(element).querySelector(".hd-add")).toBeNull();
+        expect(root(element).querySelector(".cover")).toBeNull();
+        expect(root(element).querySelector("button.tick")).toBeNull();
+        expect(root(element).querySelector(".clear")).toBeNull();
+    });
+});
+
 describe("the configuration", () => {
     const set = (config: Record<string, unknown>) => () =>
         (document.createElement("lists-card") as ListsCard).setConfig({
@@ -400,6 +573,7 @@ describe("the configuration", () => {
         expect(set({ layout: "table" })).toThrow(/Invalid layout/);
         expect(set({ text: "short" })).toThrow(/Invalid text mode/);
         expect(set({ headings: "none" })).toThrow(/Invalid headings/);
+        expect(set({ editing: true })).toThrow(/Invalid editing/);
     });
 
     it("may have no lists yet, and then says where to add one", async () => {

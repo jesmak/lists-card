@@ -7,12 +7,42 @@
                 "friendly_name": "Chores",
                 "icon": "mdi:broom",
                 "tasks": [
-                    { "title": "Water the plants", "icon": "🌿", "due": "2026-11-09", "who": "Maija" },
-                    { "title": "Take out the recycling", "icon": "♻️", "due": "2026-11-11", "who": "Matti" },
-                    { "title": "Vacuum the living room", "icon": "🧹", "due": "2026-11-12", "who": "Maija" },
-                    { "title": "Change the sheets", "icon": "🛏️", "due": "2026-11-14", "who": "Matti" },
-                    { "title": "Clean the sauna", "icon": "🧼", "due": "2026-11-17", "who": "Maija" },
-                    { "title": "Wash the windows", "icon": "🪟", "due": "2026-11-30", "who": "Matti" }
+                    {
+                        "title": "Water the plants",
+                        "icon": "🌿",
+                        "due": "2026-11-09",
+                        "who": "Maija"
+                    },
+                    {
+                        "title": "Take out the recycling",
+                        "icon": "♻️",
+                        "due": "2026-11-11",
+                        "who": "Matti"
+                    },
+                    {
+                        "title": "Vacuum the living room",
+                        "icon": "🧹",
+                        "due": "2026-11-12",
+                        "who": "Maija"
+                    },
+                    {
+                        "title": "Change the sheets",
+                        "icon": "🛏️",
+                        "due": "2026-11-14",
+                        "who": "Matti"
+                    },
+                    {
+                        "title": "Clean the sauna",
+                        "icon": "🧼",
+                        "due": "2026-11-17",
+                        "who": "Maija"
+                    },
+                    {
+                        "title": "Wash the windows",
+                        "icon": "🪟",
+                        "due": "2026-11-30",
+                        "who": "Matti"
+                    }
                 ]
             }
         },
@@ -61,6 +91,14 @@
                     }
                 ]
             }
+        },
+        "todo.upkeep": {
+            "state": "4",
+            "attributes": {
+                "friendly_name": "Upkeep",
+                "icon": "mdi:wrench-clock",
+                "supported_features": 127
+            }
         }
     },
     "shots": [
@@ -75,10 +113,23 @@
                     {
                         "entity": "sensor.chores",
                         "attribute": "tasks",
-                        "fields": { "start": "due", "label": "who" },
-                        "before": { "name": "Late", "tone": "warning", "farthest_first": true },
-                        "now": { "name": "Today", "tone": "highlight" },
-                        "after": { "name": "Coming", "days": 7 }
+                        "fields": {
+                            "start": "due",
+                            "label": "who"
+                        },
+                        "before": {
+                            "name": "Late",
+                            "tone": "warning",
+                            "farthest_first": true
+                        },
+                        "now": {
+                            "name": "Today",
+                            "tone": "highlight"
+                        },
+                        "after": {
+                            "name": "Coming",
+                            "days": 7
+                        }
                     }
                 ]
             }
@@ -95,10 +146,20 @@
                     {
                         "entity": "sensor.town_notices",
                         "attribute": "notices",
-                        "fields": { "start": "from", "end": "to", "link": "url" },
+                        "fields": {
+                            "start": "from",
+                            "end": "to",
+                            "link": "url"
+                        },
                         "order": ["now", "after", "before"],
-                        "now": { "name": "Going on", "tone": "highlight" },
-                        "before": { "name": "Over", "tone": "dimmed" }
+                        "now": {
+                            "name": "Going on",
+                            "tone": "highlight"
+                        },
+                        "before": {
+                            "name": "Over",
+                            "tone": "dimmed"
+                        }
                     }
                 ]
             }
@@ -116,10 +177,20 @@
                     {
                         "entity": "sensor.town_notices",
                         "attribute": "notices",
-                        "fields": { "start": "from", "end": "to", "link": "url" },
+                        "fields": {
+                            "start": "from",
+                            "end": "to",
+                            "link": "url"
+                        },
                         "order": ["now", "after", "before"],
-                        "now": { "name": "Going on", "tone": "highlight" },
-                        "before": { "name": "Over", "tone": "dimmed" },
+                        "now": {
+                            "name": "Going on",
+                            "tone": "highlight"
+                        },
+                        "before": {
+                            "name": "Over",
+                            "tone": "dimmed"
+                        },
                         "limit": 4
                     }
                 ]
@@ -138,21 +209,113 @@
                         "entity": "sensor.chores",
                         "attribute": "tasks",
                         "name": "Home",
-                        "fields": { "start": "due", "label": "who" },
-                        "before": { "tone": "warning", "farthest_first": true },
-                        "now": { "tone": "highlight" },
-                        "after": { "days": 7 }
+                        "fields": {
+                            "start": "due",
+                            "label": "who"
+                        },
+                        "before": {
+                            "tone": "warning",
+                            "farthest_first": true
+                        },
+                        "now": {
+                            "tone": "highlight"
+                        },
+                        "after": {
+                            "days": 7
+                        }
                     },
                     {
                         "entity": "sensor.town_notices",
                         "attribute": "notices",
                         "name": "Town",
-                        "fields": { "start": "from", "end": "to", "link": "url" },
+                        "fields": {
+                            "start": "from",
+                            "end": "to",
+                            "link": "url"
+                        },
                         "order": ["now", "after"],
-                        "now": { "tone": "highlight" }
+                        "now": {
+                            "tone": "highlight"
+                        }
+                    }
+                ]
+            }
+        },
+        {
+            "name": "todo",
+            "width": 480,
+            "card": {
+                "type": "custom:lists-card",
+                "title": "Upkeep",
+                "icon": "mdi:wrench-clock",
+                "lists": [
+                    {
+                        "entity": "todo.upkeep",
+                        "before": {
+                            "name": "Late",
+                            "tone": "warning",
+                            "farthest_first": true
+                        },
+                        "now": {
+                            "name": "Today",
+                            "tone": "highlight"
+                        },
+                        "done": {
+                            "days": 7
+                        }
                     }
                 ]
             }
         }
-    ]
+    ],
+    "commands": {
+        "todo/item/subscribe": [
+            {
+                "with": {
+                    "entity_id": "todo.upkeep"
+                },
+                "result": null,
+                "event": {
+                    "items": [
+                        {
+                            "uid": "u1",
+                            "summary": "Clean the gutters",
+                            "status": "needs_action",
+                            "due": "2026-11-08",
+                            "description": "The downpipe by the porch overflowed in the last rain. Check it while up there."
+                        },
+                        {
+                            "uid": "u2",
+                            "summary": "Replace the smoke alarm battery",
+                            "status": "needs_action",
+                            "due": "2026-11-10"
+                        },
+                        {
+                            "uid": "u3",
+                            "summary": "Bleed the radiators",
+                            "status": "needs_action"
+                        },
+                        {
+                            "uid": "u4",
+                            "summary": "Check the tyre pressure",
+                            "status": "needs_action",
+                            "due": "2026-11-15"
+                        },
+                        {
+                            "uid": "u5",
+                            "summary": "Defrost the freezer",
+                            "status": "completed",
+                            "completed": "2026-11-11T16:20:00+00:00"
+                        },
+                        {
+                            "uid": "u6",
+                            "summary": "Change the ventilation filter",
+                            "status": "completed",
+                            "completed": "2026-11-07T08:05:00+00:00"
+                        }
+                    ]
+                }
+            }
+        ]
+    }
 }

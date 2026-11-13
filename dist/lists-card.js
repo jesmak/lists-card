@@ -724,6 +724,7 @@ var en_default = {
     invalid_headings: "Invalid headings. Headings must be plain or fold.",
     invalid_height: "Invalid height. The heights (height and max_height) must be positive numbers in pixels, and the height mode (height_mode) auto, fixed or max.",
     invalid_row_step: "Invalid rounding. The rounding (row_step) must be full or half.",
+    invalid_editing: "Invalid editing. Editing (editing) must be full, tick or none.",
     no_lists: "No lists yet. Add one in the card's settings.",
     unreadable: "No list found in {entity}.",
     empty: "Nothing on the list.",
@@ -732,9 +733,26 @@ var en_default = {
     bucket_before: "Earlier",
     bucket_now: "Now",
     bucket_after: "Coming",
-    bucket_done: "Done",
-    mark_done: "Mark as done",
-    mark_open: "Mark as not done"
+    bucket_done: "Ticked",
+    mark_done: "Tick",
+    mark_open: "Untick",
+    add_item: "Add an item",
+    edit_item: "Edit",
+    edit_title: "Item",
+    edit_text: "Description",
+    edit_day: "Day",
+    edit_time: "Time",
+    clear_day: "Clear the day",
+    move_up: "Move up",
+    move_down: "Move down",
+    add: "Add",
+    save: "Save",
+    cancel: "Cancel",
+    delete: "Delete",
+    save_failed: "The change didn't go through. Try again.",
+    clear_done: "Delete ticked",
+    clear_done_ask: "Delete {n} ticked?",
+    clear_done_ask_one: "Delete the ticked item?"
   },
   editor: {
     title: "Title",
@@ -750,6 +768,11 @@ var en_default = {
     headings: "Group headings",
     headings_plain: "Plain",
     headings_fold: "Foldable",
+    editing: "Changing a to-do list on the card",
+    editing_full: "Everything",
+    editing_tick: "Ticks only",
+    editing_none: "Nothing",
+    editing_helper: "With ticks only, items can be ticked and unticked, but not added, edited or deleted.",
     lists: "Lists",
     lists_helper: "A card with one list shows that list's groups. With several lists, each list is shown under its own name instead, with no groups inside it.",
     entity: "Entity",
@@ -777,11 +800,11 @@ var en_default = {
     limit: "Most items shown",
     limit_helper: "0 shows them all. The card says how many were left out.",
     order: "Time groups shown, in order",
-    order_helper: "The items of a group left out aren't shown. Done holds the items ticked on a to-do list.",
+    order_helper: "The items of a group left out aren't shown. Ticked holds the items ticked on a to-do list.",
     before: "Earlier",
     now: "Now",
     after: "Coming",
-    done: "Done",
+    done: "Ticked",
     bucket_name: "Heading",
     bucket_tone: "Tone",
     bucket_days: "Reach in days",
@@ -811,6 +834,7 @@ var fi_default = {
     invalid_headings: "Virheelliset otsikot. Otsikoiden (headings) on oltava plain tai fold.",
     invalid_height: "Virheellinen korkeus. Korkeuksien (height ja max_height) on oltava positiivisia lukuja pikselein\xE4, ja korkeustilan (height_mode) auto, fixed tai max.",
     invalid_row_step: "Virheellinen py\xF6ristys. Py\xF6ristyksen (row_step) on oltava full tai half.",
+    invalid_editing: "Virheellinen muokkaus. Muokkauksen (editing) on oltava full, tick tai none.",
     no_lists: "Ei viel\xE4 listoja. Lis\xE4\xE4 lista kortin asetuksista.",
     unreadable: "Entiteetist\xE4 {entity} ei l\xF6ytynyt listaa.",
     empty: "Lista on tyhj\xE4.",
@@ -819,9 +843,26 @@ var fi_default = {
     bucket_before: "Aiemmat",
     bucket_now: "Nyt",
     bucket_after: "Tulossa",
-    bucket_done: "Tehdyt",
-    mark_done: "Merkitse tehdyksi",
-    mark_open: "Merkitse tekem\xE4tt\xF6m\xE4ksi"
+    bucket_done: "Merkityt",
+    mark_done: "Merkitse",
+    mark_open: "Poista merkint\xE4",
+    add_item: "Lis\xE4\xE4 rivi",
+    edit_item: "Muokkaa",
+    edit_title: "Rivi",
+    edit_text: "Kuvaus",
+    edit_day: "P\xE4iv\xE4",
+    edit_time: "Kellonaika",
+    clear_day: "Poista p\xE4iv\xE4",
+    move_up: "Siirr\xE4 yl\xF6s",
+    move_down: "Siirr\xE4 alas",
+    add: "Lis\xE4\xE4",
+    save: "Tallenna",
+    cancel: "Peruuta",
+    delete: "Poista",
+    save_failed: "Muutos ei mennyt l\xE4pi. Yrit\xE4 uudelleen.",
+    clear_done: "Poista merkityt",
+    clear_done_ask: "Poistetaanko {n} merkitty\xE4?",
+    clear_done_ask_one: "Poistetaanko merkitty rivi?"
   },
   editor: {
     title: "Otsikko",
@@ -837,6 +878,11 @@ var fi_default = {
     headings: "Ryhmien otsikot",
     headings_plain: "V\xE4liotsikko",
     headings_fold: "Taittuva",
+    editing: "Teht\xE4v\xE4listan muokkaus kortilta",
+    editing_full: "Kaikki",
+    editing_tick: "Vain rastit",
+    editing_none: "Ei mit\xE4\xE4n",
+    editing_helper: "Vain rasteilla rivej\xE4 voi merkit\xE4 ja poistaa merkinn\xE4n, mutta ei lis\xE4t\xE4, muokata eik\xE4 poistaa.",
     lists: "Listat",
     lists_helper: "Yhden listan kortti n\xE4ytt\xE4\xE4 listan omat ryhm\xE4t. Kun listoja on useita, jokainen lista n\xE4kyy oman nimens\xE4 alla, eik\xE4 sen sis\xE4ll\xE4 ole ryhmi\xE4.",
     entity: "Entiteetti",
@@ -864,11 +910,11 @@ var fi_default = {
     limit: "Rivej\xE4 enint\xE4\xE4n",
     limit_helper: "0 n\xE4ytt\xE4\xE4 kaikki. Kortti kertoo, montako j\xE4tettiin pois.",
     order: "N\xE4ytett\xE4v\xE4t aikaryhm\xE4t j\xE4rjestyksess\xE4",
-    order_helper: "Pois j\xE4tetyn ryhm\xE4n rivej\xE4 ei n\xE4ytet\xE4. Tehdyiss\xE4 ovat teht\xE4v\xE4listan rastitetut teht\xE4v\xE4t.",
+    order_helper: "Pois j\xE4tetyn ryhm\xE4n rivej\xE4 ei n\xE4ytet\xE4. Merkityiss\xE4 ovat teht\xE4v\xE4listan merkityt rivit.",
     before: "Aiemmat",
     now: "Nyt",
     after: "Tulossa",
-    done: "Tehdyt",
+    done: "Merkityt",
     bucket_name: "Otsikko",
     bucket_tone: "S\xE4vy",
     bucket_days: "Ulottuma p\xE4ivin\xE4",
@@ -915,6 +961,7 @@ function browserLanguage() {
 var LAYOUTS = ["rows", "timeline"];
 var TEXT_MODES = ["full", "clamp", "fold"];
 var HEADINGS = ["plain", "fold"];
+var EDITING = ["full", "tick", "none"];
 var GROUPINGS = ["time", "key", "none"];
 var BUCKETS = ["before", "now", "after", "done"];
 var TONES = ["plain", "warning", "highlight", "dimmed"];
@@ -1211,7 +1258,7 @@ function tidyRowStep(config) {
 }
 
 // src/editor.ts
-var DEFAULTS = { layout: "rows", text: "clamp", headings: "plain" };
+var DEFAULTS = { layout: "rows", text: "clamp", headings: "plain", editing: "full" };
 var LIST_DEFAULTS = { group: "time", limit: 0 };
 var select = (name, values, text2) => ({
   mode: "dropdown",
@@ -1229,7 +1276,8 @@ function lookSchema(text2) {
     },
     { name: "layout", selector: { select: select("layout", LAYOUTS, text2) } },
     { name: "text", selector: { select: select("text", TEXT_MODES, text2) } },
-    { name: "headings", selector: { select: select("headings", HEADINGS, text2) } }
+    { name: "headings", selector: { select: select("headings", HEADINGS, text2) } },
+    { name: "editing", selector: { select: select("editing", EDITING, text2) } }
   ];
 }
 function listsSchema(text2) {
@@ -1532,9 +1580,66 @@ var ScrollFade = class {
   }
 };
 
+// src/todo.ts
+var TODO_FEATURES = {
+  create: 1,
+  delete: 2,
+  update: 4,
+  move: 8,
+  dueDate: 16,
+  dueDateTime: 32,
+  description: 64
+};
+function hasFeature(features, feature) {
+  return (features & TODO_FEATURES[feature]) !== 0;
+}
+function draftOf(entity, item) {
+  const due = item.due ?? "";
+  const [day, rest = ""] = due.split("T");
+  return { entity, uid: item.uid, title: item.summary, text: item.description ?? "", day, time: rest.slice(0, 5) };
+}
+function dueData(draft, features, had) {
+  if (!draft.day) {
+    return had ? { due_date: null } : {};
+  }
+  const time = hasFeature(features, "dueDateTime") ? draft.time : "";
+  if (time || !hasFeature(features, "dueDate")) {
+    return { due_datetime: `${draft.day} ${time || "00:00"}:00` };
+  }
+  return { due_date: draft.day };
+}
+function saveData(draft, features, before) {
+  const data = before ? { item: draft.uid, rename: draft.title.trim() } : { item: draft.title.trim() };
+  if (hasFeature(features, "description")) {
+    const text2 = draft.text.trim();
+    if (text2 || before?.description) {
+      data.description = text2;
+    }
+  }
+  if (hasFeature(features, "dueDate") || hasFeature(features, "dueDateTime")) {
+    Object.assign(data, dueData(draft, features, Boolean(before?.due)));
+  }
+  return data;
+}
+var movable = (item) => !item.due && item.status !== "completed";
+function moveTarget(items, uid, direction) {
+  const rows = items.filter(movable);
+  const at = rows.findIndex((item) => item.uid === uid);
+  if (at < 0) {
+    return null;
+  }
+  if (direction === "down") {
+    return at + 1 < rows.length ? rows[at + 1].uid : null;
+  }
+  if (at === 0) {
+    return null;
+  }
+  const above = items.findIndex((item) => item.uid === rows[at - 1].uid);
+  return above > 0 ? items[above - 1].uid : void 0;
+}
+
 // src/lists-card.ts
 var TICK_HOLD_MS = 1e3;
-var UPDATE_TODO_ITEM = 4;
 var LIST_TOP_PX = 4;
 var HEADER_PX = 44;
 var HEADING_PX = 24;
@@ -1580,6 +1685,8 @@ var ListsCard = class extends i4 {
     this.todos = /* @__PURE__ */ new Map();
     this.failed = /* @__PURE__ */ new Set();
     this.ticking = /* @__PURE__ */ new Map();
+    this.asking = /* @__PURE__ */ new Set();
+    this.focusEditor = false;
     this.subscriptions = /* @__PURE__ */ new Map();
     this.tickTimers = /* @__PURE__ */ new Map();
     this.lists = [];
@@ -1637,6 +1744,9 @@ var ListsCard = class extends i4 {
     if (!validRowStep(config)) {
       throw invalid("invalid_row_step");
     }
+    if (config.editing != null && !EDITING.includes(config.editing)) {
+      throw invalid("invalid_editing");
+    }
     this.config = config;
   }
   getCardSize() {
@@ -1647,7 +1757,12 @@ var ListsCard = class extends i4 {
     return { columns: 12, min_columns: 6, rows: "auto", min_rows: gridMinRows(this.minimumHeight()) };
   }
   hasHeader() {
-    return Boolean(this.config?.title || this.config?.icon);
+    return Boolean(this.config?.title || this.config?.icon || this.addTarget());
+  }
+  /** The list the header's + adds to: the card's only list, when it is a to-do list that takes new items. */
+  addTarget() {
+    const lists = this.config?.lists ?? [];
+    return lists.length === 1 && isTodoList(lists[0]) && this.can(lists[0], "create") ? lists[0] : void 0;
   }
   minimumHeight() {
     return (this.hasHeader() ? HEADER_PX : 0) + LIST_TOP_PX + HEADING_PX + ITEM_PX + LIST_BOTTOM_PX + BORDER_PX;
@@ -1683,6 +1798,8 @@ var ListsCard = class extends i4 {
     this.tickTimers.forEach((timer) => window.clearTimeout(timer));
     this.tickTimers.clear();
     this.ticking = /* @__PURE__ */ new Map();
+    this.editing = void 0;
+    this.asking = /* @__PURE__ */ new Set();
   }
   /**
    * Subscribes to the items of each to-do list on the card while it is on the page, and lets go of those it no longer
@@ -1768,9 +1885,100 @@ var ListsCard = class extends i4 {
   shownDone(list, item) {
     return this.ticking.get(`${list.entity} ${item.uid}`)?.to ?? Boolean(item.done);
   }
+  features(entity) {
+    return Number(this.hass?.states[entity]?.attributes.supported_features ?? 0);
+  }
+  /** Whether the card may change a to-do list in this way: the list supports it, and the card isn't read only. */
+  /** Whether the card may change a to-do list in this way: the list supports it, and the card is set to change everything. */
+  can(list, feature) {
+    return (this.config?.editing ?? "full") === "full" && this.supports(list, feature);
+  }
+  /** Whether an item of the list can be ticked: the card isn't set to change nothing, and the list lets items be changed. */
   canTick(list) {
-    const features = Number(this.hass?.states[list.entity]?.attributes.supported_features ?? 0);
-    return Boolean(this.hass?.callService) && (features & UPDATE_TODO_ITEM) !== 0;
+    return this.config?.editing !== "none" && this.supports(list, "update");
+  }
+  supports(list, feature) {
+    return Boolean(this.hass?.callService) && hasFeature(this.features(list.entity), feature);
+  }
+  rawItem(entity, uid) {
+    return uid === void 0 ? void 0 : this.todos.get(entity)?.find((todo) => todo.uid === uid);
+  }
+  async callTodo(action, data, entity) {
+    await this.hass?.callService?.("todo", action, data, { entity_id: entity });
+  }
+  /** Opens an item in the editor, or an empty one for a new item, in place of whatever was open. */
+  edit(list, item) {
+    const raw = this.rawItem(list.entity, item?.uid);
+    this.editing = raw ? draftOf(list.entity, raw) : { entity: list.entity, title: "", text: "", day: "", time: "" };
+    this.focusEditor = true;
+  }
+  async save() {
+    const draft = this.editing;
+    if (!draft?.title.trim()) {
+      return;
+    }
+    const before = this.rawItem(draft.entity, draft.uid);
+    try {
+      if (draft.uid !== void 0 && !before) {
+        throw new Error("The item is gone from its list.");
+      }
+      await this.callTodo(before ? "update_item" : "add_item", saveData(draft, this.features(draft.entity), before), draft.entity);
+      if (this.editing === draft) {
+        this.editing = void 0;
+      }
+    } catch {
+      if (this.editing === draft) {
+        this.editing = { ...draft, failed: true };
+      }
+    }
+  }
+  async deleteItem() {
+    const draft = this.editing;
+    if (!draft?.uid) {
+      return;
+    }
+    try {
+      await this.callTodo("remove_item", { item: [draft.uid] }, draft.entity);
+      if (this.editing === draft) {
+        this.editing = void 0;
+      }
+    } catch {
+      if (this.editing === draft) {
+        this.editing = { ...draft, failed: true };
+      }
+    }
+  }
+  /** Moves the open item one row up or down among the items without a date, which the list keeps in its own order. */
+  async move(direction) {
+    const draft = this.editing;
+    const target = draft?.uid ? moveTarget(this.todos.get(draft.entity) ?? [], draft.uid, direction) : null;
+    if (!draft || target === null) {
+      return;
+    }
+    try {
+      await this.hass?.callWS?.({ type: "todo/item/move", entity_id: draft.entity, uid: draft.uid, previous_uid: target });
+    } catch {
+      if (this.editing === draft) {
+        this.editing = { ...draft, failed: true };
+      }
+    }
+  }
+  /** Deletes every done item of the list, once the list has been asked and said yes. */
+  async clearDone(list) {
+    const done = (this.todos.get(list.entity) ?? []).filter((todo) => todo.status === "completed").map((todo) => todo.uid);
+    this.ask(list.entity, false);
+    if (done.length > 0) {
+      await this.callTodo("remove_item", { item: done }, list.entity).catch(() => void 0);
+    }
+  }
+  ask(entity, on) {
+    const asking = new Set(this.asking);
+    if (on) {
+      asking.add(entity);
+    } else {
+      asking.delete(entity);
+    }
+    this.asking = asking;
   }
   /** Ticks an item done, or open again. It is shown so at once, and keeps its place a moment before it moves. */
   async tick(list, item) {
@@ -1813,6 +2021,10 @@ var ListsCard = class extends i4 {
     if (card) {
       this.resizes?.observe(card);
     }
+    if (this.focusEditor) {
+      this.focusEditor = false;
+      this.renderRoot.querySelector(".editor .f-title")?.focus();
+    }
     this.measureSoon();
   }
   render() {
@@ -1838,8 +2050,22 @@ var ListsCard = class extends i4 {
     return b2`<div class="hd">
             ${this.config?.icon ? b2`<ha-icon class="hd-icon" icon=${this.config.icon}></ha-icon>` : A}
             <div class="hd-title" title=${title}>${title}</div>
-            ${this.pill()}
+            ${this.pill()} ${this.addButton()}
         </div>`;
+  }
+  addButton() {
+    const list = this.addTarget();
+    if (!list) {
+      return A;
+    }
+    return b2`<button
+            class="hd-add"
+            title=${this.text("common.add_item")}
+            aria-label=${this.text("common.add_item")}
+            @click=${() => this.edit(list)}
+        >
+            <ha-icon icon="mdi:plus"></ha-icon>
+        </button>`;
   }
   /**
    * Beside the title: how many items the first group has, with its name, when its tone says it matters, as "2 late"
@@ -1863,17 +2089,19 @@ var ListsCard = class extends i4 {
       return A;
     }
     const groups = list.arranged?.groups ?? [];
+    const adding = this.newEditor(list.config);
     if (groups.length === 0) {
-      return b2`<div class="empty">${this.emptyText(list)}</div>`;
+      return b2`${adding}${adding === A ? b2`<div class="empty">${this.emptyText(list)}</div>` : A}`;
     }
-    return b2`${groups.map((group) => this.group(group, `${index} ${group.key}`, index, A))} ${this.more(list)}`;
+    return b2`${adding}${groups.map((group) => this.group(group, `${index} ${group.key}`, index, this.clearRow(list, group)))}
+        ${this.more(list)}`;
   }
   /** One of several lists: a group of its own, under its name. */
   listAsGroup(list, index) {
     const items = list.arranged?.groups.flatMap((group2) => group2.items) ?? [];
     const group = { key: "list", name: list.name, tone: "plain", items };
-    const rest = list.loading ? A : items.length === 0 ? b2`<div class="empty">${this.emptyText(list)}</div>` : this.more(list);
-    return this.group(group, `${index} list`, index, rest);
+    const empty = list.loading ? A : items.length === 0 ? b2`<div class="empty">${this.emptyText(list)}</div>` : this.more(list);
+    return this.group(group, `${index} list`, index, b2`${empty}${this.clearRow(list, group)}`);
   }
   emptyText(list) {
     if (!list.arranged) {
@@ -1897,8 +2125,9 @@ var ListsCard = class extends i4 {
       return b2`<div class="grp">${items}${rest}</div>`;
     }
     if (this.headings() === "plain") {
+      const clear = group.key === "done" ? this.clearButton(this.lists[list]) : A;
       return b2`<div class="grp">
-                <div class="gh" title=${group.name}>${group.name}</div>
+                <div class="gh"><span class="gh-name" title=${group.name}>${group.name}</span>${clear}</div>
                 ${items}${rest}
             </div>`;
     }
@@ -1914,6 +2143,9 @@ var ListsCard = class extends i4 {
         </div>`;
   }
   item(item, key, list) {
+    if (item.uid !== void 0 && this.can(list, "update")) {
+      return this.todoItem(item, list);
+    }
     const mode = this.textMode();
     const open = this.opened.has(key);
     const can = Boolean(item.text) && (mode === "fold" || mode === "clamp" && (open || this.cut.has(key)));
@@ -1960,6 +2192,141 @@ var ListsCard = class extends i4 {
             </div>
             ${folded ? this.fold(open, b2`<div class="sub">${label}${text2}</div>`) : label !== A || text2 !== A ? b2`<div class="sub">${label}${text2}</div>` : A}
         </div>`;
+  }
+  /**
+   * An item of a to-do list the card may change. A tap opens it in the editor, which shows its whole text, so its text
+   * is cut to two lines at most and never folded. Open, the editor takes the place of its date and text.
+   */
+  todoItem(item, list) {
+    const editing = this.editing?.entity === list.entity && this.editing.uid === item.uid;
+    const done = this.shownDone(list, item);
+    const classes = ["item", "can", this.layoutMode(), `tone-${item.tone}`, done && "done", editing && "editing"].filter(Boolean).join(" ");
+    const cover = editing ? A : b2`<button
+                  class="cover"
+                  aria-label=${`${this.text("common.edit_item")}: ${item.title}`}
+                  @click=${() => this.edit(list, item)}
+              ></button>`;
+    const tick = this.tickBox(list, item, done);
+    const text2 = item.text && !editing && this.textMode() !== "fold" ? b2`<div class="tx clamp">${item.text}</div>` : A;
+    const when = editing ? "" : this.whenText(item);
+    const editor = editing ? this.editor(list) : A;
+    if (this.layoutMode() === "timeline") {
+      const extra = this.badgeSaysIt(item) ? "" : when;
+      return b2`<div class=${classes}>
+                ${cover} ${this.badge(item)}
+                <div class="body">
+                    <div class="ti" title=${item.title}>${tick}${item.title}</div>
+                    ${extra ? b2`<div class="lb"><span class="when">${extra}</span></div>` : A} ${text2} ${editor}
+                </div>
+            </div>`;
+    }
+    return b2`<div class=${classes}>
+            ${cover}
+            <div class="line">
+                <span class="ic">${tick}</span>
+                <span class="ti" title=${item.title}>${item.title}</span>
+                ${when ? b2`<span class="when" title=${this.longWhen(item)}>${when}</span>` : A}
+            </div>
+            ${text2 !== A ? b2`<div class="sub">${text2}</div>` : A} ${editor}
+        </div>`;
+  }
+  /** The editor of a new item, at the top of its list. */
+  newEditor(list) {
+    if (this.editing?.entity !== list.entity || this.editing.uid !== void 0) {
+      return A;
+    }
+    return b2`<div class="item new">${this.editor(list)}</div>`;
+  }
+  /** The open item's fields, those the list supports, and its buttons. Enter in the title saves, Escape closes it. */
+  editor(list) {
+    const draft = this.editing;
+    const isNew = draft.uid === void 0;
+    const set = (field2) => (event) => {
+      this.editing = { ...this.editing, [field2]: event.target.value, failed: false };
+    };
+    const keys = (event) => {
+      if (event.key === "Escape") {
+        this.editing = void 0;
+      } else if (event.key === "Enter" && event.target.classList.contains("f-title")) {
+        void this.save();
+      }
+    };
+    const field = (label, input, classes = "") => b2`<label class="field ${classes}"><span>${label}</span>${input}</label>`;
+    const text2 = this.can(list, "description") ? field(
+      this.text("common.edit_text"),
+      b2`<textarea class="f-text" rows="2" .value=${draft.text} @input=${set("text")}></textarea>`
+    ) : A;
+    const days = this.can(list, "dueDate") || this.can(list, "dueDateTime");
+    const day = days ? b2`<div class="when-row">
+                  ${field(this.text("common.edit_day"), b2`<input class="f-day" type="date" .value=${draft.day} @input=${set("day")} />`, "grow")}
+                  ${this.can(list, "dueDateTime") ? field(
+      this.text("common.edit_time"),
+      b2`<input class="f-time" type="time" .value=${draft.time} @input=${set("time")} />`
+    ) : A}
+                  ${draft.day ? b2`<button
+                                class="ibtn"
+                                title=${this.text("common.clear_day")}
+                                aria-label=${this.text("common.clear_day")}
+                                @click=${() => this.editing = { ...draft, day: "", time: "" }}
+                            >
+                                <ha-icon icon="mdi:close"></ha-icon>
+                            </button>` : A}
+              </div>` : A;
+    const raw = this.todos.get(list.entity) ?? [];
+    const moves = !isNew && this.can(list, "move") && ["up", "down"].some((d3) => moveTarget(raw, draft.uid, d3) !== null);
+    const moveButton = (direction) => b2`<button
+                class="ibtn"
+                ?disabled=${moveTarget(raw, draft.uid, direction) === null}
+                title=${this.text(`common.move_${direction}`)}
+                aria-label=${this.text(`common.move_${direction}`)}
+                @click=${() => this.move(direction)}
+            >
+                <ha-icon icon=${direction === "up" ? "mdi:arrow-up" : "mdi:arrow-down"}></ha-icon>
+            </button>`;
+    return b2`<div class="editor" @keydown=${keys}>
+            ${field(this.text("common.edit_title"), b2`<input class="f-title" .value=${draft.title} @input=${set("title")} />`)} ${text2}
+            ${day} ${draft.failed ? b2`<div class="failed">${this.text("common.save_failed")}</div>` : A}
+            <div class="btns">
+                ${!isNew && this.can(list, "delete") ? b2`<button class="tbtn del" @click=${() => this.deleteItem()}>
+                              <ha-icon icon="mdi:delete-outline"></ha-icon>${this.text("common.delete")}
+                          </button>` : A}
+                ${moves ? b2`${moveButton("up")}${moveButton("down")}` : A}
+                <span class="sp"></span>
+                <button class="tbtn" @click=${() => this.editing = void 0}>${this.text("common.cancel")}</button>
+                <button class="tbtn fill" ?disabled=${!draft.title.trim()} @click=${() => this.save()}>
+                    ${this.text(isNew ? "common.add" : "common.save")}
+                </button>
+            </div>
+        </div>`;
+  }
+  /** "Delete done" beside the done group's heading, which asks before it deletes. */
+  clearButton(list) {
+    if (!list || !isTodoList(list.config) || !this.can(list.config, "delete")) {
+      return A;
+    }
+    const entity = list.config.entity;
+    const count = (this.todos.get(entity) ?? []).filter((todo) => todo.status === "completed").length;
+    if (count === 0) {
+      return A;
+    }
+    if (!this.asking.has(entity)) {
+      return b2`<button class="clear" @click=${() => this.ask(entity, true)}>${this.text("common.clear_done")}</button>`;
+    }
+    return b2`<span class="asking">
+            <span>${this.text(count === 1 ? "common.clear_done_ask_one" : "common.clear_done_ask", { n: count })}</span>
+            <button class="clear del" @click=${() => this.clearDone(list.config)}>${this.text("common.delete")}</button>
+            <button class="clear" @click=${() => this.ask(entity, false)}>${this.text("common.cancel")}</button>
+        </span>`;
+  }
+  /** "Delete done" as a row of its own, where the done items have no plain heading to sit beside: under foldable headings, or among several lists. */
+  clearRow(list, group) {
+    const plainDone = this.headings() === "plain" && group.key === "done" && this.lists.length === 1;
+    const holdsDone = group.items.some((item) => item.bucket === "done");
+    if (plainDone || !holdsDone) {
+      return A;
+    }
+    const button = this.clearButton(list);
+    return button === A ? A : b2`<div class="clear-row">${button}</div>`;
   }
   /** A to-do item's round tick. On a list that can't be changed it only shows whether the item is done. */
   tickBox(list, item, done) {
@@ -2358,7 +2725,8 @@ var ListsCard = class extends i4 {
                 }
 
                 .item .src,
-                .item .tick {
+                .item .tick,
+                .item .editor {
                     pointer-events: auto;
                 }
 
@@ -2366,8 +2734,17 @@ var ListsCard = class extends i4 {
                     opacity: 0.6;
                 }
 
-                /* A dimmed badge stays solid and dims its texts, or the timeline's line would show through it. */
-                .tone-dimmed > .badge {
+                /*
+                 * A dimmed badge stays solid and dims its texts, or the timeline's line would show through it. An open
+                 * editor isn't dimmed either. Both rules are as strong as the one above, so they win by coming after it.
+                 */
+                .tone-dimmed > .badge,
+                .tone-dimmed > .editor {
+                    opacity: 1;
+                }
+
+                /* In the timeline the editor is inside the item's body, which an open item leaves undimmed. */
+                .tone-dimmed.editing > .body {
                     opacity: 1;
                 }
 
@@ -2510,6 +2887,204 @@ var ListsCard = class extends i4 {
 
                 .done .ti {
                     text-decoration: line-through;
+                }
+
+                /* The header's +, its icon ending where the pill's text does, as the item buttons' icons do. */
+                .hd-add {
+                    flex: none;
+                    display: grid;
+                    place-items: center;
+                    width: 32px;
+                    height: 32px;
+                    margin: -4px -9px -4px -6px;
+                    padding: 0;
+                    border: 0;
+                    border-radius: 50%;
+                    background: none;
+                    color: var(--secondary-text-color);
+                    cursor: pointer;
+                }
+
+                .hd-add:hover,
+                .ibtn:hover:not(:disabled) {
+                    background: rgba(var(--rgb-primary-text-color, 33, 33, 33), 0.06);
+                    color: var(--primary-color);
+                }
+
+                /* The editor, under an item's title, or at the top of the list for a new item. */
+                .editor {
+                    position: relative;
+                    display: flex;
+                    flex-direction: column;
+                    gap: 10px;
+                    padding: 8px 0 6px 34px;
+                }
+
+                .timeline .editor,
+                .no-icons .editor {
+                    padding-left: 0;
+                }
+
+                .item.new {
+                    padding-top: 0;
+                }
+
+                .field {
+                    display: flex;
+                    flex-direction: column;
+                    gap: 3px;
+                    min-width: 0;
+                    font-size: 11px;
+                    color: var(--secondary-text-color);
+                }
+
+                .field input,
+                .field textarea {
+                    box-sizing: border-box;
+                    width: 100%;
+                    min-width: 0;
+                    padding: 7px 10px;
+                    font: inherit;
+                    font-size: 14px;
+                    color: var(--primary-text-color);
+                    background: var(--input-fill-color, rgba(var(--rgb-primary-text-color, 33, 33, 33), 0.06));
+                    border: 0;
+                    border-bottom: 1px solid var(--secondary-text-color);
+                    border-radius: 4px 4px 0 0;
+                    outline: none;
+                    color-scheme: inherit;
+                }
+
+                .field input:focus,
+                .field textarea:focus {
+                    border-bottom: 2px solid var(--primary-color);
+                    padding-bottom: 6px;
+                }
+
+                .field textarea {
+                    resize: vertical;
+                    line-height: 18px;
+                }
+
+                .when-row {
+                    display: flex;
+                    align-items: flex-end;
+                    gap: 8px;
+                }
+
+                .when-row .grow {
+                    flex: 1 1 auto;
+                }
+
+                .when-row .ibtn {
+                    margin-bottom: 2px;
+                }
+
+                .failed {
+                    font-size: 13px;
+                    color: var(--error-color, #db4437);
+                }
+
+                .btns {
+                    display: flex;
+                    flex-wrap: wrap;
+                    align-items: center;
+                    gap: 4px;
+                    margin-right: -5px;
+                }
+
+                .btns .sp {
+                    flex: 1 1 auto;
+                }
+
+                .tbtn {
+                    display: inline-flex;
+                    align-items: center;
+                    gap: 4px;
+                    padding: 6px 12px;
+                    font: inherit;
+                    font-size: 14px;
+                    font-weight: 500;
+                    color: var(--primary-color);
+                    background: none;
+                    border: 0;
+                    border-radius: 16px;
+                    cursor: pointer;
+                    --mdc-icon-size: 18px;
+                }
+
+                .tbtn.fill {
+                    color: var(--text-primary-color, #fff);
+                    background: var(--primary-color);
+                }
+
+                .tbtn:disabled {
+                    opacity: 0.5;
+                    cursor: default;
+                }
+
+                .tbtn.del {
+                    padding-left: 0;
+                    color: var(--error-color, #db4437);
+                }
+
+                .ibtn {
+                    display: grid;
+                    place-items: center;
+                    width: 32px;
+                    height: 32px;
+                    padding: 0;
+                    border: 0;
+                    border-radius: 50%;
+                    background: none;
+                    color: var(--secondary-text-color);
+                    cursor: pointer;
+                    --mdc-icon-size: 20px;
+                }
+
+                .ibtn:disabled {
+                    opacity: 0.35;
+                    cursor: default;
+                }
+
+                /* "Delete done", beside the done group's heading or on a row of its own, and its question. */
+                .clear {
+                    flex: none;
+                    padding: 0;
+                    font: inherit;
+                    font-size: 12px;
+                    font-weight: 400;
+                    letter-spacing: normal;
+                    text-transform: none;
+                    color: var(--primary-color);
+                    background: none;
+                    border: 0;
+                    cursor: pointer;
+                }
+
+                .clear:hover {
+                    text-decoration: underline;
+                }
+
+                .clear.del {
+                    font-weight: 500;
+                    color: var(--error-color, #db4437);
+                }
+
+                .asking {
+                    flex: none;
+                    display: flex;
+                    gap: 10px;
+                    font-size: 12px;
+                    font-weight: 400;
+                    letter-spacing: normal;
+                    text-transform: none;
+                }
+
+                .clear-row {
+                    display: flex;
+                    justify-content: flex-end;
+                    padding: 2px 16px;
                 }
 
                 .src:hover {
@@ -2672,15 +3247,10 @@ var ListsCard = class extends i4 {
                 .held .hd-title,
                 .held .ti,
                 .held .lb,
-                .held .gh-name,
-                .held .gh:not(.folding) {
+                .held .gh-name {
                     white-space: nowrap;
                     overflow: hidden;
                     text-overflow: ellipsis;
-                }
-
-                .held .gh:not(.folding) {
-                    display: block;
                 }
 
                 .held .line {
@@ -2759,6 +3329,12 @@ __decorateClass([
 __decorateClass([
   r5()
 ], ListsCard.prototype, "ticking", 2);
+__decorateClass([
+  r5()
+], ListsCard.prototype, "editing", 2);
+__decorateClass([
+  r5()
+], ListsCard.prototype, "asking", 2);
 if (!customElements.get("lists-card")) {
   customElements.define("lists-card", ListsCard);
   console.info(

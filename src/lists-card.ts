@@ -3,8 +3,8 @@
  * of their keys the card reads. One list is grouped by its items' dates (over, going on, to come), by one of their keys,
  * or not at all. Several lists are a group each. Held to a height, the header stays and the lists scroll under it.
  *
- * The card shows what its sources give and remembers nothing itself. The one thing it changes is a to-do item, ticked
- * done or open again.
+ * The card shows what its sources give and remembers nothing itself. What it changes are to-do lists: an item ticked,
+ * added, edited, moved or deleted.
  */
 import { LitElement, css, html, nothing } from "lit";
 import type { CSSResultGroup, PropertyValues, TemplateResult } from "lit";
@@ -18,8 +18,10 @@ import type { HomeAssistant } from "./hass";
 import { gridMinRows, heightCardSize, heightStyle, validHeight } from "./height";
 import { arrange, dayOf, isTodoList, readItems, todoItems, validList, zoneDay } from "./lists";
 import { browserLanguage, translate } from "./localize/localize";
+import { draftOf, hasFeature, moveTarget, saveData } from "./todo";
+import type { Draft, TodoFeature } from "./todo";
 import { drawnScale, fillLimit, filledHeight, filledStyle, spareRoom, validRowStep } from "./rows";
-import { BUCKETS, HEADINGS, LAYOUTS, TEXT_MODES } from "./types";
+import { BUCKETS, EDITING, HEADINGS, LAYOUTS, TEXT_MODES } from "./types";
 import type { Arranged, Bucket, Group, Headings, Layout, ListConfig, ListsCardConfig, Placed, TextMode, TodoItem, When } from "./types";
 
 interface CardRegistration {
@@ -48,8 +50,10 @@ interface Ticking {
 /** How long a ticked item stays in its place, so a tick by mistake can be undone where it was made. */
 const TICK_HOLD_MS = 1000;
 
-/** The to-do list feature that lets an item be ticked. */
-const UPDATE_TODO_ITEM = 4;
+/** An item being written, and whether the last try to save it failed. */
+interface Editing extends Draft {
+    failed?: boolean;
+}
 
 /** The list's own room at its top, above which the spare room of a filled row goes. */
 const LIST_TOP_PX = 4;
@@ -124,6 +128,10 @@ export class ListsCard extends LitElement {
     @state() private todos = new Map<string, TodoItem[]>();
     @state() private failed = new Set<string>();
     @state() private ticking = new Map<string, Ticking>();
+    /** The item open in the editor, a new one without a uid, and the to-do lists asking whether to delete what is done. */
+    @state() private editing?: Editing;
+    @state() private asking = new Set<string>();
+    private focusEditor = false;
 
     private subscriptions = new Map<string, Promise<() => Promise<void>>>();
     private tickTimers = new Map<string, number>();
@@ -183,6 +191,9 @@ export class ListsCard extends LitElement {
         if (!validRowStep(config)) {
             throw invalid("invalid_row_step");
         }
+        if (config.editing != null && !EDITING.includes(config.editing)) {
+            throw invalid("invalid_editing");
+        }
         this.config = config;
     }
 
@@ -196,7 +207,13 @@ export class ListsCard extends LitElement {
     }
 
     private hasHeader(): boolean {
-        return Boolean(this.config?.title || this.config?.icon);
+        return Boolean(this.config?.title || this.config?.icon || this.addTarget());
+    }
+
+    /** The list the header's + adds to: the card's only list, when it is a to-do list that takes new items. */
+    private addTarget(): ListConfig | undefined {
+        const lists = this.config?.lists ?? [];
+        return lists.length === 1 && isTodoList(lists[0]) && this.can(lists[0], "create") ? lists[0] : undefined;
     }
 
     private minimumHeight(): number {
@@ -239,6 +256,8 @@ export class ListsCard extends LitElement {
         this.tickTimers.forEach((timer) => window.clearTimeout(timer));
         this.tickTimers.clear();
         this.ticking = new Map();
+        this.editing = undefined;
+        this.asking = new Set();
     }
 
     /**
@@ -337,9 +356,111 @@ export class ListsCard extends LitElement {
         return this.ticking.get(`${list.entity} ${item.uid}`)?.to ?? Boolean(item.done);
     }
 
+    private features(entity: string): number {
+        return Number(this.hass?.states[entity]?.attributes.supported_features ?? 0);
+    }
+
+    /** Whether the card may change a to-do list in this way: the list supports it, and the card isn't read only. */
+    /** Whether the card may change a to-do list in this way: the list supports it, and the card is set to change everything. */
+    private can(list: ListConfig, feature: TodoFeature): boolean {
+        return (this.config?.editing ?? "full") === "full" && this.supports(list, feature);
+    }
+
+    /** Whether an item of the list can be ticked: the card isn't set to change nothing, and the list lets items be changed. */
     private canTick(list: ListConfig): boolean {
-        const features = Number(this.hass?.states[list.entity]?.attributes.supported_features ?? 0);
-        return Boolean(this.hass?.callService) && (features & UPDATE_TODO_ITEM) !== 0;
+        return this.config?.editing !== "none" && this.supports(list, "update");
+    }
+
+    private supports(list: ListConfig, feature: TodoFeature): boolean {
+        return Boolean(this.hass?.callService) && hasFeature(this.features(list.entity), feature);
+    }
+
+    private rawItem(entity: string, uid: string | undefined) {
+        return uid === undefined ? undefined : this.todos.get(entity)?.find((todo) => todo.uid === uid);
+    }
+
+    private async callTodo(action: string, data: Record<string, unknown>, entity: string): Promise<void> {
+        await this.hass?.callService?.("todo", action, data, { entity_id: entity });
+    }
+
+    /** Opens an item in the editor, or an empty one for a new item, in place of whatever was open. */
+    private edit(list: ListConfig, item?: Placed): void {
+        const raw = this.rawItem(list.entity, item?.uid);
+        this.editing = raw ? draftOf(list.entity, raw) : { entity: list.entity, title: "", text: "", day: "", time: "" };
+        this.focusEditor = true;
+    }
+
+    private async save(): Promise<void> {
+        const draft = this.editing;
+        if (!draft?.title.trim()) {
+            return;
+        }
+        const before = this.rawItem(draft.entity, draft.uid);
+        try {
+            if (draft.uid !== undefined && !before) {
+                throw new Error("The item is gone from its list.");
+            }
+            await this.callTodo(before ? "update_item" : "add_item", saveData(draft, this.features(draft.entity), before), draft.entity);
+            if (this.editing === draft) {
+                this.editing = undefined;
+            }
+        } catch {
+            if (this.editing === draft) {
+                this.editing = { ...draft, failed: true };
+            }
+        }
+    }
+
+    private async deleteItem(): Promise<void> {
+        const draft = this.editing;
+        if (!draft?.uid) {
+            return;
+        }
+        try {
+            await this.callTodo("remove_item", { item: [draft.uid] }, draft.entity);
+            if (this.editing === draft) {
+                this.editing = undefined;
+            }
+        } catch {
+            if (this.editing === draft) {
+                this.editing = { ...draft, failed: true };
+            }
+        }
+    }
+
+    /** Moves the open item one row up or down among the items without a date, which the list keeps in its own order. */
+    private async move(direction: "up" | "down"): Promise<void> {
+        const draft = this.editing;
+        const target = draft?.uid ? moveTarget(this.todos.get(draft.entity) ?? [], draft.uid, direction) : null;
+        if (!draft || target === null) {
+            return;
+        }
+        try {
+            await this.hass?.callWS?.({ type: "todo/item/move", entity_id: draft.entity, uid: draft.uid, previous_uid: target });
+        } catch {
+            if (this.editing === draft) {
+                this.editing = { ...draft, failed: true };
+            }
+        }
+    }
+
+    /** Deletes every done item of the list, once the list has been asked and said yes. */
+    private async clearDone(list: ListConfig): Promise<void> {
+        const done = (this.todos.get(list.entity) ?? []).filter((todo) => todo.status === "completed").map((todo) => todo.uid);
+        this.ask(list.entity, false);
+        if (done.length > 0) {
+            await this.callTodo("remove_item", { item: done }, list.entity).catch(() => undefined);
+        }
+    }
+
+    private ask(entity: string, on: boolean): void {
+        const asking = new Set(this.asking);
+        if (on) {
+            asking.add(entity);
+        } else {
+            asking.delete(entity);
+        }
+        this.asking = asking;
     }
 
     /** Ticks an item done, or open again. It is shown so at once, and keeps its place a moment before it moves. */
@@ -386,6 +507,10 @@ export class ListsCard extends LitElement {
         if (card) {
             this.resizes?.observe(card);
         }
+        if (this.focusEditor) {
+            this.focusEditor = false;
+            this.renderRoot.querySelector<HTMLInputElement>(".editor .f-title")?.focus();
+        }
         this.measureSoon();
     }
 
@@ -413,8 +538,23 @@ export class ListsCard extends LitElement {
         return html`<div class="hd">
             ${this.config?.icon ? html`<ha-icon class="hd-icon" icon=${this.config.icon}></ha-icon>` : nothing}
             <div class="hd-title" title=${title}>${title}</div>
-            ${this.pill()}
+            ${this.pill()} ${this.addButton()}
         </div>`;
+    }
+
+    private addButton(): TemplateResult | typeof nothing {
+        const list = this.addTarget();
+        if (!list) {
+            return nothing;
+        }
+        return html`<button
+            class="hd-add"
+            title=${this.text("common.add_item")}
+            aria-label=${this.text("common.add_item")}
+            @click=${() => this.edit(list)}
+        >
+            <ha-icon icon="mdi:plus"></ha-icon>
+        </button>`;
     }
 
     /**
@@ -441,18 +581,24 @@ export class ListsCard extends LitElement {
             return nothing;
         }
         const groups = list.arranged?.groups ?? [];
+        const adding = this.newEditor(list.config);
         if (groups.length === 0) {
-            return html`<div class="empty">${this.emptyText(list)}</div>`;
+            return html`${adding}${adding === nothing ? html`<div class="empty">${this.emptyText(list)}</div>` : nothing}`;
         }
-        return html`${groups.map((group) => this.group(group, `${index} ${group.key}`, index, nothing))} ${this.more(list)}`;
+        return html`${adding}${groups.map((group) => this.group(group, `${index} ${group.key}`, index, this.clearRow(list, group)))}
+        ${this.more(list)}`;
     }
 
     /** One of several lists: a group of its own, under its name. */
     private listAsGroup(list: Shown, index: number): TemplateResult {
         const items = list.arranged?.groups.flatMap((group) => group.items) ?? [];
         const group: Group = { key: "list", name: list.name, tone: "plain", items };
-        const rest = list.loading ? nothing : items.length === 0 ? html`<div class="empty">${this.emptyText(list)}</div>` : this.more(list);
-        return this.group(group, `${index} list`, index, rest);
+        const empty = list.loading
+            ? nothing
+            : items.length === 0
+              ? html`<div class="empty">${this.emptyText(list)}</div>`
+              : this.more(list);
+        return this.group(group, `${index} list`, index, html`${empty}${this.clearRow(list, group)}`);
     }
 
     private emptyText(list: Shown): string {
@@ -479,8 +625,9 @@ export class ListsCard extends LitElement {
             return html`<div class="grp">${items}${rest}</div>`;
         }
         if (this.headings() === "plain") {
+            const clear = group.key === "done" ? this.clearButton(this.lists[list]) : nothing;
             return html`<div class="grp">
-                <div class="gh" title=${group.name}>${group.name}</div>
+                <div class="gh"><span class="gh-name" title=${group.name}>${group.name}</span>${clear}</div>
                 ${items}${rest}
             </div>`;
         }
@@ -497,6 +644,9 @@ export class ListsCard extends LitElement {
     }
 
     private item(item: Placed, key: string, list: ListConfig): TemplateResult {
+        if (item.uid !== undefined && this.can(list, "update")) {
+            return this.todoItem(item, list);
+        }
         const mode = this.textMode();
         const open = this.opened.has(key);
         // A tap opens what isn't in sight: a folded text, or the rest of one cut to two lines.
@@ -559,6 +709,170 @@ export class ListsCard extends LitElement {
             </div>
             ${folded ? this.fold(open, html`<div class="sub">${label}${text}</div>`) : label !== nothing || text !== nothing ? html`<div class="sub">${label}${text}</div>` : nothing}
         </div>`;
+    }
+
+    /**
+     * An item of a to-do list the card may change. A tap opens it in the editor, which shows its whole text, so its text
+     * is cut to two lines at most and never folded. Open, the editor takes the place of its date and text.
+     */
+    private todoItem(item: Placed, list: ListConfig): TemplateResult {
+        const editing = this.editing?.entity === list.entity && this.editing.uid === item.uid;
+        const done = this.shownDone(list, item);
+        const classes = ["item", "can", this.layoutMode(), `tone-${item.tone}`, done && "done", editing && "editing"]
+            .filter(Boolean)
+            .join(" ");
+        const cover = editing
+            ? nothing
+            : html`<button
+                  class="cover"
+                  aria-label=${`${this.text("common.edit_item")}: ${item.title}`}
+                  @click=${() => this.edit(list, item)}
+              ></button>`;
+        const tick = this.tickBox(list, item, done);
+        const text = item.text && !editing && this.textMode() !== "fold" ? html`<div class="tx clamp">${item.text}</div>` : nothing;
+        const when = editing ? "" : this.whenText(item);
+        const editor = editing ? this.editor(list) : nothing;
+
+        if (this.layoutMode() === "timeline") {
+            const extra = this.badgeSaysIt(item) ? "" : when;
+            return html`<div class=${classes}>
+                ${cover} ${this.badge(item)}
+                <div class="body">
+                    <div class="ti" title=${item.title}>${tick}${item.title}</div>
+                    ${extra ? html`<div class="lb"><span class="when">${extra}</span></div>` : nothing} ${text} ${editor}
+                </div>
+            </div>`;
+        }
+        return html`<div class=${classes}>
+            ${cover}
+            <div class="line">
+                <span class="ic">${tick}</span>
+                <span class="ti" title=${item.title}>${item.title}</span>
+                ${when ? html`<span class="when" title=${this.longWhen(item)}>${when}</span>` : nothing}
+            </div>
+            ${text !== nothing ? html`<div class="sub">${text}</div>` : nothing} ${editor}
+        </div>`;
+    }
+
+    /** The editor of a new item, at the top of its list. */
+    private newEditor(list: ListConfig): TemplateResult | typeof nothing {
+        if (this.editing?.entity !== list.entity || this.editing.uid !== undefined) {
+            return nothing;
+        }
+        return html`<div class="item new">${this.editor(list)}</div>`;
+    }
+
+    /** The open item's fields, those the list supports, and its buttons. Enter in the title saves, Escape closes it. */
+    private editor(list: ListConfig): TemplateResult {
+        const draft = this.editing!;
+        const isNew = draft.uid === undefined;
+        const set = (field: "title" | "text" | "day" | "time") => (event: Event) => {
+            this.editing = { ...this.editing!, [field]: (event.target as HTMLInputElement).value, failed: false };
+        };
+        const keys = (event: KeyboardEvent) => {
+            if (event.key === "Escape") {
+                this.editing = undefined;
+            } else if (event.key === "Enter" && (event.target as HTMLElement).classList.contains("f-title")) {
+                void this.save();
+            }
+        };
+        const field = (label: string, input: TemplateResult, classes = "") =>
+            html`<label class="field ${classes}"><span>${label}</span>${input}</label>`;
+        const text = this.can(list, "description")
+            ? field(
+                  this.text("common.edit_text"),
+                  html`<textarea class="f-text" rows="2" .value=${draft.text} @input=${set("text")}></textarea>`,
+              )
+            : nothing;
+        const days = this.can(list, "dueDate") || this.can(list, "dueDateTime");
+        const day = days
+            ? html`<div class="when-row">
+                  ${field(this.text("common.edit_day"), html`<input class="f-day" type="date" .value=${draft.day} @input=${set("day")} />`, "grow")}
+                  ${
+                      this.can(list, "dueDateTime")
+                          ? field(
+                                this.text("common.edit_time"),
+                                html`<input class="f-time" type="time" .value=${draft.time} @input=${set("time")} />`,
+                            )
+                          : nothing
+                  }
+                  ${
+                      draft.day
+                          ? html`<button
+                                class="ibtn"
+                                title=${this.text("common.clear_day")}
+                                aria-label=${this.text("common.clear_day")}
+                                @click=${() => (this.editing = { ...draft, day: "", time: "" })}
+                            >
+                                <ha-icon icon="mdi:close"></ha-icon>
+                            </button>`
+                          : nothing
+                  }
+              </div>`
+            : nothing;
+        const raw = this.todos.get(list.entity) ?? [];
+        const moves =
+            !isNew && this.can(list, "move") && ["up", "down"].some((d) => moveTarget(raw, draft.uid!, d as "up" | "down") !== null);
+        const moveButton = (direction: "up" | "down") =>
+            html`<button
+                class="ibtn"
+                ?disabled=${moveTarget(raw, draft.uid!, direction) === null}
+                title=${this.text(`common.move_${direction}`)}
+                aria-label=${this.text(`common.move_${direction}`)}
+                @click=${() => this.move(direction)}
+            >
+                <ha-icon icon=${direction === "up" ? "mdi:arrow-up" : "mdi:arrow-down"}></ha-icon>
+            </button>`;
+        return html`<div class="editor" @keydown=${keys}>
+            ${field(this.text("common.edit_title"), html`<input class="f-title" .value=${draft.title} @input=${set("title")} />`)} ${text}
+            ${day} ${draft.failed ? html`<div class="failed">${this.text("common.save_failed")}</div>` : nothing}
+            <div class="btns">
+                ${
+                    !isNew && this.can(list, "delete")
+                        ? html`<button class="tbtn del" @click=${() => this.deleteItem()}>
+                              <ha-icon icon="mdi:delete-outline"></ha-icon>${this.text("common.delete")}
+                          </button>`
+                        : nothing
+                }
+                ${moves ? html`${moveButton("up")}${moveButton("down")}` : nothing}
+                <span class="sp"></span>
+                <button class="tbtn" @click=${() => (this.editing = undefined)}>${this.text("common.cancel")}</button>
+                <button class="tbtn fill" ?disabled=${!draft.title.trim()} @click=${() => this.save()}>
+                    ${this.text(isNew ? "common.add" : "common.save")}
+                </button>
+            </div>
+        </div>`;
+    }
+
+    /** "Delete done" beside the done group's heading, which asks before it deletes. */
+    private clearButton(list: Shown | undefined): TemplateResult | typeof nothing {
+        if (!list || !isTodoList(list.config) || !this.can(list.config, "delete")) {
+            return nothing;
+        }
+        const entity = list.config.entity;
+        const count = (this.todos.get(entity) ?? []).filter((todo) => todo.status === "completed").length;
+        if (count === 0) {
+            return nothing;
+        }
+        if (!this.asking.has(entity)) {
+            return html`<button class="clear" @click=${() => this.ask(entity, true)}>${this.text("common.clear_done")}</button>`;
+        }
+        return html`<span class="asking">
+            <span>${this.text(count === 1 ? "common.clear_done_ask_one" : "common.clear_done_ask", { n: count })}</span>
+            <button class="clear del" @click=${() => this.clearDone(list.config)}>${this.text("common.delete")}</button>
+            <button class="clear" @click=${() => this.ask(entity, false)}>${this.text("common.cancel")}</button>
+        </span>`;
+    }
+
+    /** "Delete done" as a row of its own, where the done items have no plain heading to sit beside: under foldable headings, or among several lists. */
+    private clearRow(list: Shown, group: Group): TemplateResult | typeof nothing {
+        const plainDone = this.headings() === "plain" && group.key === "done" && this.lists.length === 1;
+        const holdsDone = group.items.some((item) => item.bucket === "done");
+        if (plainDone || !holdsDone) {
+            return nothing;
+        }
+        const button = this.clearButton(list);
+        return button === nothing ? nothing : html`<div class="clear-row">${button}</div>`;
     }
 
     /** A to-do item's round tick. On a list that can't be changed it only shows whether the item is done. */
@@ -1010,7 +1324,8 @@ export class ListsCard extends LitElement {
                 }
 
                 .item .src,
-                .item .tick {
+                .item .tick,
+                .item .editor {
                     pointer-events: auto;
                 }
 
@@ -1018,8 +1333,17 @@ export class ListsCard extends LitElement {
                     opacity: 0.6;
                 }
 
-                /* A dimmed badge stays solid and dims its texts, or the timeline's line would show through it. */
-                .tone-dimmed > .badge {
+                /*
+                 * A dimmed badge stays solid and dims its texts, or the timeline's line would show through it. An open
+                 * editor isn't dimmed either. Both rules are as strong as the one above, so they win by coming after it.
+                 */
+                .tone-dimmed > .badge,
+                .tone-dimmed > .editor {
+                    opacity: 1;
+                }
+
+                /* In the timeline the editor is inside the item's body, which an open item leaves undimmed. */
+                .tone-dimmed.editing > .body {
                     opacity: 1;
                 }
 
@@ -1162,6 +1486,204 @@ export class ListsCard extends LitElement {
 
                 .done .ti {
                     text-decoration: line-through;
+                }
+
+                /* The header's +, its icon ending where the pill's text does, as the item buttons' icons do. */
+                .hd-add {
+                    flex: none;
+                    display: grid;
+                    place-items: center;
+                    width: 32px;
+                    height: 32px;
+                    margin: -4px -9px -4px -6px;
+                    padding: 0;
+                    border: 0;
+                    border-radius: 50%;
+                    background: none;
+                    color: var(--secondary-text-color);
+                    cursor: pointer;
+                }
+
+                .hd-add:hover,
+                .ibtn:hover:not(:disabled) {
+                    background: rgba(var(--rgb-primary-text-color, 33, 33, 33), 0.06);
+                    color: var(--primary-color);
+                }
+
+                /* The editor, under an item's title, or at the top of the list for a new item. */
+                .editor {
+                    position: relative;
+                    display: flex;
+                    flex-direction: column;
+                    gap: 10px;
+                    padding: 8px 0 6px 34px;
+                }
+
+                .timeline .editor,
+                .no-icons .editor {
+                    padding-left: 0;
+                }
+
+                .item.new {
+                    padding-top: 0;
+                }
+
+                .field {
+                    display: flex;
+                    flex-direction: column;
+                    gap: 3px;
+                    min-width: 0;
+                    font-size: 11px;
+                    color: var(--secondary-text-color);
+                }
+
+                .field input,
+                .field textarea {
+                    box-sizing: border-box;
+                    width: 100%;
+                    min-width: 0;
+                    padding: 7px 10px;
+                    font: inherit;
+                    font-size: 14px;
+                    color: var(--primary-text-color);
+                    background: var(--input-fill-color, rgba(var(--rgb-primary-text-color, 33, 33, 33), 0.06));
+                    border: 0;
+                    border-bottom: 1px solid var(--secondary-text-color);
+                    border-radius: 4px 4px 0 0;
+                    outline: none;
+                    color-scheme: inherit;
+                }
+
+                .field input:focus,
+                .field textarea:focus {
+                    border-bottom: 2px solid var(--primary-color);
+                    padding-bottom: 6px;
+                }
+
+                .field textarea {
+                    resize: vertical;
+                    line-height: 18px;
+                }
+
+                .when-row {
+                    display: flex;
+                    align-items: flex-end;
+                    gap: 8px;
+                }
+
+                .when-row .grow {
+                    flex: 1 1 auto;
+                }
+
+                .when-row .ibtn {
+                    margin-bottom: 2px;
+                }
+
+                .failed {
+                    font-size: 13px;
+                    color: var(--error-color, #db4437);
+                }
+
+                .btns {
+                    display: flex;
+                    flex-wrap: wrap;
+                    align-items: center;
+                    gap: 4px;
+                    margin-right: -5px;
+                }
+
+                .btns .sp {
+                    flex: 1 1 auto;
+                }
+
+                .tbtn {
+                    display: inline-flex;
+                    align-items: center;
+                    gap: 4px;
+                    padding: 6px 12px;
+                    font: inherit;
+                    font-size: 14px;
+                    font-weight: 500;
+                    color: var(--primary-color);
+                    background: none;
+                    border: 0;
+                    border-radius: 16px;
+                    cursor: pointer;
+                    --mdc-icon-size: 18px;
+                }
+
+                .tbtn.fill {
+                    color: var(--text-primary-color, #fff);
+                    background: var(--primary-color);
+                }
+
+                .tbtn:disabled {
+                    opacity: 0.5;
+                    cursor: default;
+                }
+
+                .tbtn.del {
+                    padding-left: 0;
+                    color: var(--error-color, #db4437);
+                }
+
+                .ibtn {
+                    display: grid;
+                    place-items: center;
+                    width: 32px;
+                    height: 32px;
+                    padding: 0;
+                    border: 0;
+                    border-radius: 50%;
+                    background: none;
+                    color: var(--secondary-text-color);
+                    cursor: pointer;
+                    --mdc-icon-size: 20px;
+                }
+
+                .ibtn:disabled {
+                    opacity: 0.35;
+                    cursor: default;
+                }
+
+                /* "Delete done", beside the done group's heading or on a row of its own, and its question. */
+                .clear {
+                    flex: none;
+                    padding: 0;
+                    font: inherit;
+                    font-size: 12px;
+                    font-weight: 400;
+                    letter-spacing: normal;
+                    text-transform: none;
+                    color: var(--primary-color);
+                    background: none;
+                    border: 0;
+                    cursor: pointer;
+                }
+
+                .clear:hover {
+                    text-decoration: underline;
+                }
+
+                .clear.del {
+                    font-weight: 500;
+                    color: var(--error-color, #db4437);
+                }
+
+                .asking {
+                    flex: none;
+                    display: flex;
+                    gap: 10px;
+                    font-size: 12px;
+                    font-weight: 400;
+                    letter-spacing: normal;
+                    text-transform: none;
+                }
+
+                .clear-row {
+                    display: flex;
+                    justify-content: flex-end;
+                    padding: 2px 16px;
                 }
 
                 .src:hover {
@@ -1324,15 +1846,10 @@ export class ListsCard extends LitElement {
                 .held .hd-title,
                 .held .ti,
                 .held .lb,
-                .held .gh-name,
-                .held .gh:not(.folding) {
+                .held .gh-name {
                     white-space: nowrap;
                     overflow: hidden;
                     text-overflow: ellipsis;
-                }
-
-                .held .gh:not(.folding) {
-                    display: block;
                 }
 
                 .held .line {

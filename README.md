@@ -17,15 +17,15 @@ key of your choosing.
 A custom card for the lists that sensors carry around in their attributes and that no card shows well, such as the
 tasks of a chore app, the notices of a town, the events of a club or the parcels of a shop. You tell the card which entity holds the
 list and which key of an item is its title, its date, its text and so on, and it draws the list. Nothing has to write
-a format of the card's own, and no integration is needed. Home Assistant's own to-do lists are read as they are, with
-a tick on each item.
+a format of the card's own, and no integration is needed. Home Assistant's own to-do lists are read as they are, and
+their items can be ticked, added, edited and deleted on the card.
 
 The items are grouped by their dates into what is over, what is going on today and what is to come, by one of their
 keys, or not at all. One card can show several lists, each under its own name. The look is rows or a timeline with a
 date badge, and an item's text is shown whole, cut to two lines or folded away until you tap the item.
 
-The card shows what its entity holds and remembers nothing itself. The only thing it changes is a to-do item, ticked
-done or open again.
+The card shows what its entity holds and remembers nothing itself. The only lists it changes are to-do lists, and
+`editing` limits that to ticks or turns it off.
 
 ## Installation
 
@@ -58,6 +58,7 @@ done or open again.
 | `height`      | number | The card's height in pixels, for `fixed`                                                                                                                                                                                                                            |          |
 | `max_height`  | number | The card's greatest height in pixels, for `max`                                                                                                                                                                                                                     |          |
 | `row_step`    | string | How the card rounds its height on automatic rows in a sections view, with `height_mode` at `auto` or `max`. `full` ends it on whole rows, `half` on half rows, which saves up to half a row but can leave the cards under it half a row off those in other sections | `full`   |
+| `editing`     | string | What the card may change on a to-do list. `full` for everything, `tick` for ticking and unticking only, `none` for nothing                                                                                                                                          | `full`   |
 
 ### A list
 
@@ -98,7 +99,7 @@ into the item, such as `attributes.title`.
 
 | Name             | Type    | Description                                                                                                                        | Default                      |
 | ---------------- | ------- | ---------------------------------------------------------------------------------------------------------------------------------- | ---------------------------- |
-| `name`           | string  | The group's heading                                                                                                                | Earlier, Now, Coming, Done   |
+| `name`           | string  | The group's heading                                                                                                                | Earlier, Now, Coming, Ticked |
 | `tone`           | string  | How the group's items are set off. `plain`, `warning`, `highlight` or `dimmed`                                                     | `plain`, for `done` `dimmed` |
 | `days`           | number  | How many days back or ahead the group reaches. Items further away are left out                                                     |                              |
 | `farthest_first` | boolean | The items furthest from today first. Usually the nearest come first, the latest of what is over and the soonest of what is to come | `false`                      |
@@ -124,6 +125,14 @@ day in a `warning` group is written as how long ago it was, such as "3 days ago"
 first group has a `warning` or `highlight` tone, the count beside the title is that group's, with its name, such as "2 late". Otherwise it is the
 number of items on the card that aren't done.
 
+A list grouped by `key` has a group for each value of the `group` field, in the order the values first come up. Items
+without one are together in a group with no heading.
+
+With several lists on a card, the headings are the lists, and a list's own groups only decide the order of its items.
+
+<img src="https://raw.githubusercontent.com/jesmak/lists-card/main/docs/images/several-light.png#gh-light-mode-only" width="490" alt="Two lists on one card, household tasks under Home and town notices under Town, with their texts folded away">
+<img src="https://raw.githubusercontent.com/jesmak/lists-card/main/docs/images/several-dark.png#gh-dark-mode-only" width="490" alt="Two lists on one card, household tasks under Home and town notices under Town, with their texts folded away">
+
 ### To-do lists
 
 An entity of Home Assistant's own to-do lists, such as `todo.shopping_list`, given with no `attribute`, is read as a
@@ -133,16 +142,21 @@ for how many days a ticked item stays in sight.
 
 Each item has a round tick before its title. A tap on it ticks the item done or open again, and the item is struck
 through at once. It stays where it is for a moment before it moves, so a tick by mistake can be undone where it was
-made. On a list whose integration lets no item be changed, the tick only shows whether the item is done. To leave the
-done items out, leave `done` out of `order`.
+made. To leave the done items out, leave `done` out of `order`.
 
-A list grouped by `key` has a group for each value of the `group` field, in the order the values first come up. Items
-without one are together in a group with no heading.
+A tap on an item opens it for editing, with its title, its description, its day and its time. The + in the header
+opens the same fields for a new item. Enter in the title saves and Escape closes without saving. An open item without
+a day can be moved one row up or down among the others without one, as the card keeps the dated items in the order of
+their days. "Delete ticked" beside the done group's heading deletes every ticked item of the list, once you have said
+yes.
 
-With several lists on a card, the headings are the lists, and a list's own groups only decide the order of its items.
+The card offers only what the list's integration supports. Home Assistant's own local to-do lists support all of it,
+while some others take no description, no day or no time of day, or let no item be moved, changed or deleted. With `editing:
+tick` a tap opens an item's text as on any other list, and only the tick changes anything. On a list that can't be
+changed, and with `editing: none`, the tick only shows whether an item is done.
 
-<img src="https://raw.githubusercontent.com/jesmak/lists-card/main/docs/images/several-light.png#gh-light-mode-only" width="490" alt="Two lists on one card, household tasks under Home and town notices under Town, with their texts folded away">
-<img src="https://raw.githubusercontent.com/jesmak/lists-card/main/docs/images/several-dark.png#gh-dark-mode-only" width="490" alt="Two lists on one card, household tasks under Home and town notices under Town, with their texts folded away">
+<img src="https://raw.githubusercontent.com/jesmak/lists-card/main/docs/images/todo-light.png#gh-light-mode-only" width="490" alt="An upkeep to-do list with a round tick on each task, in groups for late, today, coming and ticked, the ticked tasks struck through and dimmed">
+<img src="https://raw.githubusercontent.com/jesmak/lists-card/main/docs/images/todo-dark.png#gh-dark-mode-only" width="490" alt="An upkeep to-do list with a round tick on each task, in groups for late, today, coming and ticked, the ticked tasks struck through and dimmed">
 
 ### Dates
 
