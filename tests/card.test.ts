@@ -199,13 +199,20 @@ describe("when an item is", () => {
         expect(texts(await timeline([{ title: "This year", start: midsummer }]), ".badge > *")).toHaveLength(2);
     });
 
-    it("is a period's days in the badge within one month, and its range under the title across two", async () => {
+    it("is a period's days in the badge within one month, and its first and last day across two", async () => {
         const within = await timeline([{ title: "Works", start: "2020-03-01", end: "2020-03-03" }]);
-        expect(texts(within, ".badge .day")).toEqual(["1–3"]);
+        expect(texts(within, ".badge > *")).toEqual(["1–3", "Mar", "2020"]);
         expect(texts(within, ".lb")).toEqual([]);
-        const across = await timeline([{ title: "Works", start: "2020-03-30", end: "2020-04-02", who: "x" }]);
-        expect(texts(across, ".badge .day")).toEqual(["30"]);
-        expect(texts(across, ".lb")[0]).toMatch(/3\/30\/2020\s*–\s*4\/2\/2020/);
+        const across = await timeline([{ title: "Works", start: "2020-03-30", end: "2020-04-02" }]);
+        expect(texts(across, ".badge > *")).toEqual(["3/30", "4/2", "2020"]);
+        // The badge says it all, so nothing is written under the title.
+        expect(texts(across, ".lb")).toEqual([]);
+    });
+
+    it("is under the title for a period with times, which the badge can't hold", async () => {
+        const timed = await timeline([{ title: "Works", start: "2020-03-30T10:00:00Z", end: "2020-04-02T12:00:00Z" }]);
+        expect(texts(timed, ".badge .end")).toEqual([]);
+        expect(texts(timed, ".lb")[0]).toMatch(/2020/);
     });
 
     it("is said under the title in the timeline when the badge can't: today, and late under a warning", async () => {

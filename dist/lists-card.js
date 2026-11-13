@@ -1,4 +1,4 @@
-/*! lists-card 1.0.1 | MIT License */
+/*! lists-card 1.0.2 | MIT License */
 var __defProp = Object.defineProperty;
 var __getOwnPropDesc = Object.getOwnPropertyDescriptor;
 var __decorateClass = (decorators, target, key, kind) => {
@@ -711,7 +711,7 @@ var c4 = e5(class extends i5 {
 });
 
 // src/const.ts
-var CARD_VERSION = "1.0.1";
+var CARD_VERSION = "1.0.2";
 
 // src/localize/languages/en.json
 var en_default = {
@@ -1895,23 +1895,40 @@ var ListsCard = class extends i4 {
       start?.allDay && end?.allDay && end.time > start.time && this.format(start, { year: "numeric", month: "numeric" }).format(start.time) === this.format(end, { year: "numeric", month: "numeric" }).format(end.time)
     );
   }
-  /** Whether the timeline's badge already says when the item is, so the text needn't: a plain day, or days within a month. */
+  /** A period of whole days that isn't within one month, which the badge writes as its first and last day. */
+  acrossMonths(item) {
+    const { start, end } = item;
+    return Boolean(start?.allDay && end?.allDay && end.time > start.time && !this.sameMonthDays(item));
+  }
+  /** Whether the timeline's badge already says when the item is, so the text needn't: a plain day, or a period of whole days. */
   badgeSaysIt(item) {
     const start = item.start ?? item.end;
     if (!start) {
       return true;
     }
     if (item.start && item.end && item.end.time !== item.start.time) {
-      return this.sameMonthDays(item);
+      return this.sameMonthDays(item) || this.acrossMonths(item);
     }
     const away = dayOf(start, this.timeZone()) - zoneDay(Date.now(), this.timeZone());
     return start.allDay && away !== 0 && !(away < 0 && item.tone === "warning");
   }
-  /** The day large, or a period's days within one month, the month under it, and the year only when it isn't this year's. */
+  /**
+   * The day large, or a period's days within one month, the month under it, and the year only when it isn't this
+   * year's. A period across months has no one month to stand under, so it is its first and last day, one over the other.
+   */
   badge(item) {
     const start = item.start ?? item.end;
     if (!start) {
       return b2`<div class="badge"><div class="day">–</div></div>`;
+    }
+    if (this.acrossMonths(item)) {
+      const date = (when) => this.format(when, { day: "numeric", month: "numeric" }).format(when.time);
+      const endYear = this.year(item.end);
+      return b2`<div class="badge" title=${this.longWhen(item)}>
+                <div class="end">${date(start)}</div>
+                <div class="end">${date(item.end)}</div>
+                ${endYear === this.thisYear() ? A : b2`<div class="year">${endYear}</div>`}
+            </div>`;
     }
     const day = (when) => this.format(when, { day: "numeric" }).format(when.time);
     const days = this.sameMonthDays(item) ? `${day(start)}\u2013${day(item.end)}` : day(start);
@@ -2204,6 +2221,15 @@ var ListsCard = class extends i4 {
                     opacity: 0.6;
                 }
 
+                /* A dimmed badge stays solid and dims its texts, or the timeline's line would show through it. */
+                .tone-dimmed > .badge {
+                    opacity: 1;
+                }
+
+                .tone-dimmed > .badge > * {
+                    opacity: 0.6;
+                }
+
                 /* The date and the buttons go to a line of their own when the title has too little room beside them. */
                 .line {
                     display: flex;
@@ -2372,12 +2398,24 @@ var ListsCard = class extends i4 {
                     white-space: nowrap;
                 }
 
+                .end {
+                    font-size: 12px;
+                    font-weight: 500;
+                    line-height: 1.25;
+                    white-space: nowrap;
+                }
+
                 .month,
                 .year {
                     font-size: 10px;
                     text-transform: uppercase;
                     letter-spacing: 0.04em;
                     color: var(--secondary-text-color);
+                }
+
+                /* A year is shown only when it isn't this one, and stands out, so a date a year old isn't read as this year's. */
+                .year {
+                    color: var(--lc-warning);
                 }
 
                 .body {

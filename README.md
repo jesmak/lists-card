@@ -134,8 +134,8 @@ With several lists on a card, the headings are the lists, and a list's own group
 A date is a day or a time, and a period has a first and a last one. In rows the date is written beside the title, a
 period as a range, today as "today", and any other day with its weekday. The year is written only when it isn't this
 year's. In the timeline the date is a badge, the day large and the month under it, and a period within one month shows
-both its days. What the badge can't say, such as a period across two months or a time of day, is written under the
-title.
+both its days. A period across two months shows its first and last day, one over the other. A year that isn't this
+one stands out in the badge. What the badge can't say, such as a time of day, is written under the title.
 
 The dates are written by the browser in Home Assistant's language, and the day is the one in the time zone your Home
 Assistant profile is set to show.
