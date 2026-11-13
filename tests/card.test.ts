@@ -231,6 +231,11 @@ describe("when an item is", () => {
         expect(texts(await dated(entries), ".when")[0]).not.toMatch(/ago/);
     });
 
+    it("has its weekday when it has times, as a single day does", async () => {
+        const [range] = texts(await dated([{ title: "Meeting", start: "2020-03-10T14:00:00Z", end: "2020-03-10T15:00:00Z" }]), ".when");
+        expect(range).toMatch(/^Tue, 3\/10\/2020/);
+    });
+
     it("is a range for a period", async () => {
         const [range] = texts(await dated([{ title: "Works", start: "2020-03-30", end: "2020-04-02" }]), ".when");
         expect(range).toMatch(/^3\/30\/2020\s*–\s*4\/2\/2020$/);

@@ -2519,7 +2519,8 @@ var ListsCard = class extends i4 {
     }
     const end = item.start && item.end ? item.end : void 0;
     if (end && (end.time !== start.time || end.allDay !== start.allDay)) {
-      return this.format(start, this.dateOptions(start, end)).formatRange(start.time, end.time);
+      const options = this.dateOptions(start, end);
+      return this.format(start, start.allDay ? options : { weekday: "short", ...options }).formatRange(start.time, end.time);
     }
     const away = dayOf(start, this.timeZone()) - zoneDay(Date.now(), this.timeZone());
     if (away === 0 || away < 0 && item.tone === "warning") {

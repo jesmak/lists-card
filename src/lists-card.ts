@@ -1068,8 +1068,10 @@ export class ListsCard extends LitElement {
         }
         const end = item.start && item.end ? item.end : undefined;
         if (end && (end.time !== start.time || end.allDay !== start.allDay)) {
-            // One formatter writes both ends, so a period mixing a day and a time is written by its start's kind.
-            return this.format(start, this.dateOptions(start, end)).formatRange(start.time, end.time);
+            // One formatter writes both ends, so a period mixing a day and a time is written by its start's kind. A period
+            // with times has its weekday, as a single day does.
+            const options = this.dateOptions(start, end);
+            return this.format(start, start.allDay ? options : { weekday: "short", ...options }).formatRange(start.time, end.time);
         }
         const away = dayOf(start, this.timeZone()) - zoneDay(Date.now(), this.timeZone());
         if (away === 0 || (away < 0 && item.tone === "warning")) {
