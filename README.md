@@ -63,23 +63,25 @@ The card shows what its entity holds and remembers nothing itself. The only list
 
 ### A list
 
-| Name        | Type    | Description                                                                                                                                                                                  | Default                      |
-| ----------- | ------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ---------------------------- |
-| `entity`    | string  | The entity that holds the list                                                                                                                                                               | required                     |
-| `entities`  | list    | More [calendars](#calendars) whose events are merged into a calendar's list                                                                                                                  |                              |
-| `attribute` | string  | The attribute the items are in. Without one they are read from the entity's state, as JSON, or from a [to-do list](#to-do-lists) or a [calendar](#calendars) itself                          |                              |
-| `path`      | string  | A path to the items inside the attribute, such as `data.items`, when they aren't at its top                                                                                                  |                              |
-| `name`      | string  | The list's heading on a card with several lists                                                                                                                                              | the entity's name            |
-| `fields`    | object  | Which key of an item holds each of the card's fields, as described under [Keys](#keys)                                                                                                       | each field's own name        |
-| `group`     | string  | What the list's groups are made from. `time` for its items' dates, `key` for the values of the `group` field, `month` for the months of its items' dates, `none` for one list without groups | `time`                       |
-| `limit`     | number  | The most items shown. The card says how many were left out, and a tap on that shows them and hides them again. `0` shows them all                                                            | `0`                          |
-| `hide_more` | boolean | With `limit`, the list is only its first items, with nothing said about the rest                                                                                                             | `false`                      |
-| `order`     | list    | The time groups shown, in order, of `before`, `now`, `after` and `done`. The items of one left out aren't shown                                                                              | `[before, now, after, done]` |
-| `before`    | object  | The group of items that are over, as described under [A time group](#a-time-group)                                                                                                           |                              |
-| `now`       | object  | The group of items going on today, and of items with no date                                                                                                                                 |                              |
-| `after`     | object  | The group of items still to come                                                                                                                                                             |                              |
-| `done`      | object  | The group of a to-do list's ticked items                                                                                                                                                     |                              |
-| `empty`     | string  | What the card says when the list has no items                                                                                                                                                | the card's own text          |
+| Name         | Type    | Description                                                                                                                                                                                  | Default                      |
+| ------------ | ------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ---------------------------- |
+| `entity`     | string  | The entity that holds the list                                                                                                                                                               | required                     |
+| `entities`   | list    | More [calendars](#calendars) whose events are merged into a calendar's list, each as its entity, or as `entity` and `color` for a line of its own colour                                     |                              |
+| `color`      | string  | The colour of the line beside the list's items. One of Home Assistant's own, such as `red` or `light-blue`, or any CSS colour                                                                | the theme's primary colour   |
+| `attribute`  | string  | The attribute the items are in. Without one they are read from the entity's state, as JSON, or from a [to-do list](#to-do-lists) or a [calendar](#calendars) itself                          |                              |
+| `path`       | string  | A path to the items inside the attribute, such as `data.items`, when they aren't at its top                                                                                                  |                              |
+| `name`       | string  | The list's heading on a card with several lists                                                                                                                                              | the entity's name            |
+| `fields`     | object  | Which key of an item holds each of the card's fields, as described under [Keys](#keys)                                                                                                       | each field's own name        |
+| `group`      | string  | What the list's groups are made from. `time` for its items' dates, `key` for the values of the `group` field, `month` for the months of its items' dates, `none` for one list without groups | `time`                       |
+| `limit`      | number  | The most items shown, from 1 to 100. The card says how many were left out, and a tap on that shows them and hides them again. Left out, the list shows all its items, up to 100              | none                         |
+| `past_limit` | number  | The most items that are over shown, always the latest, counted within `limit`. The rest of `limit` goes to the others, and past items never take their places. `0` shows none                | no limit of its own          |
+| `hide_more`  | boolean | With `limit`, the list is only its first items, with nothing said about the rest                                                                                                             | `false`                      |
+| `order`      | list    | The time groups shown, in order, of `before`, `now`, `after` and `done`. The items of one left out aren't shown                                                                              | `[before, now, after, done]` |
+| `before`     | object  | The group of items that are over, as described under [A time group](#a-time-group)                                                                                                           |                              |
+| `now`        | object  | The group of items going on today, and of items with no date                                                                                                                                 |                              |
+| `after`      | object  | The group of items still to come                                                                                                                                                             |                              |
+| `done`       | object  | The group of a to-do list's ticked items                                                                                                                                                     |                              |
+| `empty`      | string  | What the card says when the list has no items                                                                                                                                                | the card's own text          |
 
 ### Keys
 
@@ -170,11 +172,15 @@ changed, and with `editing: none`, the tick only shows whether an item is done.
 A calendar entity, such as `calendar.family`, given with no `attribute`, is read as a calendar. An event's summary is
 its title, its description its text, its place its label, and its start and end its dates. A whole-day event ends on
 its last day, though a calendar gives the day after it. Each time of a repeating event is an item of its own. The
-calendars in `entities` are merged into the same list, such as the public holidays among the family's events.
+calendars in `entities` are merged into the same list, such as the public holidays among the family's events. Each
+can have a colour of its own for the line beside its events, so you can tell where an event comes from.
 
 The card asks for the events as far back as the list's `before` group reaches and as far ahead as its `after` group
-does. With no `days` set, that is from today to 30 days ahead, as a calendar can't give all its events at once. A group
-left out of `order` isn't asked for. The card shows the events and changes nothing in a calendar.
+does, the days back and ahead on the list's page in the visual editor. A calendar added in the visual editor starts with
+0 days back and 30 ahead. With no days set, there is no limit in days, and as a calendar can't give all its events at
+once, a year back or ahead is asked for. The days and the `limit` are limits of their own. With 5 days ahead and a
+limit of 50, the list shows the events of those 5 days, 50 at most. A group left out of `order` isn't asked for. The card shows the
+events and changes nothing in a calendar.
 
 ### Dates
 
@@ -433,7 +439,8 @@ layout: timeline
 lists:
   - entity: calendar.family
     entities:
-      - calendar.holidays
+      - entity: calendar.holidays
+        color: red
     now:
       name: Today
       tone: highlight
@@ -441,10 +448,11 @@ lists:
       name: Coming
 ```
 
-<img src="https://raw.githubusercontent.com/jesmak/lists-card/main/docs/images/calendar-light.png#gh-light-mode-only" width="490" alt="A family's calendar as a timeline with the holidays merged in, today's choir rehearsal highlighted, then a dentist, the next rehearsal, a cabin weekend over three days and Independence Day">
-<img src="https://raw.githubusercontent.com/jesmak/lists-card/main/docs/images/calendar-dark.png#gh-dark-mode-only" width="490" alt="A family's calendar as a timeline with the holidays merged in, today's choir rehearsal highlighted, then a dentist, the next rehearsal, a cabin weekend over three days and Independence Day">
+<img src="https://raw.githubusercontent.com/jesmak/lists-card/main/docs/images/calendar-light.png#gh-light-mode-only" width="490" alt="A family's calendar as a timeline with the holidays merged in and a line beside each event, today's choir rehearsal highlighted, then a dentist, the next rehearsal, a cabin weekend over three days and Independence Day with a red line">
+<img src="https://raw.githubusercontent.com/jesmak/lists-card/main/docs/images/calendar-dark.png#gh-dark-mode-only" width="490" alt="A family's calendar as a timeline with the holidays merged in and a line beside each event, today's choir rehearsal highlighted, then a dentist, the next rehearsal, a cabin weekend over three days and Independence Day with a red line">
 
-The cabin weekend ends on the 29th, though the calendar says the 30th.
+The cabin weekend ends on the 29th, though the calendar says the 30th. The holiday's line is red, the family's in the
+theme's primary colour.
 
 ### A list nested in an answer
 

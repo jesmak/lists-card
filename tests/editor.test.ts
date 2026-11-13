@@ -1,6 +1,16 @@
 import { describe, expect, it } from "vitest";
 
-import { configFromForm, formData, listFormData, listKind, listSchema, notListAttributes, tidyList } from "../src/editor";
+import {
+    configFromForm,
+    formData,
+    listFormData,
+    listFromForm,
+    listKind,
+    listSchema,
+    newList,
+    notListAttributes,
+    tidyList,
+} from "../src/editor";
 import type { ListsCardConfig } from "../src/types";
 
 const TYPE = "custom:lists-card";
@@ -70,6 +80,36 @@ describe("a list's page", () => {
         expect(attribute.context.filter_entity).toBe("entity");
     });
 
+    it("shows the earlier and coming groups' days as the page's own fields, and writes them back into the groups", () => {
+        const list = { entity: "calendar.home", before: { name: "Past", days: 3 }, after: { days: 60 } };
+        expect(listFormData(list)).toMatchObject({ days_back: 3, days_ahead: 60 });
+        expect(listFromForm({ ...listFormData(list), days_back: null, days_ahead: 90 })).toMatchObject({
+            before: { name: "Past" },
+            after: { days: 90 },
+        });
+        expect(tidyList(listFromForm({ ...listFormData(list), days_back: null, days_ahead: null }))).toEqual({
+            entity: "calendar.home",
+            before: { name: "Past" },
+        });
+        // Only the done group keeps a reach of its own in its form.
+        const days = (name: string) =>
+            Object.keys(
+                (listSchema("todo", text).find((entry) => entry.name === name) as unknown as { selector: { object: { fields: object } } })
+                    .selector.object.fields,
+            );
+        expect(days("after")).not.toContain("days");
+        expect(days("done")).toContain("days");
+    });
+
+    it("starts a calendar added in the editor with 30 days ahead in its config, and other lists with nothing", () => {
+        expect(newList("calendar.home")).toEqual({ entity: "calendar.home", before: { days: 0 }, after: { days: 30 } });
+        expect(listFormData(newList("calendar.home"))).toMatchObject({ days_back: 0, days_ahead: 30 });
+        // A 0 is a value of its own, and stays in the config.
+        expect(tidyList(newList("calendar.home"))).toEqual({ entity: "calendar.home", before: { days: 0 }, after: { days: 30 } });
+        expect(newList("todo.chores")).toEqual({ entity: "todo.chores" });
+        expect(newList("sensor.chores")).toEqual({ entity: "sensor.chores" });
+    });
+
     it("shows the time groups its kind has as the default order", () => {
         expect(listFormData({ entity: "calendar.home" }).order).toEqual(["before", "now", "after"]);
         expect(listFormData({ entity: "todo.chores" }).order).toEqual(["before", "now", "after", "done"]);
@@ -118,6 +158,35 @@ describe("tidyList", () => {
             entity: "todo.chores",
             order: ["before", "now", "after"],
         });
+    });
+
+    it("writes a merged calendar with no colour as its name alone, and one with a colour in full", () => {
+        expect(
+            tidyList({ entity: "calendar.home", entities: [{ entity: "calendar.work" }, { entity: "calendar.holidays", color: "red" }] }),
+        ).toEqual({ entity: "calendar.home", entities: ["calendar.work", { entity: "calendar.holidays", color: "red" }] });
+        expect(listFormData({ entity: "calendar.home", entities: ["calendar.work"] }).entities).toEqual([{ entity: "calendar.work" }]);
+    });
+
+    it("shows a group holding only its days as unset, as the days are fields of the page, and keeps them on the way back", () => {
+        const list = { entity: "calendar.home", before: { days: 0 }, after: { days: 30, name: "Soon" } };
+        const data = listFormData(list);
+        expect(data.before).toBeUndefined();
+        expect(data.after).toEqual({ name: "Soon" });
+        expect(tidyList(listFromForm(data))).toEqual(list);
+    });
+
+    it("asks for a limit of 1 to 100, starting empty", () => {
+        const limit = JSON.stringify(listSchema("attribute", (key) => key, [])).match(
+            /"name":"limit","selector":\{"number":\{[^}]*\}/,
+        )?.[0];
+        expect(limit).toContain('"min":1');
+        expect(limit).toContain('"max":100');
+        expect(listFormData({ entity: "sensor.chores" }).limit).toBeUndefined();
+    });
+
+    it("keeps a past limit of 0, which shows no past items", () => {
+        expect(tidyList({ entity: "calendar.home", past_limit: 0 })).toEqual({ entity: "calendar.home", past_limit: 0 });
+        expect(tidyList({ entity: "calendar.home", past_limit: undefined })).toEqual({ entity: "calendar.home" });
     });
 
     it("keeps hide_more only when it is on", () => {
@@ -174,7 +243,10 @@ describe("configFromForm", () => {
             layout: "timeline",
             lists: [{ entity: "sensor.chores", attribute: "tasks", fields: { start: "due" }, after: { days: 7 }, order: ["now", "after"] }],
         };
-        const form = { ...formData(config), lists: config.lists.map(listFormData) } as unknown as ListsCardConfig;
+        const form = {
+            ...formData(config),
+            lists: config.lists.map((list) => listFromForm(listFormData(list))),
+        } as unknown as ListsCardConfig;
         expect(configFromForm(form)).toEqual(config);
     });
 });

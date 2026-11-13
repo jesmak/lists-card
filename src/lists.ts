@@ -9,9 +9,26 @@
  */
 import type { HassEntity } from "./hass";
 import { BUCKETS, GROUPINGS, TONES } from "./types";
-import type { Arranged, Bucket, CalendarEvent, FieldMap, Group, Item, ListConfig, Placed, TodoItem, Tone, When } from "./types";
+import type {
+    Arranged,
+    Bucket,
+    CalendarEvent,
+    FieldMap,
+    Group,
+    Item,
+    ListConfig,
+    MergedCalendar,
+    Placed,
+    TodoItem,
+    Tone,
+    When,
+} from "./types";
 
 const DAY_MS = 86_400_000;
+
+/** Ceilings, so no list ever draws a thousand items: the most items a list shows, and the most days it reaches either way. */
+export const MAX_ITEMS = 100;
+export const MAX_DAYS = 365;
 
 /** A bucket's tone when its list sets none. What is done is dimmed. */
 export const DEFAULT_TONES: Record<Bucket, Tone> = { before: "plain", now: "plain", after: "plain", done: "dimmed" };
@@ -173,22 +190,70 @@ export function isCalendarList(list: ListConfig): boolean {
 
 /** A calendar list's calendars: its entity, and those merged into it. */
 export function calendarEntities(list: ListConfig): string[] {
-    return [...new Set([list.entity, ...(list.entities ?? [])])];
+    return [...new Set([list.entity, ...(list.entities ?? []).map(mergedEntity)])];
 }
 
-/** The days a calendar list asks for when none are set: none back, and thirty ahead. */
-export const CALENDAR_BACK_DAYS = 0;
-export const CALENDAR_AHEAD_DAYS = 30;
+const mergedEntity = (merged: string | MergedCalendar) => (typeof merged === "string" ? merged : merged.entity);
+
+/** The colour of the line beside an entity's items: a merged calendar's own if it has one, else its list's. */
+export function colorOf(list: ListConfig, entity: string): string | undefined {
+    const merged = (list.entities ?? []).find((entry): entry is MergedCalendar => typeof entry === "object" && entry.entity === entity);
+    return merged?.color || list.color || undefined;
+}
+
+/** Home Assistant's own colours, which the theme sets as `--<name>-color`. Any other value is taken as a CSS colour. */
+const THEME_COLORS = new Set([
+    "primary",
+    "accent",
+    "disabled",
+    "red",
+    "pink",
+    "purple",
+    "deep-purple",
+    "indigo",
+    "blue",
+    "light-blue",
+    "cyan",
+    "teal",
+    "green",
+    "light-green",
+    "lime",
+    "yellow",
+    "amber",
+    "orange",
+    "deep-orange",
+    "brown",
+    "light-grey",
+    "grey",
+    "dark-grey",
+    "blue-grey",
+    "black",
+    "white",
+]);
+
+export function cssColor(color: string | undefined): string | undefined {
+    if (!color) {
+        return undefined;
+    }
+    return THEME_COLORS.has(color) ? `var(--${color}-color)` : color;
+}
+
+/**
+ * The days a calendar list asks for when none are set: no limit either way, which a calendar, always asked for a time,
+ * takes as a year back and a year ahead. The days and the list's limit are limits of their own, neither setting the other.
+ */
+export const CALENDAR_BACK_DAYS = 365;
+export const CALENDAR_AHEAD_DAYS = 365;
 
 /**
  * The time a calendar list's events are asked for: back as far as its `before` group reaches, and ahead as far as its
- * `after` group does. A day more is asked at each end, in UTC, so no time zone cuts a day off. Arranging the items leaves
+ * `after` group does, a year each way when unset. A day more is asked at each end, in UTC, so no time zone cuts a day off. Arranging the items leaves
  * out what is beyond the groups' reach.
  */
 export function calendarWindow(list: ListConfig, now: number, timeZone?: string): { start: string; end: string } {
     const order = list.order?.length ? list.order : BUCKETS;
-    const back = order.includes("before") ? (list.before?.days ?? CALENDAR_BACK_DAYS) : 0;
-    const ahead = order.includes("after") ? (list.after?.days ?? CALENDAR_AHEAD_DAYS) : 0;
+    const back = order.includes("before") ? Math.min(list.before?.days ?? CALENDAR_BACK_DAYS, MAX_DAYS) : 0;
+    const ahead = order.includes("after") ? Math.min(list.after?.days ?? CALENDAR_AHEAD_DAYS, MAX_DAYS) : 0;
     const today = zoneDay(now, timeZone);
     const iso = (day: number) => new Date(day * DAY_MS).toISOString();
     return { start: iso(today - back - 1), end: iso(today + ahead + 2) };
@@ -220,6 +285,26 @@ export function calendarItems(events: CalendarEvent[], entity: string): Item[] {
             }
             return item;
         });
+}
+
+/**
+ * The items a list shows of those placed, in their order: as many as its limit allows, never more than the ceiling. With
+ * a limit for the past, that many of the items that are over at most, always the latest of them, and the rest of the
+ * limit for the others, so a total of 5 with 2 past is 2 past and 3 to come. Without one, the limit takes them in order.
+ */
+function limited<T extends { item: Placed }>(placed: T[], list: ListConfig): T[] {
+    const total = list.limit ? Math.min(list.limit, MAX_ITEMS) : MAX_ITEMS;
+    if (list.past_limit == null) {
+        return placed.slice(0, total);
+    }
+    const end = (entry: T) => (entry.item.end ?? entry.item.start)?.time ?? 0;
+    const past = placed
+        .filter((entry) => entry.item.bucket === "before")
+        .sort((a, b) => end(b) - end(a))
+        .slice(0, Math.min(list.past_limit, total));
+    const others = placed.filter((entry) => entry.item.bucket !== "before").slice(0, total - past.length);
+    const kept = new Set([...past, ...others]);
+    return placed.filter((entry) => kept.has(entry));
 }
 
 /** A time's day in a time zone, the browser's when none is given, as days since the epoch. */
@@ -273,9 +358,14 @@ export function validList(list: unknown): list is ListConfig {
         typeof config.entity === "string" &&
         config.entity !== "" &&
         // More entities are merged only into a calendar's list.
+        textOrUnset(config.color) &&
         (config.entities == null ||
             (Array.isArray(config.entities) &&
-                config.entities.every((entity) => typeof entity === "string" && entity.startsWith("calendar.")) &&
+                config.entities.every((entry) => {
+                    const entity = typeof entry === "object" && entry !== null ? entry.entity : entry;
+                    const color = typeof entry === "object" && entry !== null ? entry.color : undefined;
+                    return typeof entity === "string" && entity.startsWith("calendar.") && textOrUnset(color);
+                }) &&
                 config.entity.startsWith("calendar.") &&
                 !config.attribute)) &&
         textOrUnset(config.attribute) &&
@@ -285,6 +375,7 @@ export function validList(list: unknown): list is ListConfig {
         (config.fields == null || (typeof config.fields === "object" && Object.values(config.fields).every(textOrUnset))) &&
         (config.group == null || GROUPINGS.includes(config.group)) &&
         (config.limit == null || count(config.limit)) &&
+        (config.past_limit == null || count(config.past_limit)) &&
         (config.hide_more == null || typeof config.hide_more === "boolean") &&
         (config.order == null || (Array.isArray(config.order) && config.order.every((b) => BUCKETS.includes(b)))) &&
         bucket(config.before) &&
@@ -344,7 +435,7 @@ export function arrange(
                   a.index - b.index,
     );
     const monthOf = new Map(placed.map(({ item, undated, first }) => [item, undated ? undefined : new Date(first * DAY_MS)]));
-    const shown = (list.limit ? placed.slice(0, list.limit) : placed).map(({ item }) => item);
+    const shown = limited(placed, list).map(({ item }) => item);
 
     const groups: Group[] = [];
     if (grouping === "none") {

@@ -21,6 +21,8 @@ import {
     calendarEntities,
     calendarItems,
     calendarWindow,
+    colorOf,
+    cssColor,
     dayOf,
     isCalendarList,
     isTodoList,
@@ -255,7 +257,12 @@ export class ListsCard extends LitElement {
     }
 
     private minimumHeight(): number {
-        return (this.hasHeader() ? HEADER_PX : 0) + LIST_TOP_PX + HEADING_PX + ITEM_PX + LIST_BOTTOM_PX + BORDER_PX;
+        return (this.hasHeader() ? HEADER_PX : 0) + this.listTop() + HEADING_PX + ITEM_PX + LIST_BOTTOM_PX + BORDER_PX;
+    }
+
+    /** The list's own room at its top: a little under a header, and as much as at its bottom on a card with none, which is centred. */
+    private listTop(): number {
+        return this.hasHeader() ? LIST_TOP_PX : LIST_BOTTOM_PX;
     }
 
     private heightStyle(): string {
@@ -404,12 +411,21 @@ export class ListsCard extends LitElement {
                 : isCalendarList(config)
                   ? this.calendarItems(config)
                   : { items: readItems(entity, config), loading: false };
+            const colored =
+                items && !isCalendarList(config) && config.color ? items.map((item) => ({ ...item, color: config.color })) : items;
             const arrangeBy = (list: ListConfig) =>
-                items && arrange(items, list, Date.now(), names, { timeZone: this.timeZone(), whole, monthName: this.monthName });
+                colored && arrange(colored, list, Date.now(), names, { timeZone: this.timeZone(), whole, monthName: this.monthName });
             const limited = arrangeBy(config);
             const cut = limited?.hidden ?? 0;
             const open = cut > 0 && !config.hide_more && this.expanded.has(index);
-            return { config, name, arranged: open ? arrangeBy({ ...config, limit: 0 }) : limited, loading, cut, open };
+            return {
+                config,
+                name,
+                arranged: open ? arrangeBy({ ...config, limit: 0, past_limit: undefined }) : limited,
+                loading,
+                cut,
+                open,
+            };
         });
     }
 
@@ -425,7 +441,11 @@ export class ListsCard extends LitElement {
         }
         const read = keys.filter(([, key]) => this.events.has(key));
         return {
-            items: read.length ? read.flatMap(([entity, key]) => calendarItems(this.events.get(key)!, entity)) : undefined,
+            items: read.length
+                ? read.flatMap(([entity, key]) =>
+                      calendarItems(this.events.get(key)!, entity).map((item) => ({ ...item, color: colorOf(list, entity) })),
+                  )
+                : undefined,
             loading: false,
         };
     }
@@ -830,7 +850,7 @@ export class ListsCard extends LitElement {
 
         const folded = mode === "fold";
         return html`<div class=${classes}>
-            ${cover}
+            ${cover} ${this.accent(item)}
             <div class="line">
                 <span class="ic">${tick === nothing ? this.icon(item) : tick}</span>
                 <span class="ti" title=${item.title}
@@ -884,7 +904,7 @@ export class ListsCard extends LitElement {
             </div>`;
         }
         return html`<div class=${classes}>
-            ${cover}
+            ${cover} ${this.accent(item)}
             <div class="line">
                 <span class="ic">${tick}</span>
                 <span class="ti" title=${item.title}>${item.title}</span>
@@ -1013,6 +1033,12 @@ export class ListsCard extends LitElement {
         }
         const button = this.clearButton(list);
         return button === nothing ? nothing : html`<div class="clear-row">${button}</div>`;
+    }
+
+    /** The line beside an item, in its list's or calendar's colour, or the theme's primary colour when it has none. */
+    private accent(item: Placed): TemplateResult {
+        const color = cssColor(item.color);
+        return html`<span class="acc" style=${color ? `--lc-acc: ${color}` : ""}></span>`;
     }
 
     /** A to-do item's round tick. On a list that can't be changed it only shows whether the item is done. */
@@ -1160,9 +1186,14 @@ export class ListsCard extends LitElement {
      * year's. A period across months has no one month to stand under, so it is its first and last day, one over the other.
      */
     private badge(item: Placed): TemplateResult {
+        // The line beside the item is the badge's own, so it is always as tall as the badge, whatever stands beside it.
+        const line = this.accent(item);
         const start = item.start ?? item.end;
         if (!start) {
-            return html`<div class="badge"><div class="day">–</div></div>`;
+            return html`<div class="badge">
+                <div class="day">–</div>
+                ${line}
+            </div>`;
         }
         if (this.acrossMonths(item)) {
             const date = (when: When) => this.format(when, { day: "numeric", month: "numeric" }).format(when.time);
@@ -1170,7 +1201,7 @@ export class ListsCard extends LitElement {
             return html`<div class="badge" title=${this.longWhen(item)}>
                 <div class="end">${date(start)}</div>
                 <div class="end">${date(item.end!)}</div>
-                ${endYear === this.thisYear() ? nothing : html`<div class="year">${endYear}</div>`}
+                ${endYear === this.thisYear() ? nothing : html`<div class="year">${endYear}</div>`} ${line}
             </div>`;
         }
         const day = (when: When) => this.format(when, { day: "numeric" }).format(when.time);
@@ -1179,7 +1210,7 @@ export class ListsCard extends LitElement {
         return html`<div class="badge" title=${this.longWhen(item)}>
             <div class="day">${days}</div>
             <div class="month">${this.format(start, { month: "short" }).format(start.time)}</div>
-            ${year === this.thisYear() ? nothing : html`<div class="year">${year}</div>`}
+            ${year === this.thisYear() ? nothing : html`<div class="year">${year}</div>`} ${line}
         </div>`;
     }
 
@@ -1278,7 +1309,7 @@ export class ListsCard extends LitElement {
         const list = card.querySelector<HTMLElement>(":scope > .list");
         if (list) {
             const listStyle = getComputedStyle(list);
-            content -= Math.max(0, px(listStyle.paddingTop) - LIST_TOP_PX) + Math.max(0, px(listStyle.paddingBottom) - LIST_BOTTOM_PX);
+            content -= Math.max(0, px(listStyle.paddingTop) - this.listTop()) + Math.max(0, px(listStyle.paddingBottom) - LIST_BOTTOM_PX);
         }
         const filled = filledHeight(content, this.config ?? {}, limit);
         const spare = spareRoom(filled, content);
@@ -1298,9 +1329,8 @@ export class ListsCard extends LitElement {
     private cardStyle(): string {
         const style = [filledStyle(this.config ?? {}, this.layout, this.minimumHeight(), this.filled)];
         if (this.filled) {
-            const top = this.hasHeader()
-                ? this.spare
-                : Math.min(this.spare, Math.max(0, Math.floor((this.spare + LIST_BOTTOM_PX - LIST_TOP_PX) / 2)));
+            // With no header the list has as much room at its top as at its bottom, so the spare room is split in half.
+            const top = this.hasHeader() ? this.spare : Math.floor(this.spare / 2);
             style.push(`--lc-spare: ${top}px`, `--lc-spare-bottom: ${this.spare - top}px`);
         }
         if (this.titleButtonsPx) {
@@ -1312,7 +1342,13 @@ export class ListsCard extends LitElement {
     private cardClass(): string {
         // Without a single icon or tick on the card, the rows give its column up.
         const icons = this.lists.some((list) => list.arranged?.groups.some((group) => group.items.some((item) => item.icon || item.uid)));
-        return [this.heightStyle() && "held", this.sliding && "sliding", !icons && "no-icons", this.titleButtonsPx && "rows-buttons"]
+        return [
+            this.heightStyle() && "held",
+            this.sliding && "sliding",
+            !icons && "no-icons",
+            this.titleButtonsPx && "rows-buttons",
+            !this.hasHeader() && "no-header",
+        ]
             .filter(Boolean)
             .join(" ");
     }
@@ -1925,31 +1961,48 @@ export class ListsCard extends LitElement {
                     padding-bottom: 0;
                 }
 
-                .item.timeline::before {
-                    content: "";
+                /*
+                 * The line beside an item, 12 px from what is on each side of it: the card's padding edge and the item's
+                 * icon or title in rows, the badge and the text in the timeline, where it is as tall as the badge. It is
+                 * placed absolutely, as a line stretched by the item would be measured at the item's height while a
+                 * fold slides.
+                 */
+                .acc {
                     position: absolute;
-                    /* Through the badge's middle: the item's padding and half the badge, less half the line. */
-                    left: 41.5px;
+                    width: 2px;
+                    border-radius: 999px;
+                    background: var(--lc-acc, var(--primary-color));
+                    pointer-events: none;
+                }
+
+                .item.rows {
+                    padding-left: 30px;
+                }
+
+                .item.rows > .acc {
+                    left: 16px;
+                    top: 6px;
+                    bottom: 6px;
+                }
+
+                .item.timeline > .body {
+                    margin-left: 14px;
+                }
+
+                .badge > .acc {
+                    left: calc(100% + 12px);
                     top: 0;
                     bottom: 0;
-                    width: 1px;
-                    background: var(--divider-color, rgba(0, 0, 0, 0.12));
-                }
-
-                .item.timeline:first-child::before {
-                    top: 12px;
-                }
-
-                .item.timeline:last-child::before {
-                    bottom: calc(100% - 12px);
                 }
 
                 .badge {
                     flex: none;
                     position: relative;
                     width: 52px;
+                    /* Whole pixels, as its lines alone come to 35.75, and the items beside a title alone would end a fraction short. */
+                    min-height: 36px;
                     box-sizing: border-box;
-                    margin: 6px 0;
+                    margin: 7px 0;
                     text-align: center;
                     border-radius: 6px;
                     padding: 4px 0 3px;
@@ -1993,17 +2046,26 @@ export class ListsCard extends LitElement {
                 }
 
                 /*
-                 * The title and the line under it stand centred against a badge of two lines, 36 px tall from 6 px down,
-                 * and anything more flows on below them. A title alone is centred against the badge by itself.
+                 * The title and the line under it stand centred against a badge of two lines, 36 px tall from 7 px down,
+                 * so an item of one or two lines is 50 px tall, whatever its second line is, and the badges stand at
+                 * even gaps. Anything more flows on below them. A title alone is centred against the badge by itself,
+                 * as is a title with its text folded away. A description's line is 2 px taller than a time's, so the
+                 * pair starts a pixel higher.
                  */
                 .body {
                     flex: 1 1 auto;
                     min-width: 0;
-                    padding: 6px 0 7px;
+                    padding: 7px 0;
                 }
 
-                .timeline .body:has(> .ti:only-child) {
-                    padding-top: 14px;
+                .timeline .body:has(> .ti:only-child),
+                .timeline .body:has(> .ti + .fold:not(.open):last-child) {
+                    padding-top: 15px;
+                }
+
+                .timeline .body:has(> .ti + .tx) {
+                    padding-top: 6px;
+                    padding-bottom: 6px;
                 }
 
                 .timeline .ti {
@@ -2092,10 +2154,36 @@ export class ListsCard extends LitElement {
                     flex-basis: 0;
                 }
 
+                /* The lists scroll with no scrollbar. Their fading edges show that there is more. */
                 .held .list {
                     overflow-y: auto;
-                    scrollbar-width: thin;
-                    scrollbar-gutter: stable;
+                    scrollbar-width: none;
+                }
+
+                .held .list::-webkit-scrollbar {
+                    display: none;
+                }
+
+                /* A card with no header has as much room above its lists as below them. */
+                .no-header > .list {
+                    padding-top: calc(12px + var(--lc-spare, 0px));
+                }
+
+                /*
+                 * Held to a height, a card with no header centres its lists while they fit. The auto margins share the
+                 * room left over, and come to nothing once the lists are taller, so they scroll from their top.
+                 */
+                .held.no-header > .list {
+                    display: flex;
+                    flex-direction: column;
+                }
+
+                .held.no-header > .list > :first-child {
+                    margin-top: auto;
+                }
+
+                .held.no-header > .list > :last-child {
+                    margin-bottom: auto;
                 }
 
                 .sliding.held .list {

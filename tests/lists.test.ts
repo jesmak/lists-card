@@ -7,6 +7,8 @@ import {
     calendarEntities,
     calendarItems,
     calendarWindow,
+    colorOf,
+    cssColor,
     dig,
     isCalendarList,
     isTodoList,
@@ -217,15 +219,17 @@ describe("calendars", () => {
         ]);
     });
 
-    it("are asked for over their groups' reach, a day more at each end, 30 days ahead when no reach is set", () => {
+    it("are asked for over their groups' reach, a day more at each end, a year each way when no reach is set", () => {
         expect(calendarWindow({ entity: "calendar.home" }, NOW, "UTC")).toEqual({
-            start: "2026-03-09T00:00:00.000Z",
-            end: "2026-04-11T00:00:00.000Z",
+            start: "2025-03-09T00:00:00.000Z",
+            end: "2027-03-12T00:00:00.000Z",
         });
         expect(calendarWindow({ entity: "calendar.home", before: { days: 7 }, after: { days: 3 } }, NOW, "UTC")).toEqual({
             start: "2026-03-02T00:00:00.000Z",
             end: "2026-03-15T00:00:00.000Z",
         });
+        // The days and the limit are limits of their own: a limit doesn't widen days that are set.
+        expect(calendarWindow({ entity: "calendar.home", limit: 50, after: { days: 5 } }, NOW, "UTC").end).toBe("2026-03-17T00:00:00.000Z");
         // A group left out of the order isn't asked for.
         expect(calendarWindow({ entity: "calendar.home", order: ["now"], after: { days: 7 } }, NOW, "UTC").end).toBe(
             "2026-03-12T00:00:00.000Z",
@@ -265,6 +269,22 @@ describe("calendars", () => {
         expect(new Set(items.map((i) => i.key)).size).toBe(4);
         expect(items[1].label).toBe("Town hall");
         expect(items[3].text).toBe("Up north.");
+    });
+
+    it("take a colour of their own when merged, and their list's otherwise", () => {
+        const list = { entity: "calendar.home", color: "blue", entities: ["calendar.work", { entity: "calendar.holidays", color: "red" }] };
+        expect(calendarEntities(list)).toEqual(["calendar.home", "calendar.work", "calendar.holidays"]);
+        expect(colorOf(list, "calendar.holidays")).toBe("red");
+        expect(colorOf(list, "calendar.work")).toBe("blue");
+        expect(colorOf({ entity: "calendar.home" }, "calendar.home")).toBeUndefined();
+        expect(validList(list)).toBe(true);
+        expect(validList({ entity: "calendar.home", entities: [{ entity: "calendar.x", color: 3 }] } as never)).toBe(false);
+    });
+
+    it("read Home Assistant's own colours from the theme, and any other as CSS", () => {
+        expect(cssColor("red")).toBe("var(--red-color)");
+        expect(cssColor("#ff8800")).toBe("#ff8800");
+        expect(cssColor(undefined)).toBeUndefined();
     });
 
     it("take more entities only on a calendar's list", () => {
@@ -357,6 +377,48 @@ describe("arrange", () => {
             ["done yesterday", "done undated"],
         ]);
         expect(titles(arrange(todos, { ...list, order: ["before", "now", "after"] }, NOW, NAMES, UTC))).toEqual([["Earlier", ["open"]]]);
+    });
+
+    it("shows at most its past limit of what is over, the latest, and fills the rest of the total with what is to come", () => {
+        const many = [
+            item("long ago", "2026-01-01"),
+            item("last week", "2026-03-03"),
+            item("yesterday", "2026-03-09"),
+            item("tomorrow", "2026-03-11"),
+            item("next week", "2026-03-17"),
+            item("in a month", "2026-04-10"),
+            item("later", "2026-05-01"),
+        ];
+        const two = arrange(many, { ...list, limit: 5, past_limit: 2 }, NOW, NAMES, UTC);
+        expect(titles(two)).toEqual([
+            ["Earlier", ["yesterday", "last week"]],
+            ["Coming", ["tomorrow", "next week", "in a month"]],
+        ]);
+        expect(two.hidden).toBe(2);
+        // A hard limit: with only one item to come, 2 + 1, not more of the past.
+        const few = arrange(many.slice(0, 4), { ...list, limit: 5, past_limit: 2 }, NOW, NAMES, UTC);
+        expect(titles(few)).toEqual([
+            ["Earlier", ["yesterday", "last week"]],
+            ["Coming", ["tomorrow"]],
+        ]);
+        // 0 shows nothing that is over. Unset, the total alone decides, in the list's order.
+        expect(titles(arrange(many, { ...list, limit: 3, past_limit: 0 }, NOW, NAMES, UTC))).toEqual([
+            ["Coming", ["tomorrow", "next week", "in a month"]],
+        ]);
+        expect(titles(arrange(many, { ...list, limit: 3 }, NOW, NAMES, UTC))).toEqual([
+            ["Earlier", ["yesterday", "last week", "long ago"]],
+        ]);
+    });
+
+    it("never shows more than 100 items, nor asks a calendar for more than 365 days either way", () => {
+        const lots = Array.from({ length: 150 }, (_, i) => item(`item ${i}`, "2026-03-20"));
+        const arranged = arrange(lots, { ...list, limit: 0 }, NOW, NAMES, UTC);
+        expect(arranged.groups.flatMap((g) => g.items)).toHaveLength(100);
+        expect(arranged.hidden).toBe(50);
+        expect(calendarWindow({ entity: "calendar.home", before: { days: 5000 }, after: { days: 5000 } }, NOW, "UTC")).toEqual({
+            start: "2025-03-09T00:00:00.000Z",
+            end: "2027-03-12T00:00:00.000Z",
+        });
     });
 
     it("groups by month in the order of the days, past months first, named by the card", () => {

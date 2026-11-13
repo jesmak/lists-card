@@ -50,11 +50,19 @@ export interface FieldMap {
 }
 export const FIELDS: Array<keyof FieldMap> = ["title", "text", "start", "end", "label", "icon", "link", "group", "id"];
 
+/** A calendar merged into another's list, with the colour of the line beside its events. */
+export interface MergedCalendar {
+    entity: string;
+    color?: string;
+}
+
 /** One list of the card: where its items are, which of their keys the card reads, and how they are grouped. */
 export interface ListConfig {
     entity: string;
-    /** More calendars whose events are merged into a calendar's list, such as the public holidays. */
-    entities?: string[];
+    /** More calendars whose events are merged into a calendar's list, such as the public holidays, each with a colour of its own if set. */
+    entities?: Array<string | MergedCalendar>;
+    /** The colour of the line beside the list's items: a colour of Home Assistant's own, such as `red`, or any CSS colour. */
+    color?: string;
     /** The attribute that holds the items. Without one they are read from the state, as JSON. */
     attribute?: string;
     /** A path to the items inside the attribute, such as `data.items`, when they aren't at its top. */
@@ -67,6 +75,8 @@ export interface ListConfig {
     limit?: number;
     /** No row saying how many the limit left out, so the list is only its first items. */
     hide_more?: boolean;
+    /** The most items that are over shown, the latest of them, within the limit. 0 shows none. Unset, the limit alone decides. */
+    past_limit?: number;
     before?: BucketConfig;
     now?: BucketConfig;
     after?: BucketConfig;
@@ -111,6 +121,8 @@ export interface Item {
     /** A to-do item's own id, which ticking it names, and whether it is done. Other items have neither. */
     uid?: string;
     done?: boolean;
+    /** The colour of the line beside the item, from its list or the calendar it came from. */
+    color?: string;
 }
 
 /** An item of a to-do list, as Home Assistant's `todo/item/subscribe` gives it. */

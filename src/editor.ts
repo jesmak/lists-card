@@ -10,7 +10,7 @@ import { customElement, property, state } from "lit/decorators.js";
 
 import type { HomeAssistant } from "./hass";
 import { browserLanguage, translate } from "./localize/localize";
-import { DEFAULT_TONES } from "./lists";
+import { DEFAULT_TONES, MAX_DAYS, MAX_ITEMS } from "./lists";
 import { rowStepData, rowStepSchema, tidyRowStep } from "./rows";
 import { BUCKETS, EDITING, FIELDS, GROUPINGS, HEADINGS, LAYOUTS, TEXT_MODES, TONES } from "./types";
 import type { BucketConfig, FieldMap, ListConfig, ListsCardConfig } from "./types";
@@ -22,7 +22,7 @@ interface SchemaEntry {
 type Text = (key: string) => string;
 
 const DEFAULTS: Record<string, unknown> = { layout: "rows", text: "clamp", headings: "plain", editing: "full" };
-const LIST_DEFAULTS: Record<string, unknown> = { group: "time", limit: 0 };
+const LIST_DEFAULTS: Record<string, unknown> = { group: "time" };
 
 const select = (name: string, values: readonly string[], text: Text) => ({
     mode: "dropdown",
@@ -92,6 +92,7 @@ export function notListAttributes(attributes: Record<string, unknown> | undefine
 }
 
 export function listSchema(kind: ListKind, text: Text, hiddenAttributes: string[] = []) {
+    // The days the earlier and coming groups reach are fields of the page itself. Only the done group's reach stays its own.
     const bucket = (name: string) => ({
         name,
         selector: {
@@ -99,11 +100,15 @@ export function listSchema(kind: ListKind, text: Text, hiddenAttributes: string[
                 fields: {
                     name: { label: text("editor.bucket_name"), selector: { text: {} } },
                     tone: { label: text("editor.bucket_tone"), selector: { select: select("tone", TONES, text) } },
-                    days: {
-                        label: text("editor.bucket_days"),
-                        description: text("editor.bucket_days_helper"),
-                        selector: { number: { min: 0, step: 1, mode: "box" } },
-                    },
+                    ...(name === "done"
+                        ? {
+                              days: {
+                                  label: text("editor.bucket_days"),
+                                  description: text("editor.bucket_days_helper"),
+                                  selector: { number: { min: 0, step: 1, mode: "box" } },
+                              },
+                          }
+                        : {}),
                     farthest_first: {
                         label: text("editor.bucket_farthest_first"),
                         description: text("editor.bucket_farthest_first_helper"),
@@ -116,7 +121,29 @@ export function listSchema(kind: ListKind, text: Text, hiddenAttributes: string[
     const groupings = GROUPINGS.filter((grouping) => grouping !== "key" || kind === "attribute");
     return [
         { name: "entity", required: true, selector: { entity: {} } },
-        ...(kind === "calendar" ? [{ name: "entities", selector: { entity: { multiple: true, filter: { domain: "calendar" } } } }] : []),
+        { name: "color", selector: { ui_color: { default_color: "primary" } } },
+        ...(kind === "calendar"
+            ? [
+                  {
+                      name: "entities",
+                      selector: {
+                          object: {
+                              multiple: true,
+                              label_field: "entity",
+                              description_field: "color",
+                              fields: {
+                                  entity: {
+                                      label: text("editor.calendar"),
+                                      required: true,
+                                      selector: { entity: { filter: { domain: "calendar" } } },
+                                  },
+                                  color: { label: text("editor.color"), selector: { ui_color: { default_color: "primary" } } },
+                              },
+                          },
+                      },
+                  },
+              ]
+            : []),
         ...(kind === "attribute"
             ? [
                   // Home Assistant's own attribute picker, offering the attributes of the entity picked above.
@@ -144,7 +171,22 @@ export function listSchema(kind: ListKind, text: Text, hiddenAttributes: string[
               ]
             : []),
         { name: "group", selector: { select: select("group", groupings, text) } },
-        { name: "limit", selector: { number: { min: 0, step: 1, mode: "box" } } },
+        {
+            type: "grid",
+            name: "",
+            schema: [
+                { name: "days_back", selector: { number: { min: 0, max: MAX_DAYS, step: 1, mode: "box" } } },
+                { name: "days_ahead", selector: { number: { min: 0, max: MAX_DAYS, step: 1, mode: "box" } } },
+            ],
+        },
+        {
+            type: "grid",
+            name: "",
+            schema: [
+                { name: "limit", selector: { number: { min: 1, max: MAX_ITEMS, step: 1, mode: "box" } } },
+                { name: "past_limit", selector: { number: { min: 0, max: MAX_ITEMS, step: 1, mode: "box" } } },
+            ],
+        },
         { name: "hide_more", selector: { boolean: {} } },
         {
             name: "order",
@@ -161,9 +203,56 @@ export function listSchema(kind: ListKind, text: Text, hiddenAttributes: string[
     ];
 }
 
+/** The days back and ahead a calendar added in the editor starts with. Left empty, a calendar has no limit in days. */
+export const NEW_CALENDAR_DAYS_BACK = 0;
+export const NEW_CALENDAR_DAYS_AHEAD = 30;
+
+/**
+ * A list added by picking its entity. A calendar starts with today and a month ahead, written into its config, so they
+ * show in the fields.
+ */
+export function newList(entity: string): ListConfig {
+    const list: ListConfig = { entity };
+    return listKind(list) === "calendar"
+        ? { ...list, before: { days: NEW_CALENDAR_DAYS_BACK }, after: { days: NEW_CALENDAR_DAYS_AHEAD } }
+        : list;
+}
+
 /** A list's page values: the list over its kind's defaults. */
 export function listFormData(list: ListConfig): Record<string, unknown> {
-    return { ...LIST_DEFAULTS, order: bucketsOf(listKind(list)), ...list };
+    // The other calendars are edited as rows of a calendar and its colour, though a name alone is written for one with none.
+    const entities = list.entities?.map((entry) => (typeof entry === "string" ? { entity: entry } : entry));
+    // The days are fields of the page, so a group holding only them is shown as unset.
+    const withoutDays = (bucket: "before" | "after") => {
+        const rest = { ...(list[bucket] ?? {}) };
+        delete rest.days;
+        return Object.keys(rest).length ? rest : undefined;
+    };
+    return {
+        ...LIST_DEFAULTS,
+        order: bucketsOf(listKind(list)),
+        ...list,
+        ...(entities ? { entities } : {}),
+        before: withoutDays("before"),
+        after: withoutDays("after"),
+        days_back: list.before?.days,
+        days_ahead: list.after?.days,
+    };
+}
+
+/** A list from its page's values: the days back and ahead written into the earlier and coming groups, where the card reads them. */
+export function listFromForm(value: Record<string, unknown>): ListConfig {
+    const {
+        days_back: back,
+        days_ahead: ahead,
+        ...list
+    } = value as unknown as ListConfig & { days_back?: number | null; days_ahead?: number | null };
+    const reach = (bucket: "before" | "after", days: number | null | undefined) => {
+        const rest = { ...(list[bucket] ?? {}) };
+        delete rest.days;
+        return days == null ? rest : { ...rest, days };
+    };
+    return { ...list, before: reach("before", back), after: reach("after", ahead) };
 }
 
 /** The form's values: the config over the defaults. An option left empty in YAML is null, and shows its default. */
@@ -185,12 +274,16 @@ function tidy<T extends object>(value: T | undefined): T | undefined {
 /** A list as the configuration keeps it: blank values and defaults left out, so it stays as short as one written by hand. */
 export function tidyList(list: ListConfig): ListConfig {
     const tidied: Record<string, unknown> = { entity: list.entity };
-    for (const key of ["attribute", "path", "name", "empty", "hide_more"] as const) {
+    for (const key of ["attribute", "path", "name", "color", "empty", "hide_more"] as const) {
         if (!blank(list[key])) {
             tidied[key] = list[key];
         }
     }
-    const entities = (list.entities ?? []).filter((entity) => entity && entity !== list.entity);
+    // A merged calendar with no colour of its own is written as its name alone, as one written by hand would be.
+    const entities = (list.entities ?? [])
+        .map((entry) => (typeof entry === "string" ? { entity: entry } : entry))
+        .filter((entry) => entry?.entity && entry.entity !== list.entity)
+        .map((entry) => (entry.color ? { entity: entry.entity, color: entry.color } : entry.entity));
     if (entities.length > 0) {
         tidied.entities = entities;
     }
@@ -203,6 +296,10 @@ export function tidyList(list: ListConfig): ListConfig {
     }
     if (list.limit) {
         tidied.limit = list.limit;
+    }
+    // 0 shows no past items, so it is kept.
+    if (list.past_limit != null && (list.past_limit as unknown) !== "") {
+        tidied.past_limit = list.past_limit;
     }
     // Every bucket the list's kind has, in its usual order, is the default.
     if (list.order?.length && list.order.join() !== BUCKETS.join() && list.order.join() !== bucketsOf(listKind(list)).join()) {
@@ -277,7 +374,16 @@ export class ListsCardEditor extends LitElement {
 
     private form(data: Record<string, unknown>, schema: unknown, changed: (event: CustomEvent) => void, kind?: ListKind): TemplateResult {
         // Only a to-do list's page says what its done group holds.
-        const helper = (name: string) => this.helper(name === "order" && kind === "todo" ? "order_todo" : name);
+        const helper = (name: string) => {
+            if (name === "order" && kind === "todo") {
+                return this.helper("order_todo");
+            }
+            // A calendar is asked for a time, so its days have defaults of their own.
+            if ((name === "days_back" || name === "days_ahead") && kind === "calendar") {
+                return this.helper(`${name}_calendar`);
+            }
+            return this.helper(name);
+        };
         return html`<ha-form
             .hass=${this.hass}
             .data=${data}
@@ -318,9 +424,9 @@ export class ListsCardEditor extends LitElement {
         const text: Text = (key) => this.text(key);
         const state = this.hass?.states[list.entity];
         const name = list.name || (state?.attributes.friendly_name as string | undefined) || list.entity;
-        const changed = (event: CustomEvent<{ value: ListConfig }>) => {
+        const changed = (event: CustomEvent<{ value: Record<string, unknown> }>) => {
             const lists = this.lists();
-            lists[index] = event.detail.value;
+            lists[index] = listFromForm(event.detail.value);
             this.setLists(lists);
         };
         return html`
@@ -367,7 +473,7 @@ export class ListsCardEditor extends LitElement {
         if (!entity) {
             return;
         }
-        const lists = [...this.lists(), { entity }];
+        const lists = [...this.lists(), newList(entity)];
         this.setLists(lists);
         this.open = lists.length - 1;
     };

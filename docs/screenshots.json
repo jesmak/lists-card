@@ -397,7 +397,12 @@
                 "lists": [
                     {
                         "entity": "calendar.family",
-                        "entities": ["calendar.holidays"],
+                        "entities": [
+                            {
+                                "entity": "calendar.holidays",
+                                "color": "red"
+                            }
+                        ],
                         "now": {
                             "name": "Today",
                             "tone": "highlight"

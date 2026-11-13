@@ -262,18 +262,18 @@ describe("when an item is", () => {
 
     it("is in the timeline's badge: the day, the month, and the year when it isn't this year", async () => {
         const old = await timeline([{ title: "Old", start: "2020-03-01" }]);
-        expect(texts(old, ".badge > *")).toEqual(["1", "Mar", "2020"]);
+        expect(texts(old, ".badge > :not(.acc)")).toEqual(["1", "Mar", "2020"]);
         // The badge says it all, so the text under the title doesn't repeat it.
         expect(texts(old, ".lb")).toEqual([]);
-        expect(texts(await timeline([{ title: "This year", start: midsummer }]), ".badge > *")).toHaveLength(2);
+        expect(texts(await timeline([{ title: "This year", start: midsummer }]), ".badge > :not(.acc)")).toHaveLength(2);
     });
 
     it("is a period's days in the badge within one month, and its first and last day across two", async () => {
         const within = await timeline([{ title: "Works", start: "2020-03-01", end: "2020-03-03" }]);
-        expect(texts(within, ".badge > *")).toEqual(["1–3", "Mar", "2020"]);
+        expect(texts(within, ".badge > :not(.acc)")).toEqual(["1–3", "Mar", "2020"]);
         expect(texts(within, ".lb")).toEqual([]);
         const across = await timeline([{ title: "Works", start: "2020-03-30", end: "2020-04-02" }]);
-        expect(texts(across, ".badge > *")).toEqual(["3/30", "4/2", "2020"]);
+        expect(texts(across, ".badge > :not(.acc)")).toEqual(["3/30", "4/2", "2020"]);
         // The badge says it all, so nothing is written under the title.
         expect(texts(across, ".lb")).toEqual([]);
     });
@@ -673,6 +673,24 @@ describe("a calendar", () => {
         expect(element.shadowRoot!.querySelector("button.tick")).toBeNull();
     });
 
+    it("draws the line beside each event in its calendar's colour, or the list's", async () => {
+        const { hass, send } = calendarHass();
+        const element = await card(hass, {
+            lists: [{ entity: "calendar.home", color: "blue", entities: [{ entity: "calendar.holidays", color: "red" }] }],
+        });
+        send.get("calendar.home")!({ events: [{ summary: "Dentist", start: day(2), end: day(3) }] });
+        send.get("calendar.holidays")!({ events: [{ summary: "Holiday", start: day(1), end: day(2) }] });
+        await element.updateComplete;
+        const lines = [...element.shadowRoot!.querySelectorAll(".item")].map((item) => [
+            item.querySelector(".ti")!.textContent!.trim(),
+            item.querySelector(".acc")!.getAttribute("style"),
+        ]);
+        expect(lines).toEqual([
+            ["Holiday", "--lc-acc: var(--red-color)"],
+            ["Dentist", "--lc-acc: var(--blue-color)"],
+        ]);
+    });
+
     it("shows what the calendars it could read hold, and says so when it could read none", async () => {
         const some = calendarHass(["calendar.holidays"]);
         const element = await card(some.hass, { lists: [{ entity: "calendar.home", entities: ["calendar.holidays"] }] });
@@ -706,9 +724,9 @@ describe("the spare room of a filled row", () => {
 
     it("is split on a card with no header, so the lists stand as far from its top as from its bottom", async () => {
         const style = await filled({});
-        // 4 px above the lists and 12 below, so 16 more above and 8 below make 20 each.
-        expect(style).toContain("--lc-spare: 16px");
-        expect(style).toContain("--lc-spare-bottom: 8px");
+        // 12 px above the lists and 12 below, so the room is split in half.
+        expect(style).toContain("--lc-spare: 12px");
+        expect(style).toContain("--lc-spare-bottom: 12px");
     });
 });
 

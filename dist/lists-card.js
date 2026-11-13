@@ -785,7 +785,10 @@ var en_default = {
     back: "Back",
     entity: "Entity",
     entities: "Other calendars",
-    entities_helper: "These calendars' events are shown in the same list, such as the public holidays among your own events.",
+    entities_helper: "These calendars' events are shown in the same list, such as the public holidays among your own events. A calendar can have a colour of its own.",
+    calendar: "Calendar",
+    color: "Colour",
+    color_helper: "The colour of the vertical line beside the items. By default the theme's primary colour is used.",
     attribute: "Attribute",
     attribute_helper: "The attribute that holds the list's items. Left empty, the items are read from the entity's state as JSON.",
     path: "Path to the list's items",
@@ -807,11 +810,19 @@ var en_default = {
     group_time: "By time",
     group_key: "By the group key",
     group_month: "By month",
+    days_back: "Days back",
+    days_back_helper: "How many days back items that are over are shown. If the field is empty, no day limit is used.",
+    days_back_calendar_helper: "How many days back the events are fetched (max. 365). If the field is empty, the events are fetched from the past year.",
+    days_ahead: "Days ahead",
+    days_ahead_helper: "How many days ahead items to come are shown. If the field is empty, no day limit is used.",
+    days_ahead_calendar_helper: "How many days ahead the events are fetched (max. 365). If the field is empty, the events are fetched a year ahead.",
     group_none: "None, one list",
     limit: "Most items shown",
-    limit_helper: "0 shows them all. The card says how many were left out, and a tap on that shows them.",
+    limit_helper: "The most items shown, 100 at most. If there are more items than can be shown, the card says how many were left out.",
+    past_limit: "Most past items",
+    past_limit_helper: "How many items that are over are shown. They count toward the total, and past events are always shown starting from the latest. 0 means no history is shown.",
     hide_more: "Hide how many were left out",
-    hide_more_helper: "The list shows only its most items, and doesn't say how many were left out.",
+    hide_more_helper: "The list is cut to the set maximum, and how many were left out isn't shown.",
     order: "Time groups shown, in order",
     order_helper: "The items of a group left out aren't shown.",
     order_todo_helper: "The items of a group left out aren't shown. Ticked holds the items ticked on a to-do list.",
@@ -909,7 +920,10 @@ var fi_default = {
     back: "Takaisin",
     entity: "Entiteetti",
     entities: "Muut kalenterit",
-    entities_helper: "N\xE4iden kalenterien tapahtumat n\xE4ytet\xE4\xE4n samassa listassa, esimerkiksi juhlapyh\xE4t omien menojen joukossa.",
+    entities_helper: "N\xE4iden kalenterien tapahtumat n\xE4ytet\xE4\xE4n samassa listassa, esimerkiksi juhlapyh\xE4t omien menojen joukossa. Kalenterille voi m\xE4\xE4ritt\xE4\xE4 oman v\xE4rins\xE4.",
+    calendar: "Kalenteri",
+    color: "V\xE4ri",
+    color_helper: "Rivien vieress\xE4 olevan pystyviivan v\xE4ri. Oletuksena k\xE4ytet\xE4\xE4n teeman p\xE4\xE4v\xE4ri\xE4.",
     attribute: "Attribuutti",
     attribute_helper: "Attribuutti, jossa listan rivit ovat. Tyhj\xE4ksi j\xE4tettyn\xE4 rivit luetaan entiteetin tilasta JSON-muodossa.",
     path: "Polku listan riveihin",
@@ -931,11 +945,19 @@ var fi_default = {
     group_time: "Ajan mukaan",
     group_key: "Ryhm\xE4n avaimen mukaan",
     group_month: "Kuukausittain",
+    days_back: "P\xE4ivi\xE4 taaksep\xE4in",
+    days_back_helper: "Kuinka monen p\xE4iv\xE4n takaa menneet rivit n\xE4ytet\xE4\xE4n. Jos kentt\xE4 on tyhj\xE4, p\xE4iv\xE4rajausta ei k\xE4ytet\xE4.",
+    days_back_calendar_helper: "Kuinka monen p\xE4iv\xE4n takaa tapahtumat haetaan (enint. 365). Jos kentt\xE4 on tyhj\xE4, tapahtumat haetaan vuoden ajalta.",
+    days_ahead: "P\xE4ivi\xE4 eteenp\xE4in",
+    days_ahead_helper: "Kuinka monen p\xE4iv\xE4n p\xE4\xE4h\xE4n tulevat rivit n\xE4ytet\xE4\xE4n. Jos kentt\xE4 on tyhj\xE4, p\xE4iv\xE4rajausta ei k\xE4ytet\xE4.",
+    days_ahead_calendar_helper: "Kuinka monen p\xE4iv\xE4n p\xE4\xE4h\xE4n tapahtumat haetaan (enint. 365). Jos kentt\xE4 on tyhj\xE4, tapahtumat haetaan vuoden p\xE4\xE4h\xE4n.",
     group_none: "Ei ryhmi\xE4, yksi lista",
     limit: "Rivej\xE4 enint\xE4\xE4n",
-    limit_helper: "0 n\xE4ytt\xE4\xE4 kaikki. Kortti kertoo, montako j\xE4tettiin pois, ja ne saa n\xE4kyviin napauttamalla.",
+    limit_helper: "N\xE4ytett\xE4vien rivien enimm\xE4ism\xE4\xE4r\xE4, korkeintaan 100. Jos rivej\xE4 on enemm\xE4n kuin voidaan n\xE4ytt\xE4\xE4, kortti kertoo montako rajattiin pois.",
+    past_limit: "Menneit\xE4 enint\xE4\xE4n",
+    past_limit_helper: "Kuinka monta mennytt\xE4 rivi\xE4 n\xE4ytet\xE4\xE4n. Menneet rivit sis\xE4ltyv\xE4t kokonaism\xE4\xE4r\xE4\xE4n, ja menneiden tapahtumien n\xE4ytt\xE4minen aloitetaan aina uusimmasta. 0 tarkoittaa ett\xE4 historiaa ei n\xE4ytet\xE4.",
     hide_more: "Piilota pois j\xE4tettyjen m\xE4\xE4r\xE4",
-    hide_more_helper: "Lista n\xE4ytt\xE4\xE4 vain enimm\xE4ism\xE4\xE4r\xE4n rivej\xE4, eik\xE4 kerro, montako j\xE4tettiin pois.",
+    hide_more_helper: "Listan pituus rajataan asetettuun enimm\xE4ism\xE4\xE4r\xE4\xE4n, eik\xE4 pois j\xE4tettyjen m\xE4\xE4r\xE4\xE4 n\xE4ytet\xE4.",
     order: "N\xE4ytett\xE4v\xE4t aikaryhm\xE4t j\xE4rjestyksess\xE4",
     order_helper: "Pois j\xE4tetyn ryhm\xE4n rivej\xE4 ei n\xE4ytet\xE4.",
     order_todo_helper: "Pois j\xE4tetyn ryhm\xE4n rivej\xE4 ei n\xE4ytet\xE4. Merkityiss\xE4 ovat teht\xE4v\xE4listan merkityt rivit.",
@@ -997,6 +1019,8 @@ var FIELDS = ["title", "text", "start", "end", "label", "icon", "link", "group",
 
 // src/lists.ts
 var DAY_MS = 864e5;
+var MAX_ITEMS = 100;
+var MAX_DAYS = 365;
 var DEFAULT_TONES = { before: "plain", now: "plain", after: "plain", done: "dimmed" };
 function dig(value, path) {
   if (!path) {
@@ -1118,14 +1142,53 @@ function isCalendarList(list) {
   return list.entity.startsWith("calendar.") && !list.attribute;
 }
 function calendarEntities(list) {
-  return [.../* @__PURE__ */ new Set([list.entity, ...list.entities ?? []])];
+  return [.../* @__PURE__ */ new Set([list.entity, ...(list.entities ?? []).map(mergedEntity)])];
 }
-var CALENDAR_BACK_DAYS = 0;
-var CALENDAR_AHEAD_DAYS = 30;
+var mergedEntity = (merged) => typeof merged === "string" ? merged : merged.entity;
+function colorOf(list, entity) {
+  const merged = (list.entities ?? []).find((entry) => typeof entry === "object" && entry.entity === entity);
+  return merged?.color || list.color || void 0;
+}
+var THEME_COLORS = /* @__PURE__ */ new Set([
+  "primary",
+  "accent",
+  "disabled",
+  "red",
+  "pink",
+  "purple",
+  "deep-purple",
+  "indigo",
+  "blue",
+  "light-blue",
+  "cyan",
+  "teal",
+  "green",
+  "light-green",
+  "lime",
+  "yellow",
+  "amber",
+  "orange",
+  "deep-orange",
+  "brown",
+  "light-grey",
+  "grey",
+  "dark-grey",
+  "blue-grey",
+  "black",
+  "white"
+]);
+function cssColor(color) {
+  if (!color) {
+    return void 0;
+  }
+  return THEME_COLORS.has(color) ? `var(--${color}-color)` : color;
+}
+var CALENDAR_BACK_DAYS = 365;
+var CALENDAR_AHEAD_DAYS = 365;
 function calendarWindow(list, now, timeZone) {
   const order = list.order?.length ? list.order : BUCKETS;
-  const back = order.includes("before") ? list.before?.days ?? CALENDAR_BACK_DAYS : 0;
-  const ahead = order.includes("after") ? list.after?.days ?? CALENDAR_AHEAD_DAYS : 0;
+  const back = order.includes("before") ? Math.min(list.before?.days ?? CALENDAR_BACK_DAYS, MAX_DAYS) : 0;
+  const ahead = order.includes("after") ? Math.min(list.after?.days ?? CALENDAR_AHEAD_DAYS, MAX_DAYS) : 0;
   const today = zoneDay(now, timeZone);
   const iso = (day) => new Date(day * DAY_MS).toISOString();
   return { start: iso(today - back - 1), end: iso(today + ahead + 2) };
@@ -1150,6 +1213,17 @@ function calendarItems(events, entity) {
     }
     return item;
   });
+}
+function limited(placed, list) {
+  const total = list.limit ? Math.min(list.limit, MAX_ITEMS) : MAX_ITEMS;
+  if (list.past_limit == null) {
+    return placed.slice(0, total);
+  }
+  const end = (entry) => (entry.item.end ?? entry.item.start)?.time ?? 0;
+  const past = placed.filter((entry) => entry.item.bucket === "before").sort((a3, b3) => end(b3) - end(a3)).slice(0, Math.min(list.past_limit, total));
+  const others = placed.filter((entry) => entry.item.bucket !== "before").slice(0, total - past.length);
+  const kept = /* @__PURE__ */ new Set([...past, ...others]);
+  return placed.filter((entry) => kept.has(entry));
 }
 function zoneDay(time, timeZone) {
   const parts = new Intl.DateTimeFormat("en-CA", { timeZone, year: "numeric", month: "2-digit", day: "2-digit" }).formatToParts(time);
@@ -1181,7 +1255,11 @@ function validList(list) {
   const count = (value) => typeof value === "number" && Number.isInteger(value) && value >= 0;
   const textOrUnset = (value) => value == null || typeof value === "string";
   return config !== null && typeof config === "object" && typeof config.entity === "string" && config.entity !== "" && // More entities are merged only into a calendar's list.
-  (config.entities == null || Array.isArray(config.entities) && config.entities.every((entity) => typeof entity === "string" && entity.startsWith("calendar.")) && config.entity.startsWith("calendar.") && !config.attribute) && textOrUnset(config.attribute) && textOrUnset(config.path) && textOrUnset(config.name) && textOrUnset(config.empty) && (config.fields == null || typeof config.fields === "object" && Object.values(config.fields).every(textOrUnset)) && (config.group == null || GROUPINGS.includes(config.group)) && (config.limit == null || count(config.limit)) && (config.hide_more == null || typeof config.hide_more === "boolean") && (config.order == null || Array.isArray(config.order) && config.order.every((b3) => BUCKETS.includes(b3))) && bucket(config.before) && bucket(config.now) && bucket(config.after) && bucket(config.done);
+  textOrUnset(config.color) && (config.entities == null || Array.isArray(config.entities) && config.entities.every((entry) => {
+    const entity = typeof entry === "object" && entry !== null ? entry.entity : entry;
+    const color = typeof entry === "object" && entry !== null ? entry.color : void 0;
+    return typeof entity === "string" && entity.startsWith("calendar.") && textOrUnset(color);
+  }) && config.entity.startsWith("calendar.") && !config.attribute) && textOrUnset(config.attribute) && textOrUnset(config.path) && textOrUnset(config.name) && textOrUnset(config.empty) && (config.fields == null || typeof config.fields === "object" && Object.values(config.fields).every(textOrUnset)) && (config.group == null || GROUPINGS.includes(config.group)) && (config.limit == null || count(config.limit)) && (config.past_limit == null || count(config.past_limit)) && (config.hide_more == null || typeof config.hide_more === "boolean") && (config.order == null || Array.isArray(config.order) && config.order.every((b3) => BUCKETS.includes(b3))) && bucket(config.before) && bucket(config.now) && bucket(config.after) && bucket(config.done);
 }
 function arrange(items, list, now, names, {
   timeZone,
@@ -1211,7 +1289,7 @@ function arrange(items, list, now, names, {
     grouping === "month" ? (a3, b3) => Number(a3.undated) - Number(b3.undated) || a3.first - b3.first || a3.time - b3.time || a3.index - b3.index : (a3, b3) => order.indexOf(a3.item.bucket) - order.indexOf(b3.item.bucket) || Number(a3.undated) - Number(b3.undated) || a3.near - b3.near || a3.index - b3.index
   );
   const monthOf = new Map(placed.map(({ item, undated, first }) => [item, undated ? void 0 : new Date(first * DAY_MS)]));
-  const shown = (list.limit ? placed.slice(0, list.limit) : placed).map(({ item }) => item);
+  const shown = limited(placed, list).map(({ item }) => item);
   const groups = [];
   if (grouping === "none") {
     groups.push({ key: "all", tone: "plain", items: shown });
@@ -1332,7 +1410,7 @@ function tidyRowStep(config) {
 
 // src/editor.ts
 var DEFAULTS = { layout: "rows", text: "clamp", headings: "plain", editing: "full" };
-var LIST_DEFAULTS = { group: "time", limit: 0 };
+var LIST_DEFAULTS = { group: "time" };
 var select = (name, values, text2) => ({
   mode: "dropdown",
   options: values.map((value) => ({ value, label: text2(`editor.${name}_${value}`) }))
@@ -1388,11 +1466,13 @@ function listSchema(kind, text2, hiddenAttributes = []) {
         fields: {
           name: { label: text2("editor.bucket_name"), selector: { text: {} } },
           tone: { label: text2("editor.bucket_tone"), selector: { select: select("tone", TONES, text2) } },
-          days: {
-            label: text2("editor.bucket_days"),
-            description: text2("editor.bucket_days_helper"),
-            selector: { number: { min: 0, step: 1, mode: "box" } }
-          },
+          ...name === "done" ? {
+            days: {
+              label: text2("editor.bucket_days"),
+              description: text2("editor.bucket_days_helper"),
+              selector: { number: { min: 0, step: 1, mode: "box" } }
+            }
+          } : {},
           farthest_first: {
             label: text2("editor.bucket_farthest_first"),
             description: text2("editor.bucket_farthest_first_helper"),
@@ -1405,7 +1485,27 @@ function listSchema(kind, text2, hiddenAttributes = []) {
   const groupings = GROUPINGS.filter((grouping) => grouping !== "key" || kind === "attribute");
   return [
     { name: "entity", required: true, selector: { entity: {} } },
-    ...kind === "calendar" ? [{ name: "entities", selector: { entity: { multiple: true, filter: { domain: "calendar" } } } }] : [],
+    { name: "color", selector: { ui_color: { default_color: "primary" } } },
+    ...kind === "calendar" ? [
+      {
+        name: "entities",
+        selector: {
+          object: {
+            multiple: true,
+            label_field: "entity",
+            description_field: "color",
+            fields: {
+              entity: {
+                label: text2("editor.calendar"),
+                required: true,
+                selector: { entity: { filter: { domain: "calendar" } } }
+              },
+              color: { label: text2("editor.color"), selector: { ui_color: { default_color: "primary" } } }
+            }
+          }
+        }
+      }
+    ] : [],
     ...kind === "attribute" ? [
       // Home Assistant's own attribute picker, offering the attributes of the entity picked above.
       {
@@ -1429,7 +1529,22 @@ function listSchema(kind, text2, hiddenAttributes = []) {
       }
     ] : [],
     { name: "group", selector: { select: select("group", groupings, text2) } },
-    { name: "limit", selector: { number: { min: 0, step: 1, mode: "box" } } },
+    {
+      type: "grid",
+      name: "",
+      schema: [
+        { name: "days_back", selector: { number: { min: 0, max: MAX_DAYS, step: 1, mode: "box" } } },
+        { name: "days_ahead", selector: { number: { min: 0, max: MAX_DAYS, step: 1, mode: "box" } } }
+      ]
+    },
+    {
+      type: "grid",
+      name: "",
+      schema: [
+        { name: "limit", selector: { number: { min: 1, max: MAX_ITEMS, step: 1, mode: "box" } } },
+        { name: "past_limit", selector: { number: { min: 0, max: MAX_ITEMS, step: 1, mode: "box" } } }
+      ]
+    },
     { name: "hide_more", selector: { boolean: {} } },
     {
       name: "order",
@@ -1445,8 +1560,42 @@ function listSchema(kind, text2, hiddenAttributes = []) {
     { name: "empty", selector: { text: {} } }
   ];
 }
+var NEW_CALENDAR_DAYS_BACK = 0;
+var NEW_CALENDAR_DAYS_AHEAD = 30;
+function newList(entity) {
+  const list = { entity };
+  return listKind(list) === "calendar" ? { ...list, before: { days: NEW_CALENDAR_DAYS_BACK }, after: { days: NEW_CALENDAR_DAYS_AHEAD } } : list;
+}
 function listFormData(list) {
-  return { ...LIST_DEFAULTS, order: bucketsOf(listKind(list)), ...list };
+  const entities = list.entities?.map((entry) => typeof entry === "string" ? { entity: entry } : entry);
+  const withoutDays = (bucket) => {
+    const rest = { ...list[bucket] ?? {} };
+    delete rest.days;
+    return Object.keys(rest).length ? rest : void 0;
+  };
+  return {
+    ...LIST_DEFAULTS,
+    order: bucketsOf(listKind(list)),
+    ...list,
+    ...entities ? { entities } : {},
+    before: withoutDays("before"),
+    after: withoutDays("after"),
+    days_back: list.before?.days,
+    days_ahead: list.after?.days
+  };
+}
+function listFromForm(value) {
+  const {
+    days_back: back,
+    days_ahead: ahead,
+    ...list
+  } = value;
+  const reach = (bucket, days) => {
+    const rest = { ...list[bucket] ?? {} };
+    delete rest.days;
+    return days == null ? rest : { ...rest, days };
+  };
+  return { ...list, before: reach("before", back), after: reach("after", ahead) };
 }
 function formData(config) {
   const set = Object.fromEntries(Object.entries(config).filter(([name, value]) => value != null && name !== "lists"));
@@ -1459,12 +1608,12 @@ function tidy(value) {
 }
 function tidyList(list) {
   const tidied = { entity: list.entity };
-  for (const key of ["attribute", "path", "name", "empty", "hide_more"]) {
+  for (const key of ["attribute", "path", "name", "color", "empty", "hide_more"]) {
     if (!blank(list[key])) {
       tidied[key] = list[key];
     }
   }
-  const entities = (list.entities ?? []).filter((entity) => entity && entity !== list.entity);
+  const entities = (list.entities ?? []).map((entry) => typeof entry === "string" ? { entity: entry } : entry).filter((entry) => entry?.entity && entry.entity !== list.entity).map((entry) => entry.color ? { entity: entry.entity, color: entry.color } : entry.entity);
   if (entities.length > 0) {
     tidied.entities = entities;
   }
@@ -1477,6 +1626,9 @@ function tidyList(list) {
   }
   if (list.limit) {
     tidied.limit = list.limit;
+  }
+  if (list.past_limit != null && list.past_limit !== "") {
+    tidied.past_limit = list.past_limit;
   }
   if (list.order?.length && list.order.join() !== BUCKETS.join() && list.order.join() !== bucketsOf(listKind(list)).join()) {
     tidied.order = list.order;
@@ -1519,7 +1671,7 @@ var ListsCardEditor = class extends i4 {
       if (!entity) {
         return;
       }
-      const lists = [...this.lists(), { entity }];
+      const lists = [...this.lists(), newList(entity)];
       this.setLists(lists);
       this.open = lists.length - 1;
     };
@@ -1554,7 +1706,15 @@ var ListsCardEditor = class extends i4 {
         `;
   }
   form(data, schema, changed, kind) {
-    const helper = (name) => this.helper(name === "order" && kind === "todo" ? "order_todo" : name);
+    const helper = (name) => {
+      if (name === "order" && kind === "todo") {
+        return this.helper("order_todo");
+      }
+      if ((name === "days_back" || name === "days_ahead") && kind === "calendar") {
+        return this.helper(`${name}_calendar`);
+      }
+      return this.helper(name);
+    };
     return b2`<ha-form
             .hass=${this.hass}
             .data=${data}
@@ -1590,7 +1750,7 @@ var ListsCardEditor = class extends i4 {
     const name = list.name || state?.attributes.friendly_name || list.entity;
     const changed = (event) => {
       const lists = this.lists();
-      lists[index] = event.detail.value;
+      lists[index] = listFromForm(event.detail.value);
       this.setLists(lists);
     };
     return b2`
@@ -2043,7 +2203,11 @@ var ListsCard = class extends i4 {
     return lists.length === 1 && isTodoList(lists[0]) && this.can(lists[0], "create") ? lists[0] : void 0;
   }
   minimumHeight() {
-    return (this.hasHeader() ? HEADER_PX : 0) + LIST_TOP_PX + HEADING_PX + ITEM_PX + LIST_BOTTOM_PX + BORDER_PX;
+    return (this.hasHeader() ? HEADER_PX : 0) + this.listTop() + HEADING_PX + ITEM_PX + LIST_BOTTOM_PX + BORDER_PX;
+  }
+  /** The list's own room at its top: a little under a header, and as much as at its bottom on a card with none, which is centred. */
+  listTop() {
+    return this.hasHeader() ? LIST_TOP_PX : LIST_BOTTOM_PX;
   }
   heightStyle() {
     return heightStyle(this.config ?? {}, this.layout, this.minimumHeight());
@@ -2171,11 +2335,19 @@ var ListsCard = class extends i4 {
         items: this.todoItems(config.entity),
         loading: !this.todos.has(config.entity) && !this.failed.has(todoKey(config.entity))
       } : isCalendarList(config) ? this.calendarItems(config) : { items: readItems(entity, config), loading: false };
-      const arrangeBy = (list) => items && arrange(items, list, Date.now(), names, { timeZone: this.timeZone(), whole, monthName: this.monthName });
-      const limited = arrangeBy(config);
-      const cut = limited?.hidden ?? 0;
+      const colored = items && !isCalendarList(config) && config.color ? items.map((item) => ({ ...item, color: config.color })) : items;
+      const arrangeBy = (list) => colored && arrange(colored, list, Date.now(), names, { timeZone: this.timeZone(), whole, monthName: this.monthName });
+      const limited2 = arrangeBy(config);
+      const cut = limited2?.hidden ?? 0;
       const open = cut > 0 && !config.hide_more && this.expanded.has(index);
-      return { config, name, arranged: open ? arrangeBy({ ...config, limit: 0 }) : limited, loading, cut, open };
+      return {
+        config,
+        name,
+        arranged: open ? arrangeBy({ ...config, limit: 0, past_limit: void 0 }) : limited2,
+        loading,
+        cut,
+        open
+      };
     });
   }
   /**
@@ -2190,7 +2362,9 @@ var ListsCard = class extends i4 {
     }
     const read2 = keys.filter(([, key]) => this.events.has(key));
     return {
-      items: read2.length ? read2.flatMap(([entity, key]) => calendarItems(this.events.get(key), entity)) : void 0,
+      items: read2.length ? read2.flatMap(
+        ([entity, key]) => calendarItems(this.events.get(key), entity).map((item) => ({ ...item, color: colorOf(list, entity) }))
+      ) : void 0,
       loading: false
     };
   }
@@ -2524,7 +2698,7 @@ var ListsCard = class extends i4 {
     }
     const folded = mode === "fold";
     return b2`<div class=${classes}>
-            ${cover}
+            ${cover} ${this.accent(item)}
             <div class="line">
                 <span class="ic">${tick === A ? this.icon(item) : tick}</span>
                 <span class="ti" title=${item.title}
@@ -2565,7 +2739,7 @@ var ListsCard = class extends i4 {
             </div>`;
     }
     return b2`<div class=${classes}>
-            ${cover}
+            ${cover} ${this.accent(item)}
             <div class="line">
                 <span class="ic">${tick}</span>
                 <span class="ti" title=${item.title}>${item.title}</span>
@@ -2671,6 +2845,11 @@ var ListsCard = class extends i4 {
     }
     const button = this.clearButton(list);
     return button === A ? A : b2`<div class="clear-row">${button}</div>`;
+  }
+  /** The line beside an item, in its list's or calendar's colour, or the theme's primary colour when it has none. */
+  accent(item) {
+    const color = cssColor(item.color);
+    return b2`<span class="acc" style=${color ? `--lc-acc: ${color}` : ""}></span>`;
   }
   /** A to-do item's round tick. On a list that can't be changed it only shows whether the item is done. */
   tickBox(list, item, done) {
@@ -2794,9 +2973,13 @@ var ListsCard = class extends i4 {
    * year's. A period across months has no one month to stand under, so it is its first and last day, one over the other.
    */
   badge(item) {
+    const line = this.accent(item);
     const start = item.start ?? item.end;
     if (!start) {
-      return b2`<div class="badge"><div class="day">–</div></div>`;
+      return b2`<div class="badge">
+                <div class="day">–</div>
+                ${line}
+            </div>`;
     }
     if (this.acrossMonths(item)) {
       const date = (when) => this.format(when, { day: "numeric", month: "numeric" }).format(when.time);
@@ -2804,7 +2987,7 @@ var ListsCard = class extends i4 {
       return b2`<div class="badge" title=${this.longWhen(item)}>
                 <div class="end">${date(start)}</div>
                 <div class="end">${date(item.end)}</div>
-                ${endYear === this.thisYear() ? A : b2`<div class="year">${endYear}</div>`}
+                ${endYear === this.thisYear() ? A : b2`<div class="year">${endYear}</div>`} ${line}
             </div>`;
     }
     const day = (when) => this.format(when, { day: "numeric" }).format(when.time);
@@ -2813,7 +2996,7 @@ var ListsCard = class extends i4 {
     return b2`<div class="badge" title=${this.longWhen(item)}>
             <div class="day">${days}</div>
             <div class="month">${this.format(start, { month: "short" }).format(start.time)}</div>
-            ${year === this.thisYear() ? A : b2`<div class="year">${year}</div>`}
+            ${year === this.thisYear() ? A : b2`<div class="year">${year}</div>`} ${line}
         </div>`;
   }
   timeZone() {
@@ -2886,7 +3069,7 @@ var ListsCard = class extends i4 {
     const list = card.querySelector(":scope > .list");
     if (list) {
       const listStyle = getComputedStyle(list);
-      content -= Math.max(0, px(listStyle.paddingTop) - LIST_TOP_PX) + Math.max(0, px(listStyle.paddingBottom) - LIST_BOTTOM_PX);
+      content -= Math.max(0, px(listStyle.paddingTop) - this.listTop()) + Math.max(0, px(listStyle.paddingBottom) - LIST_BOTTOM_PX);
     }
     const filled = filledHeight(content, this.config ?? {}, limit);
     const spare = spareRoom(filled, content);
@@ -2905,7 +3088,7 @@ var ListsCard = class extends i4 {
   cardStyle() {
     const style = [filledStyle(this.config ?? {}, this.layout, this.minimumHeight(), this.filled)];
     if (this.filled) {
-      const top = this.hasHeader() ? this.spare : Math.min(this.spare, Math.max(0, Math.floor((this.spare + LIST_BOTTOM_PX - LIST_TOP_PX) / 2)));
+      const top = this.hasHeader() ? this.spare : Math.floor(this.spare / 2);
       style.push(`--lc-spare: ${top}px`, `--lc-spare-bottom: ${this.spare - top}px`);
     }
     if (this.titleButtonsPx) {
@@ -2915,7 +3098,13 @@ var ListsCard = class extends i4 {
   }
   cardClass() {
     const icons = this.lists.some((list) => list.arranged?.groups.some((group) => group.items.some((item) => item.icon || item.uid)));
-    return [this.heightStyle() && "held", this.sliding && "sliding", !icons && "no-icons", this.titleButtonsPx && "rows-buttons"].filter(Boolean).join(" ");
+    return [
+      this.heightStyle() && "held",
+      this.sliding && "sliding",
+      !icons && "no-icons",
+      this.titleButtonsPx && "rows-buttons",
+      !this.hasHeader() && "no-header"
+    ].filter(Boolean).join(" ");
   }
   text(key, values = {}) {
     return Object.entries(values).reduce(
@@ -3523,31 +3712,48 @@ var ListsCard = class extends i4 {
                     padding-bottom: 0;
                 }
 
-                .item.timeline::before {
-                    content: "";
+                /*
+                 * The line beside an item, 12 px from what is on each side of it: the card's padding edge and the item's
+                 * icon or title in rows, the badge and the text in the timeline, where it is as tall as the badge. It is
+                 * placed absolutely, as a line stretched by the item would be measured at the item's height while a
+                 * fold slides.
+                 */
+                .acc {
                     position: absolute;
-                    /* Through the badge's middle: the item's padding and half the badge, less half the line. */
-                    left: 41.5px;
+                    width: 2px;
+                    border-radius: 999px;
+                    background: var(--lc-acc, var(--primary-color));
+                    pointer-events: none;
+                }
+
+                .item.rows {
+                    padding-left: 30px;
+                }
+
+                .item.rows > .acc {
+                    left: 16px;
+                    top: 6px;
+                    bottom: 6px;
+                }
+
+                .item.timeline > .body {
+                    margin-left: 14px;
+                }
+
+                .badge > .acc {
+                    left: calc(100% + 12px);
                     top: 0;
                     bottom: 0;
-                    width: 1px;
-                    background: var(--divider-color, rgba(0, 0, 0, 0.12));
-                }
-
-                .item.timeline:first-child::before {
-                    top: 12px;
-                }
-
-                .item.timeline:last-child::before {
-                    bottom: calc(100% - 12px);
                 }
 
                 .badge {
                     flex: none;
                     position: relative;
                     width: 52px;
+                    /* Whole pixels, as its lines alone come to 35.75, and the items beside a title alone would end a fraction short. */
+                    min-height: 36px;
                     box-sizing: border-box;
-                    margin: 6px 0;
+                    margin: 7px 0;
                     text-align: center;
                     border-radius: 6px;
                     padding: 4px 0 3px;
@@ -3591,17 +3797,26 @@ var ListsCard = class extends i4 {
                 }
 
                 /*
-                 * The title and the line under it stand centred against a badge of two lines, 36 px tall from 6 px down,
-                 * and anything more flows on below them. A title alone is centred against the badge by itself.
+                 * The title and the line under it stand centred against a badge of two lines, 36 px tall from 7 px down,
+                 * so an item of one or two lines is 50 px tall, whatever its second line is, and the badges stand at
+                 * even gaps. Anything more flows on below them. A title alone is centred against the badge by itself,
+                 * as is a title with its text folded away. A description's line is 2 px taller than a time's, so the
+                 * pair starts a pixel higher.
                  */
                 .body {
                     flex: 1 1 auto;
                     min-width: 0;
-                    padding: 6px 0 7px;
+                    padding: 7px 0;
                 }
 
-                .timeline .body:has(> .ti:only-child) {
-                    padding-top: 14px;
+                .timeline .body:has(> .ti:only-child),
+                .timeline .body:has(> .ti + .fold:not(.open):last-child) {
+                    padding-top: 15px;
+                }
+
+                .timeline .body:has(> .ti + .tx) {
+                    padding-top: 6px;
+                    padding-bottom: 6px;
                 }
 
                 .timeline .ti {
@@ -3690,10 +3905,36 @@ var ListsCard = class extends i4 {
                     flex-basis: 0;
                 }
 
+                /* The lists scroll with no scrollbar. Their fading edges show that there is more. */
                 .held .list {
                     overflow-y: auto;
-                    scrollbar-width: thin;
-                    scrollbar-gutter: stable;
+                    scrollbar-width: none;
+                }
+
+                .held .list::-webkit-scrollbar {
+                    display: none;
+                }
+
+                /* A card with no header has as much room above its lists as below them. */
+                .no-header > .list {
+                    padding-top: calc(12px + var(--lc-spare, 0px));
+                }
+
+                /*
+                 * Held to a height, a card with no header centres its lists while they fit. The auto margins share the
+                 * room left over, and come to nothing once the lists are taller, so they scroll from their top.
+                 */
+                .held.no-header > .list {
+                    display: flex;
+                    flex-direction: column;
+                }
+
+                .held.no-header > .list > :first-child {
+                    margin-top: auto;
+                }
+
+                .held.no-header > .list > :last-child {
+                    margin-bottom: auto;
                 }
 
                 .sliding.held .list {
