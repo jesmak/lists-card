@@ -1128,6 +1128,8 @@ export class ListsCard extends LitElement {
                     font: inherit;
                     vertical-align: top;
                     --mdc-icon-size: 15px;
+                    /* The rows' 24 px line height would make the icon's box taller than the ring and sink the check to its bottom. */
+                    line-height: 0;
                 }
 
                 button.tick {
@@ -1140,6 +1142,7 @@ export class ListsCard extends LitElement {
                 }
 
                 .tick ha-icon {
+                    display: flex;
                     visibility: hidden;
                 }
 

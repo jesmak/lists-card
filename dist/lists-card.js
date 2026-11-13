@@ -2476,6 +2476,8 @@ var ListsCard = class extends i4 {
                     font: inherit;
                     vertical-align: top;
                     --mdc-icon-size: 15px;
+                    /* The rows' 24 px line height would make the icon's box taller than the ring and sink the check to its bottom. */
+                    line-height: 0;
                 }
 
                 button.tick {
@@ -2488,6 +2490,7 @@ var ListsCard = class extends i4 {
                 }
 
                 .tick ha-icon {
+                    display: flex;
                     visibility: hidden;
                 }
 
