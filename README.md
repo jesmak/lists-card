@@ -451,8 +451,9 @@ lists:
 <img src="https://raw.githubusercontent.com/jesmak/lists-card/main/docs/images/calendar-light.png#gh-light-mode-only" width="490" alt="A family's calendar as a timeline with the holidays merged in and a line beside each event, today's choir rehearsal highlighted, then a dentist, the next rehearsal, a cabin weekend over three days and Independence Day with a red line">
 <img src="https://raw.githubusercontent.com/jesmak/lists-card/main/docs/images/calendar-dark.png#gh-dark-mode-only" width="490" alt="A family's calendar as a timeline with the holidays merged in and a line beside each event, today's choir rehearsal highlighted, then a dentist, the next rehearsal, a cabin weekend over three days and Independence Day with a red line">
 
-The cabin weekend ends on the 29th, though the calendar says the 30th. The holiday's line is red, the family's in the
-theme's primary colour.
+A calendar stores an all-day event's end as the day after its last one, so the cabin weekend comes as the 27th to the
+30th. The card shows the days it lasts, the 27th to the 29th. The holiday's line is red, the family's in the theme's
+primary colour.
 
 ### A list nested in an answer
 
