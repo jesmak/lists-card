@@ -567,6 +567,59 @@ describe("editing a to-do list", () => {
     });
 });
 
+describe("a calendar", () => {
+    function calendarHass(refuse: string[] = []) {
+        const send = new Map<string, (message: unknown) => void>();
+        const asked: Array<Record<string, unknown>> = [];
+        const hass: HomeAssistant = {
+            ...hassWith(sensor("calendar.home", "Home", {}), sensor("calendar.holidays", "Holidays", {})),
+            connection: {
+                subscribeMessage: async <T>(callback: (message: T) => void, message: Record<string, unknown>) => {
+                    asked.push(message);
+                    if (refuse.includes(message.entity_id as string)) {
+                        throw new Error("Unknown entity");
+                    }
+                    send.set(message.entity_id as string, callback as (message: unknown) => void);
+                    return async () => undefined;
+                },
+            },
+        };
+        return { hass, send, asked };
+    }
+
+    it("merges its calendars' events into one list once all have come, a whole day ending on the day itself", async () => {
+        const { hass, send, asked } = calendarHass();
+        const element = await card(hass, { lists: [{ entity: "calendar.home", entities: ["calendar.holidays"] }] });
+        expect(asked.map((m) => [m.type, m.entity_id])).toEqual([
+            ["calendar/event/subscribe", "calendar.home"],
+            ["calendar/event/subscribe", "calendar.holidays"],
+        ]);
+        send.get("calendar.home")!({ events: [{ summary: "Dentist", start: `${day(2)}T09:00:00`, end: `${day(2)}T10:00:00` }] });
+        await element.updateComplete;
+        // Still waiting for the holidays.
+        expect(texts(element, ".ti")).toEqual([]);
+        send.get("calendar.holidays")!({ events: [{ summary: "Holiday", start: day(1), end: day(2), all_day: true }] });
+        await element.updateComplete;
+        expect(texts(element, ".ti")).toEqual(["Holiday", "Dentist"]);
+        expect(element.shadowRoot!.querySelector("button.tick")).toBeNull();
+    });
+
+    it("shows what the calendars it could read hold, and says so when it could read none", async () => {
+        const some = calendarHass(["calendar.holidays"]);
+        const element = await card(some.hass, { lists: [{ entity: "calendar.home", entities: ["calendar.holidays"] }] });
+        some.send.get("calendar.home")!({ events: [{ summary: "Dentist", start: day(2), end: day(3) }] });
+        await new Promise((resolve) => setTimeout(resolve));
+        await element.updateComplete;
+        expect(texts(element, ".ti")).toEqual(["Dentist"]);
+
+        const none = calendarHass(["calendar.home"]);
+        const empty = await card(none.hass, { lists: [{ entity: "calendar.home" }] });
+        await new Promise((resolve) => setTimeout(resolve));
+        await empty.updateComplete;
+        expect(texts(empty, ".empty")).toEqual(["No list found in calendar.home."]);
+    });
+});
+
 describe("the configuration", () => {
     const set = (config: Record<string, unknown>) => () =>
         (document.createElement("lists-card") as ListsCard).setConfig({

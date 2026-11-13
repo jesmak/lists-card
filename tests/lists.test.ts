@@ -1,7 +1,22 @@
 import { describe, expect, it } from "vitest";
 
 import type { HassEntity } from "../src/hass";
-import { arrange, bucketOf, dig, isTodoList, parseWhen, plainText, readItems, todoItems, validList, zoneDay } from "../src/lists";
+import {
+    arrange,
+    bucketOf,
+    calendarEntities,
+    calendarItems,
+    calendarWindow,
+    dig,
+    isCalendarList,
+    isTodoList,
+    parseWhen,
+    plainText,
+    readItems,
+    todoItems,
+    validList,
+    zoneDay,
+} from "../src/lists";
 import type { Bucket, Item, ListConfig } from "../src/types";
 
 const entity = (state: string, attributes: Record<string, unknown> = {}): HassEntity => ({
@@ -189,6 +204,73 @@ describe("to-do lists", () => {
             { key: "2", uid: "2", title: "Laundry", done: true, start: { time: Date.UTC(2026, 2, 9, 18), allDay: false } },
             { key: "3", uid: "3", title: "Fix the gate", done: false, start: { time: Date.UTC(2026, 2, 10, 13), allDay: false } },
         ]);
+    });
+});
+
+describe("calendars", () => {
+    it("are calendar entities with no attribute, with the calendars merged into them", () => {
+        expect(isCalendarList({ entity: "calendar.home" })).toBe(true);
+        expect(isCalendarList({ entity: "calendar.home", attribute: "events" })).toBe(false);
+        expect(calendarEntities({ entity: "calendar.home", entities: ["calendar.holidays", "calendar.home"] })).toEqual([
+            "calendar.home",
+            "calendar.holidays",
+        ]);
+    });
+
+    it("are asked for over their groups' reach, a day more at each end, 30 days ahead when no reach is set", () => {
+        expect(calendarWindow({ entity: "calendar.home" }, NOW, "UTC")).toEqual({
+            start: "2026-03-09T00:00:00.000Z",
+            end: "2026-04-11T00:00:00.000Z",
+        });
+        expect(calendarWindow({ entity: "calendar.home", before: { days: 7 }, after: { days: 3 } }, NOW, "UTC")).toEqual({
+            start: "2026-03-02T00:00:00.000Z",
+            end: "2026-03-15T00:00:00.000Z",
+        });
+        // A group left out of the order isn't asked for.
+        expect(calendarWindow({ entity: "calendar.home", order: ["now"], after: { days: 7 } }, NOW, "UTC").end).toBe(
+            "2026-03-12T00:00:00.000Z",
+        );
+    });
+
+    it("end a whole day on the day itself, and tell a repeating event's times apart", () => {
+        const items = calendarItems(
+            [
+                { summary: "Independence Day", start: "2026-12-06", end: "2026-12-07", all_day: true, uid: "h1" },
+                {
+                    summary: "Choir",
+                    start: "2026-03-10T18:00:00+02:00",
+                    end: "2026-03-10T19:30:00+02:00",
+                    uid: "c",
+                    recurrence_id: "20260310",
+                    location: "Town hall",
+                },
+                {
+                    summary: "Choir",
+                    start: "2026-03-17T18:00:00+02:00",
+                    end: "2026-03-17T19:30:00+02:00",
+                    uid: "c",
+                    recurrence_id: "20260317",
+                },
+                { summary: "Trip", start: "2026-03-20", end: "2026-03-23", description: "<p>Up north.</p>" },
+                { summary: " ", start: "2026-03-20", end: "2026-03-21" },
+            ],
+            "calendar.home",
+        );
+        expect(items.map((i) => [i.title, i.start, i.end])).toEqual([
+            ["Independence Day", { time: Date.UTC(2026, 11, 6), allDay: true }, { time: Date.UTC(2026, 11, 6), allDay: true }],
+            ["Choir", { time: Date.UTC(2026, 2, 10, 16), allDay: false }, { time: Date.UTC(2026, 2, 10, 17, 30), allDay: false }],
+            ["Choir", { time: Date.UTC(2026, 2, 17, 16), allDay: false }, { time: Date.UTC(2026, 2, 17, 17, 30), allDay: false }],
+            ["Trip", { time: Date.UTC(2026, 2, 20), allDay: true }, { time: Date.UTC(2026, 2, 22), allDay: true }],
+        ]);
+        expect(new Set(items.map((i) => i.key)).size).toBe(4);
+        expect(items[1].label).toBe("Town hall");
+        expect(items[3].text).toBe("Up north.");
+    });
+
+    it("take more entities only on a calendar's list", () => {
+        expect(validList({ entity: "calendar.home", entities: ["calendar.holidays"] })).toBe(true);
+        expect(validList({ entity: "sensor.chores", entities: ["calendar.holidays"] })).toBe(false);
+        expect(validList({ entity: "calendar.home", entities: ["sensor.chores"] })).toBe(false);
     });
 });
 

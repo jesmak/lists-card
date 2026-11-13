@@ -718,7 +718,7 @@ var en_default = {
   common: {
     name: "Lists card",
     description: "Any list an entity holds, such as tasks, events or notices, grouped by time or by a key",
-    invalid_configuration: "Invalid configuration. Each entry under lists needs an entity, group must be time, key or none, limit a whole number, order a list of before, now, after and done, and a tone plain, warning, highlight or dimmed.",
+    invalid_configuration: "Invalid configuration. Each entry under lists needs an entity, more entities (entities) are for a calendar's list only, group must be time, key or none, limit a whole number, order a list of before, now, after and done, and a tone plain, warning, highlight or dimmed.",
     invalid_layout: "Invalid layout. Layout must be rows or timeline.",
     invalid_text: "Invalid text mode. Text must be full, clamp or fold.",
     invalid_headings: "Invalid headings. Headings must be plain or fold.",
@@ -776,8 +776,10 @@ var en_default = {
     lists: "Lists",
     lists_helper: "A card with one list shows that list's groups. With several lists, each list is shown under its own name instead, with no groups inside it.",
     entity: "Entity",
+    entities: "Other calendars",
+    entities_helper: "For a calendar's list only. These calendars' events are shown in the same list, such as the public holidays among your own events.",
     attribute: "Attribute",
-    attribute_helper: "The attribute that holds the list's items. Left empty, the items are read from the entity's state as JSON, or from the list itself when the entity is a to-do list.",
+    attribute_helper: "The attribute that holds the list's items. Left empty, the items are read from the entity's state as JSON, or from the to-do list or calendar itself when the entity is one.",
     path: "Path to the list's items",
     path_helper: "Only when the items are deeper inside the attribute, for example data.items.",
     name: "Name",
@@ -828,7 +830,7 @@ var fi_default = {
   common: {
     name: "Listakortti",
     description: "Mik\xE4 tahansa entiteetin lista, kuten teht\xE4v\xE4t, tapahtumat tai tiedotteet, ryhmiteltyn\xE4 ajan tai avaimen mukaan",
-    invalid_configuration: "Virheelliset asetukset. Jokainen lista kohdassa lists tarvitsee entiteetin (entity). Ryhmittelyn (group) on oltava time, key tai none, rajan (limit) kokonaisluku, j\xE4rjestyksen (order) lista arvoista before, now, after ja done, ja s\xE4vyn (tone) plain, warning, highlight tai dimmed.",
+    invalid_configuration: "Virheelliset asetukset. Jokainen lista kohdassa lists tarvitsee entiteetin (entity), ja muita entiteettej\xE4 (entities) voi olla vain kalenterilistassa. Ryhmittelyn (group) on oltava time, key tai none, rajan (limit) kokonaisluku, j\xE4rjestyksen (order) lista arvoista before, now, after ja done, ja s\xE4vyn (tone) plain, warning, highlight tai dimmed.",
     invalid_layout: "Virheellinen asettelu. Asettelun (layout) on oltava rows tai timeline.",
     invalid_text: "Virheellinen tekstin tapa. Tekstin (text) on oltava full, clamp tai fold.",
     invalid_headings: "Virheelliset otsikot. Otsikoiden (headings) on oltava plain tai fold.",
@@ -886,8 +888,10 @@ var fi_default = {
     lists: "Listat",
     lists_helper: "Yhden listan kortti n\xE4ytt\xE4\xE4 listan omat ryhm\xE4t. Kun listoja on useita, jokainen lista n\xE4kyy oman nimens\xE4 alla, eik\xE4 sen sis\xE4ll\xE4 ole ryhmi\xE4.",
     entity: "Entiteetti",
+    entities: "Muut kalenterit",
+    entities_helper: "Vain kalenterilistalle. N\xE4iden kalenterien tapahtumat n\xE4ytet\xE4\xE4n samassa listassa, esimerkiksi juhlapyh\xE4t omien menojen joukossa.",
     attribute: "Attribuutti",
-    attribute_helper: "Attribuutti, jossa listan rivit ovat. Tyhj\xE4ksi j\xE4tettyn\xE4 rivit luetaan entiteetin tilasta JSON-muodossa, tai teht\xE4v\xE4listasta itsest\xE4\xE4n, jos entiteetti on teht\xE4v\xE4lista.",
+    attribute_helper: "Attribuutti, jossa listan rivit ovat. Tyhj\xE4ksi j\xE4tettyn\xE4 rivit luetaan entiteetin tilasta JSON-muodossa, tai teht\xE4v\xE4listasta tai kalenterista itsest\xE4\xE4n, jos entiteetti on sellainen.",
     path: "Polku listan riveihin",
     path_helper: "Vain kun rivit ovat attribuutin sis\xE4ll\xE4 syvemm\xE4ll\xE4, esimerkiksi data.items.",
     name: "Nimi",
@@ -1086,6 +1090,43 @@ function todoItems(items) {
     return item;
   });
 }
+function isCalendarList(list) {
+  return list.entity.startsWith("calendar.") && !list.attribute;
+}
+function calendarEntities(list) {
+  return [.../* @__PURE__ */ new Set([list.entity, ...list.entities ?? []])];
+}
+var CALENDAR_BACK_DAYS = 0;
+var CALENDAR_AHEAD_DAYS = 30;
+function calendarWindow(list, now, timeZone) {
+  const order = list.order?.length ? list.order : BUCKETS;
+  const back = order.includes("before") ? list.before?.days ?? CALENDAR_BACK_DAYS : 0;
+  const ahead = order.includes("after") ? list.after?.days ?? CALENDAR_AHEAD_DAYS : 0;
+  const today = zoneDay(now, timeZone);
+  const iso = (day) => new Date(day * DAY_MS).toISOString();
+  return { start: iso(today - back - 1), end: iso(today + ahead + 2) };
+}
+function calendarItems(events, entity) {
+  return events.filter((event) => typeof event.summary === "string" && event.summary.trim()).map((event) => {
+    const item = {
+      key: [entity, event.uid ?? event.summary, event.recurrence_id ?? event.start].join("|"),
+      title: plainText(event.summary)
+    };
+    if (event.description?.trim()) {
+      item.text = plainText(event.description);
+    }
+    if (event.location?.trim()) {
+      item.label = event.location.trim();
+    }
+    item.start = parseWhen(event.start);
+    const end = parseWhen(event.end);
+    item.end = end?.allDay ? { time: end.time - DAY_MS, allDay: true } : end;
+    if (item.start && item.end && item.end.time < item.start.time) {
+      item.end = item.start;
+    }
+    return item;
+  });
+}
 function zoneDay(time, timeZone) {
   const parts = new Intl.DateTimeFormat("en-CA", { timeZone, year: "numeric", month: "2-digit", day: "2-digit" }).formatToParts(time);
   const part = (type) => Number(parts.find((p4) => p4.type === type)?.value);
@@ -1115,7 +1156,8 @@ function validList(list) {
   };
   const count = (value) => typeof value === "number" && Number.isInteger(value) && value >= 0;
   const textOrUnset = (value) => value == null || typeof value === "string";
-  return config !== null && typeof config === "object" && typeof config.entity === "string" && config.entity !== "" && textOrUnset(config.attribute) && textOrUnset(config.path) && textOrUnset(config.name) && textOrUnset(config.empty) && (config.fields == null || typeof config.fields === "object" && Object.values(config.fields).every(textOrUnset)) && (config.group == null || GROUPINGS.includes(config.group)) && (config.limit == null || count(config.limit)) && (config.order == null || Array.isArray(config.order) && config.order.every((b3) => BUCKETS.includes(b3))) && bucket(config.before) && bucket(config.now) && bucket(config.after) && bucket(config.done);
+  return config !== null && typeof config === "object" && typeof config.entity === "string" && config.entity !== "" && // More entities are merged only into a calendar's list.
+  (config.entities == null || Array.isArray(config.entities) && config.entities.every((entity) => typeof entity === "string" && entity.startsWith("calendar.")) && config.entity.startsWith("calendar.") && !config.attribute) && textOrUnset(config.attribute) && textOrUnset(config.path) && textOrUnset(config.name) && textOrUnset(config.empty) && (config.fields == null || typeof config.fields === "object" && Object.values(config.fields).every(textOrUnset)) && (config.group == null || GROUPINGS.includes(config.group)) && (config.limit == null || count(config.limit)) && (config.order == null || Array.isArray(config.order) && config.order.every((b3) => BUCKETS.includes(b3))) && bucket(config.before) && bucket(config.now) && bucket(config.after) && bucket(config.done);
 }
 function arrange(items, list, now, names, { timeZone, whole = false } = {}) {
   const today = zoneDay(now, timeZone);
@@ -1312,6 +1354,11 @@ function listsSchema(text2) {
           description_field: "attribute",
           fields: {
             entity: { label: text2("editor.entity"), required: true, selector: { entity: {} } },
+            entities: {
+              label: text2("editor.entities"),
+              description: text2("editor.entities_helper"),
+              selector: { entity: { multiple: true, filter: { domain: "calendar" } } }
+            },
             attribute: {
               label: text2("editor.attribute"),
               description: text2("editor.attribute_helper"),
@@ -1374,6 +1421,10 @@ function tidyList(list) {
     if (!blank(list[key])) {
       tidied[key] = list[key];
     }
+  }
+  const entities = (list.entities ?? []).filter((entity) => entity && entity !== list.entity);
+  if (entities.length > 0) {
+    tidied.entities = entities;
   }
   const fields = tidy(list.fields);
   if (fields) {
@@ -1639,6 +1690,9 @@ function moveTarget(items, uid, direction) {
 }
 
 // src/lists-card.ts
+var TODO_PREFIX = "todo ";
+var todoKey = (entity) => `${TODO_PREFIX}${entity}`;
+var calendarKey = (entity, start, end) => `calendar ${entity} ${start} ${end}`;
 var TICK_HOLD_MS = 1e3;
 var LIST_TOP_PX = 4;
 var HEADER_PX = 44;
@@ -1683,6 +1737,7 @@ var ListsCard = class extends i4 {
     this.filled = 0;
     this.spare = 0;
     this.todos = /* @__PURE__ */ new Map();
+    this.events = /* @__PURE__ */ new Map();
     this.failed = /* @__PURE__ */ new Set();
     this.ticking = /* @__PURE__ */ new Map();
     this.asking = /* @__PURE__ */ new Set();
@@ -1794,7 +1849,7 @@ var ListsCard = class extends i4 {
     this.sliding = false;
     this.resizes?.disconnect();
     cancelAnimationFrame(this.frame ?? 0);
-    this.watchTodos();
+    this.watchSources();
     this.tickTimers.forEach((timer) => window.clearTimeout(timer));
     this.tickTimers.clear();
     this.ticking = /* @__PURE__ */ new Map();
@@ -1802,36 +1857,56 @@ var ListsCard = class extends i4 {
     this.asking = /* @__PURE__ */ new Set();
   }
   /**
-   * Subscribes to the items of each to-do list on the card while it is on the page, and lets go of those it no longer
-   * shows. Home Assistant sends a list's items whole, at once and on every change.
+   * The subscriptions the card's lists need: each to-do list's items, and each calendar's events over its list's
+   * window, which moves with the day. Each is keyed by what it asks, so a changed window is a new subscription.
    */
-  watchTodos() {
-    const connection = this.isConnected ? this.hass?.connection : void 0;
-    const wanted = new Set(connection ? (this.config?.lists ?? []).filter(isTodoList).map((list) => list.entity) : []);
-    for (const [entity, subscription] of this.subscriptions) {
-      if (!wanted.has(entity)) {
-        this.subscriptions.delete(entity);
-        subscription.then((unsubscribe) => unsubscribe()).catch(() => void 0);
-        this.todos.delete(entity);
-        this.failed.delete(entity);
+  wantedSources() {
+    const wanted = /* @__PURE__ */ new Map();
+    for (const list of this.config?.lists ?? []) {
+      if (isTodoList(list)) {
+        wanted.set(todoKey(list.entity), { type: "todo/item/subscribe", entity_id: list.entity });
+      } else if (isCalendarList(list)) {
+        const { start, end } = calendarWindow(list, Date.now(), this.timeZone());
+        for (const entity of calendarEntities(list)) {
+          wanted.set(calendarKey(entity, start, end), { type: "calendar/event/subscribe", entity_id: entity, start, end });
+        }
       }
     }
-    for (const entity of wanted) {
-      if (this.subscriptions.has(entity)) {
+    return wanted;
+  }
+  /**
+   * Subscribes to what the card's lists need while it is on the page, and lets go of what they no longer do. Home
+   * Assistant sends a to-do list's items and a calendar's events whole, at once and on every change.
+   */
+  watchSources() {
+    const connection = this.isConnected ? this.hass?.connection : void 0;
+    const wanted = connection ? this.wantedSources() : /* @__PURE__ */ new Map();
+    for (const [key, subscription] of this.subscriptions) {
+      if (!wanted.has(key)) {
+        this.subscriptions.delete(key);
+        subscription.then((unsubscribe) => unsubscribe()).catch(() => void 0);
+        this.todos.delete(key.slice(TODO_PREFIX.length));
+        this.events.delete(key);
+        this.failed.delete(key);
+      }
+    }
+    for (const [key, message] of wanted) {
+      if (this.subscriptions.has(key)) {
         continue;
       }
-      const subscription = connection.subscribeMessage(
-        (message) => {
-          this.todos = new Map(this.todos).set(entity, Array.isArray(message?.items) ? message.items : []);
-        },
-        { type: "todo/item/subscribe", entity_id: entity }
-      );
+      const subscription = connection.subscribeMessage((answer) => {
+        if (message.type === "todo/item/subscribe") {
+          this.todos = new Map(this.todos).set(message.entity_id, Array.isArray(answer?.items) ? answer.items : []);
+        } else {
+          this.events = new Map(this.events).set(key, Array.isArray(answer?.events) ? answer.events : []);
+        }
+      }, message);
       subscription.catch(() => {
-        if (this.subscriptions.get(entity) === subscription) {
-          this.failed = new Set(this.failed).add(entity);
+        if (this.subscriptions.get(key) === subscription) {
+          this.failed = new Set(this.failed).add(key);
         }
       });
-      this.subscriptions.set(entity, subscription);
+      this.subscriptions.set(key, subscription);
     }
   }
   /** The items change buckets when the day does, with no change in any entity, so the card is drawn again then. */
@@ -1863,18 +1938,35 @@ var ListsCard = class extends i4 {
     if (!this.hass || !this.config) {
       return;
     }
-    this.watchTodos();
+    this.watchSources();
     const names = Object.fromEntries(BUCKETS.map((bucket) => [bucket, this.text(`common.bucket_${bucket}`)]));
     const whole = this.config.lists.length > 1;
     this.lists = this.config.lists.map((config) => {
       const entity = this.hass?.states[config.entity];
       const name = config.name || entity && this.hass?.formatEntityName?.(entity, [{ type: "device" }, { type: "entity" }]) || entity?.attributes.friendly_name || config.entity;
-      const todo = isTodoList(config);
-      const items = todo ? this.todoItems(config.entity) : readItems(entity, config);
-      const loading = todo && !items && !this.failed.has(config.entity);
+      const { items, loading } = isTodoList(config) ? {
+        items: this.todoItems(config.entity),
+        loading: !this.todos.has(config.entity) && !this.failed.has(todoKey(config.entity))
+      } : isCalendarList(config) ? this.calendarItems(config) : { items: readItems(entity, config), loading: false };
       const arranged = items && arrange(items, config, Date.now(), names, { timeZone: this.timeZone(), whole });
       return { config, name, arranged, loading };
     });
+  }
+  /**
+   * A calendar list's events from all its calendars. Until every calendar has answered or failed it is loading, and
+   * when none could be read it has no list to show.
+   */
+  calendarItems(list) {
+    const { start, end } = calendarWindow(list, Date.now(), this.timeZone());
+    const keys = calendarEntities(list).map((entity) => [entity, calendarKey(entity, start, end)]);
+    if (keys.some(([, key]) => !this.events.has(key) && !this.failed.has(key))) {
+      return { loading: true };
+    }
+    const read2 = keys.filter(([, key]) => this.events.has(key));
+    return {
+      items: read2.length ? read2.flatMap(([entity, key]) => calendarItems(this.events.get(key), entity)) : void 0,
+      loading: false
+    };
   }
   /** A to-do list's items, those just ticked still where they were, or undefined until they have come. */
   todoItems(entity) {
@@ -3323,6 +3415,9 @@ __decorateClass([
 __decorateClass([
   r5()
 ], ListsCard.prototype, "todos", 2);
+__decorateClass([
+  r5()
+], ListsCard.prototype, "events", 2);
 __decorateClass([
   r5()
 ], ListsCard.prototype, "failed", 2);

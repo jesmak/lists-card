@@ -78,6 +78,11 @@ function listsSchema(text: Text) {
                     description_field: "attribute",
                     fields: {
                         entity: { label: text("editor.entity"), required: true, selector: { entity: {} } },
+                        entities: {
+                            label: text("editor.entities"),
+                            description: text("editor.entities_helper"),
+                            selector: { entity: { multiple: true, filter: { domain: "calendar" } } },
+                        },
                         attribute: {
                             label: text("editor.attribute"),
                             description: text("editor.attribute_helper"),
@@ -148,6 +153,10 @@ export function tidyList(list: ListConfig): ListConfig {
         if (!blank(list[key])) {
             tidied[key] = list[key];
         }
+    }
+    const entities = (list.entities ?? []).filter((entity) => entity && entity !== list.entity);
+    if (entities.length > 0) {
+        tidied.entities = entities;
     }
     const fields = tidy<FieldMap>(list.fields);
     if (fields) {

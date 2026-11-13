@@ -53,6 +53,8 @@ export const FIELDS: Array<keyof FieldMap> = ["title", "text", "start", "end", "
 /** One list of the card: where its items are, which of their keys the card reads, and how they are grouped. */
 export interface ListConfig {
     entity: string;
+    /** More calendars whose events are merged into a calendar's list, such as the public holidays. */
+    entities?: string[];
     /** The attribute that holds the items. Without one they are read from the state, as JSON. */
     attribute?: string;
     /** A path to the items inside the attribute, such as `data.items`, when they aren't at its top. */
@@ -119,6 +121,20 @@ export interface TodoItem {
     due?: string | null;
     /** When the item was ticked, where the list keeps it. */
     completed?: string | null;
+}
+
+/** An event of a calendar, as Home Assistant's `calendar/event/subscribe` gives it. */
+export interface CalendarEvent {
+    summary: string;
+    /** A day, or a time with its date. A whole day's end is the day after it. */
+    start: string;
+    end: string;
+    description?: string | null;
+    location?: string | null;
+    uid?: string | null;
+    /** Which of a repeating event's times this is. The times share the uid. */
+    recurrence_id?: string | null;
+    all_day?: boolean;
 }
 
 /** An item with the bucket its dates put it in, and that bucket's tone. */

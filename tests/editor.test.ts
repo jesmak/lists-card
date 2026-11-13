@@ -49,6 +49,14 @@ describe("tidyList", () => {
         });
     });
 
+    it("keeps the other calendars, but not the list's own entity among them", () => {
+        expect(tidyList({ entity: "calendar.home", entities: ["calendar.home", "calendar.holidays", ""] })).toEqual({
+            entity: "calendar.home",
+            entities: ["calendar.holidays"],
+        });
+        expect(tidyList({ entity: "calendar.home", entities: [] })).toEqual({ entity: "calendar.home" });
+    });
+
     it("keeps a grouping, a limit and an order that aren't the defaults", () => {
         expect(tidyList({ entity: "sensor.chores", group: "key", limit: 5, order: ["now", "after"] })).toEqual({
             entity: "sensor.chores",

@@ -4,11 +4,12 @@
  * The items are a list of objects in an attribute, a list nested deeper inside it, an object keyed by id, or any of
  * those as JSON text in an attribute or in the state. Which of an item's keys the card reads is set per list. Arranged,
  * the items are in their buckets' order (over, going on today, to come, done), cut to the list's limit, and split into groups.
- * A to-do list's items come from Home Assistant's own subscription instead, as the entity holds only their count.
+ * A to-do list's items and a calendar's events come from Home Assistant's own subscriptions instead, as their entities
+ * hold neither.
  */
 import type { HassEntity } from "./hass";
 import { BUCKETS, GROUPINGS, TONES } from "./types";
-import type { Arranged, Bucket, FieldMap, Group, Item, ListConfig, Placed, TodoItem, Tone, When } from "./types";
+import type { Arranged, Bucket, CalendarEvent, FieldMap, Group, Item, ListConfig, Placed, TodoItem, Tone, When } from "./types";
 
 const DAY_MS = 86_400_000;
 
@@ -165,6 +166,62 @@ export function todoItems(items: TodoItem[]): Item[] {
         });
 }
 
+/** A list of calendars with no attribute given, whose events the card subscribes to. */
+export function isCalendarList(list: ListConfig): boolean {
+    return list.entity.startsWith("calendar.") && !list.attribute;
+}
+
+/** A calendar list's calendars: its entity, and those merged into it. */
+export function calendarEntities(list: ListConfig): string[] {
+    return [...new Set([list.entity, ...(list.entities ?? [])])];
+}
+
+/** The days a calendar list asks for when none are set: none back, and thirty ahead. */
+export const CALENDAR_BACK_DAYS = 0;
+export const CALENDAR_AHEAD_DAYS = 30;
+
+/**
+ * The time a calendar list's events are asked for: back as far as its `before` group reaches, and ahead as far as its
+ * `after` group does. A day more is asked at each end, in UTC, so no time zone cuts a day off. Arranging the items leaves
+ * out what is beyond the groups' reach.
+ */
+export function calendarWindow(list: ListConfig, now: number, timeZone?: string): { start: string; end: string } {
+    const order = list.order?.length ? list.order : BUCKETS;
+    const back = order.includes("before") ? (list.before?.days ?? CALENDAR_BACK_DAYS) : 0;
+    const ahead = order.includes("after") ? (list.after?.days ?? CALENDAR_AHEAD_DAYS) : 0;
+    const today = zoneDay(now, timeZone);
+    const iso = (day: number) => new Date(day * DAY_MS).toISOString();
+    return { start: iso(today - back - 1), end: iso(today + ahead + 2) };
+}
+
+/**
+ * A calendar's events as items. A whole day's end is the day after it in the calendar, so it is moved back a day, or a
+ * one-day event would be two days long. A repeating event's times share a uid, so each is told apart by which time it is.
+ */
+export function calendarItems(events: CalendarEvent[], entity: string): Item[] {
+    return events
+        .filter((event) => typeof event.summary === "string" && event.summary.trim())
+        .map((event) => {
+            const item: Item = {
+                key: [entity, event.uid ?? event.summary, event.recurrence_id ?? event.start].join("|"),
+                title: plainText(event.summary),
+            };
+            if (event.description?.trim()) {
+                item.text = plainText(event.description);
+            }
+            if (event.location?.trim()) {
+                item.label = event.location.trim();
+            }
+            item.start = parseWhen(event.start);
+            const end = parseWhen(event.end);
+            item.end = end?.allDay ? { time: end.time - DAY_MS, allDay: true } : end;
+            if (item.start && item.end && item.end.time < item.start.time) {
+                item.end = item.start;
+            }
+            return item;
+        });
+}
+
 /** A time's day in a time zone, the browser's when none is given, as days since the epoch. */
 export function zoneDay(time: number, timeZone?: string): number {
     const parts = new Intl.DateTimeFormat("en-CA", { timeZone, year: "numeric", month: "2-digit", day: "2-digit" }).formatToParts(time);
@@ -215,6 +272,12 @@ export function validList(list: unknown): list is ListConfig {
         typeof config === "object" &&
         typeof config.entity === "string" &&
         config.entity !== "" &&
+        // More entities are merged only into a calendar's list.
+        (config.entities == null ||
+            (Array.isArray(config.entities) &&
+                config.entities.every((entity) => typeof entity === "string" && entity.startsWith("calendar.")) &&
+                config.entity.startsWith("calendar.") &&
+                !config.attribute)) &&
         textOrUnset(config.attribute) &&
         textOrUnset(config.path) &&
         textOrUnset(config.name) &&

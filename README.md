@@ -18,7 +18,8 @@ A custom card for the lists that sensors carry around in their attributes and th
 tasks of a chore app, the notices of a town, the events of a club or the parcels of a shop. You tell the card which entity holds the
 list and which key of an item is its title, its date, its text and so on, and it draws the list. Nothing has to write
 a format of the card's own, and no integration is needed. Home Assistant's own to-do lists are read as they are, and
-their items can be ticked, added, edited and deleted on the card.
+their items can be ticked, added, edited and deleted on the card. Calendars are read as they are too, several merged
+into one list if you like.
 
 The items are grouped by their dates into what is over, what is going on today and what is to come, by one of their
 keys, or not at all. One card can show several lists, each under its own name. The look is rows or a timeline with a
@@ -62,21 +63,22 @@ The card shows what its entity holds and remembers nothing itself. The only list
 
 ### A list
 
-| Name        | Type   | Description                                                                                                                                      | Default                      |
-| ----------- | ------ | ------------------------------------------------------------------------------------------------------------------------------------------------ | ---------------------------- |
-| `entity`    | string | The entity that holds the list                                                                                                                   | required                     |
-| `attribute` | string | The attribute the items are in. Without one they are read from the entity's state, as JSON, or from a [to-do list](#to-do-lists) itself          |                              |
-| `path`      | string | A path to the items inside the attribute, such as `data.items`, when they aren't at its top                                                      |                              |
-| `name`      | string | The list's heading on a card with several lists                                                                                                  | the entity's name            |
-| `fields`    | object | Which key of an item holds each of the card's fields, as described under [Keys](#keys)                                                           | each field's own name        |
-| `group`     | string | What the list's groups are made from. `time` for its items' dates, `key` for the values of the `group` field, `none` for one list without groups | `time`                       |
-| `limit`     | number | The most items shown. The card says how many were left out. `0` shows them all                                                                   | `0`                          |
-| `order`     | list   | The time groups shown, in order, of `before`, `now`, `after` and `done`. The items of one left out aren't shown                                  | `[before, now, after, done]` |
-| `before`    | object | The group of items that are over, as described under [A time group](#a-time-group)                                                               |                              |
-| `now`       | object | The group of items going on today, and of items with no date                                                                                     |                              |
-| `after`     | object | The group of items still to come                                                                                                                 |                              |
-| `done`      | object | The group of a to-do list's ticked items                                                                                                         |                              |
-| `empty`     | string | What the card says when the list has no items                                                                                                    | the card's own text          |
+| Name        | Type   | Description                                                                                                                                                         | Default                      |
+| ----------- | ------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ---------------------------- |
+| `entity`    | string | The entity that holds the list                                                                                                                                      | required                     |
+| `entities`  | list   | More [calendars](#calendars) whose events are merged into a calendar's list                                                                                         |                              |
+| `attribute` | string | The attribute the items are in. Without one they are read from the entity's state, as JSON, or from a [to-do list](#to-do-lists) or a [calendar](#calendars) itself |                              |
+| `path`      | string | A path to the items inside the attribute, such as `data.items`, when they aren't at its top                                                                         |                              |
+| `name`      | string | The list's heading on a card with several lists                                                                                                                     | the entity's name            |
+| `fields`    | object | Which key of an item holds each of the card's fields, as described under [Keys](#keys)                                                                              | each field's own name        |
+| `group`     | string | What the list's groups are made from. `time` for its items' dates, `key` for the values of the `group` field, `none` for one list without groups                    | `time`                       |
+| `limit`     | number | The most items shown. The card says how many were left out. `0` shows them all                                                                                      | `0`                          |
+| `order`     | list   | The time groups shown, in order, of `before`, `now`, `after` and `done`. The items of one left out aren't shown                                                     | `[before, now, after, done]` |
+| `before`    | object | The group of items that are over, as described under [A time group](#a-time-group)                                                                                  |                              |
+| `now`       | object | The group of items going on today, and of items with no date                                                                                                        |                              |
+| `after`     | object | The group of items still to come                                                                                                                                    |                              |
+| `done`      | object | The group of a to-do list's ticked items                                                                                                                            |                              |
+| `empty`     | string | What the card says when the list has no items                                                                                                                       | the card's own text          |
 
 ### Keys
 
@@ -157,6 +159,17 @@ changed, and with `editing: none`, the tick only shows whether an item is done.
 
 <img src="https://raw.githubusercontent.com/jesmak/lists-card/main/docs/images/todo-light.png#gh-light-mode-only" width="490" alt="An upkeep to-do list with a round tick on each task, in groups for late, today, coming and ticked, the ticked tasks struck through and dimmed">
 <img src="https://raw.githubusercontent.com/jesmak/lists-card/main/docs/images/todo-dark.png#gh-dark-mode-only" width="490" alt="An upkeep to-do list with a round tick on each task, in groups for late, today, coming and ticked, the ticked tasks struck through and dimmed">
+
+### Calendars
+
+A calendar entity, such as `calendar.family`, given with no `attribute`, is read as a calendar. An event's summary is
+its title, its description its text, its place its label, and its start and end its dates. A whole-day event ends on
+its last day, though a calendar gives the day after it. Each time of a repeating event is an item of its own. The
+calendars in `entities` are merged into the same list, such as the public holidays among the family's events.
+
+The card asks for the events as far back as the list's `before` group reaches and as far ahead as its `after` group
+does. With no `days` set, that is from today to 30 days ahead, as a calendar can't give all its events at once. A group
+left out of `order` isn't asked for. The card shows the events and changes nothing in a calendar.
 
 ### Dates
 
@@ -365,6 +378,69 @@ lists:
 
 The picture is under [To-do lists](#to-do-lists).
 
+### Calendars merged into one
+
+A family's calendar with the public holidays among its events, as a timeline. A calendar too keeps its events out of
+its attributes, and the card gets them from Home Assistant like this, from the family's calendar:
+
+```yaml
+- summary: Choir rehearsal
+  start: "2026-11-12T18:00:00+02:00"
+  end: "2026-11-12T19:30:00+02:00"
+  location: Riverside church
+  uid: c1
+  recurrence_id: "20261112T180000"
+- summary: Dentist
+  start: "2026-11-16T08:15:00+02:00"
+  end: "2026-11-16T09:00:00+02:00"
+  uid: d1
+- summary: Choir rehearsal
+  start: "2026-11-19T18:00:00+02:00"
+  end: "2026-11-19T19:30:00+02:00"
+  location: Riverside church
+  uid: c1
+  recurrence_id: "20261119T180000"
+- summary: Cabin weekend
+  start: "2026-11-27"
+  end: "2026-11-30"
+  description: Take the sauna towels and the long johns.
+  uid: w1
+  all_day: true
+```
+
+And from the holidays' calendar:
+
+```yaml
+- summary: Independence Day
+  start: "2026-12-06"
+  end: "2026-12-07"
+  uid: h1
+  all_day: true
+```
+
+The card:
+
+```yaml
+type: custom:lists-card
+title: Calendar
+icon: mdi:calendar
+layout: timeline
+lists:
+  - entity: calendar.family
+    entities:
+      - calendar.holidays
+    now:
+      name: Today
+      tone: highlight
+    after:
+      name: Coming
+```
+
+<img src="https://raw.githubusercontent.com/jesmak/lists-card/main/docs/images/calendar-light.png#gh-light-mode-only" width="490" alt="A family's calendar as a timeline with the holidays merged in, today's choir rehearsal highlighted, then a dentist, the next rehearsal, a cabin weekend over three days and Independence Day">
+<img src="https://raw.githubusercontent.com/jesmak/lists-card/main/docs/images/calendar-dark.png#gh-dark-mode-only" width="490" alt="A family's calendar as a timeline with the holidays merged in, today's choir rehearsal highlighted, then a dentist, the next rehearsal, a cabin weekend over three days and Independence Day">
+
+The cabin weekend ends on the 29th, though the calendar says the 30th.
+
 ### A list nested in an answer
 
 A REST sensor that keeps an API's whole answer in an attribute, with the items under `features` and each item's
@@ -466,6 +542,7 @@ The card reads its items from an entity in Home Assistant and fetches nothing it
 - any of those as JSON text, in an attribute or, with no `attribute` set, in the entity's state
 - a list of plain texts, each then an item's title
 - a to-do list's items, which the card subscribes to, as the entity itself holds only how many are open
+- a calendar's events, which the card subscribes to over the days its list's groups reach
 
 A date is one of these. Anything else is not taken for a date, and the item then has none.
 

@@ -16,13 +16,39 @@ import "./editor";
 import { ScrollFade, fadeStyles } from "./fade";
 import type { HomeAssistant } from "./hass";
 import { gridMinRows, heightCardSize, heightStyle, validHeight } from "./height";
-import { arrange, dayOf, isTodoList, readItems, todoItems, validList, zoneDay } from "./lists";
+import {
+    arrange,
+    calendarEntities,
+    calendarItems,
+    calendarWindow,
+    dayOf,
+    isCalendarList,
+    isTodoList,
+    readItems,
+    todoItems,
+    validList,
+    zoneDay,
+} from "./lists";
 import { browserLanguage, translate } from "./localize/localize";
 import { draftOf, hasFeature, moveTarget, saveData } from "./todo";
 import type { Draft, TodoFeature } from "./todo";
 import { drawnScale, fillLimit, filledHeight, filledStyle, spareRoom, validRowStep } from "./rows";
 import { BUCKETS, EDITING, HEADINGS, LAYOUTS, TEXT_MODES } from "./types";
-import type { Arranged, Bucket, Group, Headings, Layout, ListConfig, ListsCardConfig, Placed, TextMode, TodoItem, When } from "./types";
+import type {
+    Arranged,
+    Bucket,
+    CalendarEvent,
+    Group,
+    Headings,
+    Item,
+    Layout,
+    ListConfig,
+    ListsCardConfig,
+    Placed,
+    TextMode,
+    TodoItem,
+    When,
+} from "./types";
 
 interface CardRegistration {
     type: string;
@@ -46,6 +72,11 @@ interface Ticking {
     held: TodoItem;
     to: boolean;
 }
+
+/** The keys of the card's subscriptions: a to-do list's by its entity, a calendar's by its entity and window. */
+const TODO_PREFIX = "todo ";
+const todoKey = (entity: string) => `${TODO_PREFIX}${entity}`;
+const calendarKey = (entity: string, start: string, end: string) => `calendar ${entity} ${start} ${end}`;
 
 /** How long a ticked item stays in its place, so a tick by mistake can be undone where it was made. */
 const TICK_HOLD_MS = 1000;
@@ -126,6 +157,8 @@ export class ListsCard extends LitElement {
     @state() private spare = 0;
     /** The to-do lists' items as they last came, those whose subscription failed, and the items just ticked. */
     @state() private todos = new Map<string, TodoItem[]>();
+    /** The calendars' events as they last came, by their subscriptions' keys. */
+    @state() private events = new Map<string, CalendarEvent[]>();
     @state() private failed = new Set<string>();
     @state() private ticking = new Map<string, Ticking>();
     /** The item open in the editor, a new one without a uid, and the to-do lists asking whether to delete what is done. */
@@ -252,7 +285,7 @@ export class ListsCard extends LitElement {
         this.sliding = false;
         this.resizes?.disconnect();
         cancelAnimationFrame(this.frame ?? 0);
-        this.watchTodos();
+        this.watchSources();
         this.tickTimers.forEach((timer) => window.clearTimeout(timer));
         this.tickTimers.clear();
         this.ticking = new Map();
@@ -261,37 +294,58 @@ export class ListsCard extends LitElement {
     }
 
     /**
-     * Subscribes to the items of each to-do list on the card while it is on the page, and lets go of those it no longer
-     * shows. Home Assistant sends a list's items whole, at once and on every change.
+     * The subscriptions the card's lists need: each to-do list's items, and each calendar's events over its list's
+     * window, which moves with the day. Each is keyed by what it asks, so a changed window is a new subscription.
      */
-    private watchTodos(): void {
-        const connection = this.isConnected ? this.hass?.connection : undefined;
-        const wanted = new Set(connection ? (this.config?.lists ?? []).filter(isTodoList).map((list) => list.entity) : []);
-        for (const [entity, subscription] of this.subscriptions) {
-            if (!wanted.has(entity)) {
-                this.subscriptions.delete(entity);
-                subscription.then((unsubscribe) => unsubscribe()).catch(() => undefined);
-                this.todos.delete(entity);
-                this.failed.delete(entity);
+    private wantedSources(): Map<string, Record<string, unknown>> {
+        const wanted = new Map<string, Record<string, unknown>>();
+        for (const list of this.config?.lists ?? []) {
+            if (isTodoList(list)) {
+                wanted.set(todoKey(list.entity), { type: "todo/item/subscribe", entity_id: list.entity });
+            } else if (isCalendarList(list)) {
+                const { start, end } = calendarWindow(list, Date.now(), this.timeZone());
+                for (const entity of calendarEntities(list)) {
+                    wanted.set(calendarKey(entity, start, end), { type: "calendar/event/subscribe", entity_id: entity, start, end });
+                }
             }
         }
-        for (const entity of wanted) {
-            if (this.subscriptions.has(entity)) {
+        return wanted;
+    }
+
+    /**
+     * Subscribes to what the card's lists need while it is on the page, and lets go of what they no longer do. Home
+     * Assistant sends a to-do list's items and a calendar's events whole, at once and on every change.
+     */
+    private watchSources(): void {
+        const connection = this.isConnected ? this.hass?.connection : undefined;
+        const wanted = connection ? this.wantedSources() : new Map<string, Record<string, unknown>>();
+        for (const [key, subscription] of this.subscriptions) {
+            if (!wanted.has(key)) {
+                this.subscriptions.delete(key);
+                subscription.then((unsubscribe) => unsubscribe()).catch(() => undefined);
+                this.todos.delete(key.slice(TODO_PREFIX.length));
+                this.events.delete(key);
+                this.failed.delete(key);
+            }
+        }
+        for (const [key, message] of wanted) {
+            if (this.subscriptions.has(key)) {
                 continue;
             }
-            const subscription = connection!.subscribeMessage<{ items: TodoItem[] }>(
-                (message) => {
-                    this.todos = new Map(this.todos).set(entity, Array.isArray(message?.items) ? message.items : []);
-                },
-                { type: "todo/item/subscribe", entity_id: entity },
-            );
-            // No such list, or not a to-do list after all.
+            const subscription = connection!.subscribeMessage<{ items?: TodoItem[]; events?: CalendarEvent[] | null }>((answer) => {
+                if (message.type === "todo/item/subscribe") {
+                    this.todos = new Map(this.todos).set(message.entity_id as string, Array.isArray(answer?.items) ? answer.items : []);
+                } else {
+                    this.events = new Map(this.events).set(key, Array.isArray(answer?.events) ? answer.events : []);
+                }
+            }, message);
+            // No such entity, or not a to-do list or a calendar after all.
             subscription.catch(() => {
-                if (this.subscriptions.get(entity) === subscription) {
-                    this.failed = new Set(this.failed).add(entity);
+                if (this.subscriptions.get(key) === subscription) {
+                    this.failed = new Set(this.failed).add(key);
                 }
             });
-            this.subscriptions.set(entity, subscription);
+            this.subscriptions.set(key, subscription);
         }
     }
 
@@ -327,7 +381,7 @@ export class ListsCard extends LitElement {
         if (!this.hass || !this.config) {
             return;
         }
-        this.watchTodos();
+        this.watchSources();
         const names = Object.fromEntries(BUCKETS.map((bucket) => [bucket, this.text(`common.bucket_${bucket}`)])) as Record<Bucket, string>;
         const whole = this.config.lists.length > 1;
         this.lists = this.config.lists.map((config) => {
@@ -337,12 +391,34 @@ export class ListsCard extends LitElement {
                 (entity && this.hass?.formatEntityName?.(entity, [{ type: "device" }, { type: "entity" }])) ||
                 (entity?.attributes.friendly_name as string | undefined) ||
                 config.entity;
-            const todo = isTodoList(config);
-            const items = todo ? this.todoItems(config.entity) : readItems(entity, config);
-            const loading = todo && !items && !this.failed.has(config.entity);
+            const { items, loading } = isTodoList(config)
+                ? {
+                      items: this.todoItems(config.entity),
+                      loading: !this.todos.has(config.entity) && !this.failed.has(todoKey(config.entity)),
+                  }
+                : isCalendarList(config)
+                  ? this.calendarItems(config)
+                  : { items: readItems(entity, config), loading: false };
             const arranged = items && arrange(items, config, Date.now(), names, { timeZone: this.timeZone(), whole });
             return { config, name, arranged, loading };
         });
+    }
+
+    /**
+     * A calendar list's events from all its calendars. Until every calendar has answered or failed it is loading, and
+     * when none could be read it has no list to show.
+     */
+    private calendarItems(list: ListConfig): { items?: Item[]; loading: boolean } {
+        const { start, end } = calendarWindow(list, Date.now(), this.timeZone());
+        const keys = calendarEntities(list).map((entity) => [entity, calendarKey(entity, start, end)] as const);
+        if (keys.some(([, key]) => !this.events.has(key) && !this.failed.has(key))) {
+            return { loading: true };
+        }
+        const read = keys.filter(([, key]) => this.events.has(key));
+        return {
+            items: read.length ? read.flatMap(([entity, key]) => calendarItems(this.events.get(key)!, entity)) : undefined,
+            loading: false,
+        };
     }
 
     /** A to-do list's items, those just ticked still where they were, or undefined until they have come. */
