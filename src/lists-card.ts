@@ -718,7 +718,8 @@ export class ListsCard extends LitElement {
     private todoItem(item: Placed, list: ListConfig): TemplateResult {
         const editing = this.editing?.entity === list.entity && this.editing.uid === item.uid;
         const done = this.shownDone(list, item);
-        const classes = ["item", "can", this.layoutMode(), `tone-${item.tone}`, done && "done", editing && "editing"]
+        // An open item has no cover, so it isn't one that lets clicks through to it, or its editor would take none.
+        const classes = ["item", !editing && "can", this.layoutMode(), `tone-${item.tone}`, done && "done", editing && "editing"]
             .filter(Boolean)
             .join(" ");
         const cover = editing

@@ -465,6 +465,14 @@ describe("editing a to-do list", () => {
         expect(root(element).querySelector(".editor")).toBeNull();
     });
 
+    it("lets an open item's editor take clicks: the item isn't one whose parts let clicks through", async () => {
+        const { element } = await editable();
+        await openItem(element, "Laundry");
+        const open = root(element).querySelector(".item.editing")!;
+        expect(open.classList.contains("can")).toBe(false);
+        expect(open.querySelector(".cover")).toBeNull();
+    });
+
     it("opens an item on a tap, and saves its changes, a day taken away as null", async () => {
         const { element, callService } = await editable();
         await openItem(element, "Dishes");
