@@ -689,6 +689,29 @@ describe("a calendar", () => {
     });
 });
 
+describe("the spare room of a filled row", () => {
+    // What filling the rows left over, as the card would measure it in a sections view.
+    async function filled(config: Partial<ListsCardConfig>) {
+        const element = await card(hassWith(chores), { lists: [CHORES], ...config });
+        Object.assign(element as unknown as { filled: number; spare: number }, { filled: 312, spare: 24 });
+        await element.updateComplete;
+        return element.shadowRoot!.querySelector("ha-card")!.getAttribute("style")!;
+    }
+
+    it("goes under the header on a card with one", async () => {
+        const style = await filled({ title: "Home" });
+        expect(style).toContain("--lc-spare: 24px");
+        expect(style).toContain("--lc-spare-bottom: 0px");
+    });
+
+    it("is split on a card with no header, so the lists stand as far from its top as from its bottom", async () => {
+        const style = await filled({});
+        // 4 px above the lists and 12 below, so 16 more above and 8 below make 20 each.
+        expect(style).toContain("--lc-spare: 16px");
+        expect(style).toContain("--lc-spare-bottom: 8px");
+    });
+});
+
 describe("the configuration", () => {
     const set = (config: Record<string, unknown>) => () =>
         (document.createElement("lists-card") as ListsCard).setConfig({

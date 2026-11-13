@@ -2678,7 +2678,10 @@ var ListsCard = class extends i4 {
       content += px(partStyle.marginTop) + height + px(partStyle.marginBottom);
     }
     const list = card.querySelector(":scope > .list");
-    content -= list ? Math.max(0, px(getComputedStyle(list).paddingTop) - LIST_TOP_PX) : 0;
+    if (list) {
+      const listStyle = getComputedStyle(list);
+      content -= Math.max(0, px(listStyle.paddingTop) - LIST_TOP_PX) + Math.max(0, px(listStyle.paddingBottom) - LIST_BOTTOM_PX);
+    }
     const filled = filledHeight(content, this.config ?? {}, limit);
     const spare = spareRoom(filled, content);
     if (filled !== this.filled) {
@@ -2688,11 +2691,16 @@ var ListsCard = class extends i4 {
       this.spare = spare;
     }
   }
-  /** The card's inline style: the height it is held to, or the rows it fills up to any limit, with their spare room under the header. */
+  /**
+   * The card's inline style: the height it is held to, or the rows it fills up to any limit, with their spare room.
+   * Under a header the room goes between it and the lists. A card with no header is centred instead, the room split so
+   * the lists stand as far from the card's top as from its bottom.
+   */
   cardStyle() {
     const style = [filledStyle(this.config ?? {}, this.layout, this.minimumHeight(), this.filled)];
     if (this.filled) {
-      style.push(`--lc-spare: ${this.spare}px`);
+      const top = this.hasHeader() ? this.spare : Math.min(this.spare, Math.max(0, Math.floor((this.spare + LIST_BOTTOM_PX - LIST_TOP_PX) / 2)));
+      style.push(`--lc-spare: ${top}px`, `--lc-spare-bottom: ${this.spare - top}px`);
     }
     if (this.titleButtonsPx) {
       style.push(`--lc-title-buttons: ${this.titleButtonsPx}px`);
@@ -2770,11 +2778,11 @@ var ListsCard = class extends i4 {
                     background: color-mix(in srgb, var(--lc-highlight) 24%, transparent);
                 }
 
-                /* The room a whole row leaves over goes under the header, above the lists. */
+                /* The room a whole row leaves over goes under the header, or above and below the lists on a card with none. */
                 .list {
                     flex: 1 1 auto;
                     min-height: 0;
-                    padding: calc(4px + var(--lc-spare, 0px)) 0 12px;
+                    padding: calc(4px + var(--lc-spare, 0px)) 0 calc(12px + var(--lc-spare-bottom, 0px));
                 }
 
                 .grp + .grp {
