@@ -192,10 +192,46 @@ pixels with a header and 130 without.
 
 ## Examples
 
+Each example shows what the entity holds, as Developer tools › States shows its attributes, the card's configuration,
+and the card it makes. The pictures are taken on 12 November 2026, which decides what is over and what is to come.
+
 ### Household tasks
 
 A chore app's sensor with a `tasks` attribute, each task with a `title`, an `icon`, a `due` day and `who` is to do it.
 The most overdue task comes first, and tasks more than a week away are left out.
+
+The entity's attributes:
+
+```yaml
+friendly_name: Chores
+tasks:
+  - title: Water the plants
+    icon: 🌿
+    due: "2026-11-09"
+    who: Maija
+  - title: Take out the recycling
+    icon: ♻️
+    due: "2026-11-11"
+    who: Matti
+  - title: Vacuum the living room
+    icon: 🧹
+    due: "2026-11-12"
+    who: Maija
+  - title: Change the sheets
+    icon: 🛏️
+    due: "2026-11-14"
+    who: Matti
+  - title: Clean the sauna
+    icon: 🧼
+    due: "2026-11-17"
+    who: Maija
+  - title: Wash the windows
+    icon: 🪟
+    due: "2026-11-30"
+    who: Matti
+```
+
+The card:
 
 ```yaml
 type: custom:lists-card
@@ -220,9 +256,35 @@ lists:
     empty: Nothing to do right now.
 ```
 
+<img src="https://raw.githubusercontent.com/jesmak/lists-card/main/docs/images/tasks-light.png#gh-light-mode-only" width="490" alt="The household tasks in three groups, late, today and coming, each with its emoji, whose turn it is and its day, and the windows a month away left out">
+<img src="https://raw.githubusercontent.com/jesmak/lists-card/main/docs/images/tasks-dark.png#gh-dark-mode-only" width="490" alt="The household tasks in three groups, late, today and coming, each with its emoji, whose turn it is and its day, and the windows a month away left out">
+
 ### Notices as a timeline
 
-What is going on first, then what is to come, then the latest of what is over, five in all.
+What is going on first, then what is to come, then the latest of what is over, five in all. The texts are HTML, which
+the card strips.
+
+The entity's attributes, with two of its five notices:
+
+```yaml
+friendly_name: Town notices
+notices:
+  - id: n1
+    title: Mill Bridge closed for repairs
+    from: "2026-11-10"
+    to: "2026-11-13"
+    text: <p>Mill Bridge is closed to cars from Tuesday to Friday.</p><p>Walkers and cyclists get across on the north
+      side. Buses 4 and 7 go round by Station Road and skip the stops at the bridge.</p>
+    url: https://example.com/notices/n1
+  - id: n2
+    title: Water supply interrupted on Lake Road
+    from: "2026-11-19"
+    text: <p>The water is off on Lake Road from 9 to 14 while a valve is replaced. Fill a few bottles the evening
+      before.</p>
+    url: https://example.com/notices/n2
+```
+
+The card:
 
 ```yaml
 type: custom:lists-card
@@ -246,9 +308,43 @@ lists:
     limit: 5
 ```
 
+<img src="https://raw.githubusercontent.com/jesmak/lists-card/main/docs/images/notices-light.png#gh-light-mode-only" width="490" alt="The town notices as a timeline, each with a date badge, the bridge closure going on, two notices to come, and two that are over dimmed">
+<img src="https://raw.githubusercontent.com/jesmak/lists-card/main/docs/images/notices-dark.png#gh-dark-mode-only" width="490" alt="The town notices as a timeline, each with a date badge, the bridge closure going on, two notices to come, and two that are over dimmed">
+
 ### A to-do list
 
 What is late first, the most overdue at the top, and what was ticked in the past week dimmed at the bottom.
+
+A to-do list keeps its items out of its attributes. The card asks Home Assistant for them, and gets them like this:
+
+```yaml
+- uid: u1
+  summary: Clean the gutters
+  status: needs_action
+  due: "2026-11-08"
+  description: The downpipe by the porch overflowed in the last rain. Check it while up there.
+- uid: u2
+  summary: Replace the smoke alarm battery
+  status: needs_action
+  due: "2026-11-10"
+- uid: u3
+  summary: Bleed the radiators
+  status: needs_action
+- uid: u4
+  summary: Check the tyre pressure
+  status: needs_action
+  due: "2026-11-15"
+- uid: u5
+  summary: Defrost the freezer
+  status: completed
+  completed: "2026-11-11T16:20:00+00:00"
+- uid: u6
+  summary: Change the ventilation filter
+  status: completed
+  completed: "2026-11-07T08:05:00+00:00"
+```
+
+The card:
 
 ```yaml
 type: custom:lists-card
@@ -267,10 +363,38 @@ lists:
       days: 7
 ```
 
+The picture is under [To-do lists](#to-do-lists).
+
 ### A list nested in an answer
 
 A REST sensor that keeps an API's whole answer in an attribute, with the items under `features` and each item's
-values under `attributes`.
+values under `attributes`. The grouping is the card's own, so the groups' names are its own too.
+
+The entity's attributes:
+
+```yaml
+friendly_name: Road works
+answer:
+  type: FeatureCollection
+  features:
+    - attributes:
+        name: Resurfacing on Station Road
+        description: One lane open, with traffic lights at both ends.
+        starts: "2026-11-02"
+        ends: "2026-11-20"
+    - attributes:
+        name: New water main on Birch Street
+        description: Closed between Mill Street and the school. The detour is signposted.
+        starts: "2026-11-16"
+        ends: "2026-12-04"
+    - attributes:
+        name: Bridge railing repairs
+        description: The pavement on the east side was closed.
+        starts: "2026-10-12"
+        ends: "2026-11-06"
+```
+
+The card:
 
 ```yaml
 type: custom:lists-card
@@ -286,7 +410,33 @@ lists:
       end: attributes.ends
 ```
 
+<img src="https://raw.githubusercontent.com/jesmak/lists-card/main/docs/images/road-works-light.png#gh-light-mode-only" width="490" alt="Three road works under the card's own groups, earlier, now and coming, each with its period and its description">
+<img src="https://raw.githubusercontent.com/jesmak/lists-card/main/docs/images/road-works-dark.png#gh-dark-mode-only" width="490" alt="Three road works under the card's own groups, earlier, now and coming, each with its period and its description">
+
 ### Grouped by a key, without dates
+
+A list grouped by the shop each item is bought from, the shops in the order they first come up. An item with no shop
+goes to a group with no heading.
+
+The entity's attributes:
+
+```yaml
+friendly_name: Shopping list
+items:
+  - name: Milk
+    shop: Grocery
+  - name: Rye bread
+    shop: Grocery
+  - name: Light bulbs, E27
+    shop: Hardware store
+  - name: Oat flakes
+    shop: Grocery
+  - name: Wood screws, 4 × 40
+    shop: Hardware store
+  - name: Stamps
+```
+
+The card:
 
 ```yaml
 type: custom:lists-card
@@ -300,6 +450,11 @@ lists:
       title: name
       group: shop
 ```
+
+<img src="https://raw.githubusercontent.com/jesmak/lists-card/main/docs/images/shopping-light.png#gh-light-mode-only" width="490" alt="A shopping list in a group for the grocery and one for the hardware store, and stamps, which have no shop, under no heading">
+<img src="https://raw.githubusercontent.com/jesmak/lists-card/main/docs/images/shopping-dark.png#gh-dark-mode-only" width="490" alt="A shopping list in a group for the grocery and one for the hardware store, and stamps, which have no shop, under no heading">
+
+Without `group`, the items would be one list grouped by time, all in its now group, as none has a date.
 
 ## Data
 

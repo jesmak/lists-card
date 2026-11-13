@@ -99,6 +99,72 @@
                 "icon": "mdi:wrench-clock",
                 "supported_features": 127
             }
+        },
+        "sensor.road_works": {
+            "state": "3",
+            "attributes": {
+                "friendly_name": "Road works",
+                "answer": {
+                    "type": "FeatureCollection",
+                    "features": [
+                        {
+                            "attributes": {
+                                "name": "Resurfacing on Station Road",
+                                "description": "One lane open, with traffic lights at both ends.",
+                                "starts": "2026-11-02",
+                                "ends": "2026-11-20"
+                            }
+                        },
+                        {
+                            "attributes": {
+                                "name": "New water main on Birch Street",
+                                "description": "Closed between Mill Street and the school. The detour is signposted.",
+                                "starts": "2026-11-16",
+                                "ends": "2026-12-04"
+                            }
+                        },
+                        {
+                            "attributes": {
+                                "name": "Bridge railing repairs",
+                                "description": "The pavement on the east side was closed.",
+                                "starts": "2026-10-12",
+                                "ends": "2026-11-06"
+                            }
+                        }
+                    ]
+                }
+            }
+        },
+        "sensor.shopping_list": {
+            "state": "6",
+            "attributes": {
+                "friendly_name": "Shopping list",
+                "items": [
+                    {
+                        "name": "Milk",
+                        "shop": "Grocery"
+                    },
+                    {
+                        "name": "Rye bread",
+                        "shop": "Grocery"
+                    },
+                    {
+                        "name": "Light bulbs, E27",
+                        "shop": "Hardware store"
+                    },
+                    {
+                        "name": "Oat flakes",
+                        "shop": "Grocery"
+                    },
+                    {
+                        "name": "Wood screws, 4 × 40",
+                        "shop": "Hardware store"
+                    },
+                    {
+                        "name": "Stamps"
+                    }
+                ]
+            }
         }
     },
     "shots": [
@@ -262,6 +328,47 @@
                         },
                         "done": {
                             "days": 7
+                        }
+                    }
+                ]
+            }
+        },
+        {
+            "name": "road-works",
+            "width": 480,
+            "card": {
+                "type": "custom:lists-card",
+                "title": "Road works",
+                "lists": [
+                    {
+                        "entity": "sensor.road_works",
+                        "attribute": "answer",
+                        "path": "features",
+                        "fields": {
+                            "title": "attributes.name",
+                            "text": "attributes.description",
+                            "start": "attributes.starts",
+                            "end": "attributes.ends"
+                        }
+                    }
+                ]
+            }
+        },
+        {
+            "name": "shopping",
+            "width": 480,
+            "card": {
+                "type": "custom:lists-card",
+                "title": "Shopping",
+                "text": "full",
+                "lists": [
+                    {
+                        "entity": "sensor.shopping_list",
+                        "attribute": "items",
+                        "group": "key",
+                        "fields": {
+                            "title": "name",
+                            "group": "shop"
                         }
                     }
                 ]
