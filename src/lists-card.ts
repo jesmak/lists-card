@@ -65,6 +65,9 @@ interface Shown {
     arranged?: Arranged;
     /** A to-do list whose items haven't come yet. */
     loading?: boolean;
+    /** How many items the list's limit leaves out, and whether they are shown after all, opened by a tap. */
+    cut: number;
+    open: boolean;
 }
 
 /** A ticked to-do item, by its list's entity and its uid: as it was, which keeps its place and its date, and whether it is shown done. */
@@ -164,6 +167,8 @@ export class ListsCard extends LitElement {
     /** The item open in the editor, a new one without a uid, and the to-do lists asking whether to delete what is done. */
     @state() private editing?: Editing;
     @state() private asking = new Set<string>();
+    /** The lists, by their place on the card, whose items beyond the limit have been opened. */
+    @state() private expanded = new Set<number>();
     private focusEditor = false;
 
     private subscriptions = new Map<string, Promise<() => Promise<void>>>();
@@ -384,7 +389,7 @@ export class ListsCard extends LitElement {
         this.watchSources();
         const names = Object.fromEntries(BUCKETS.map((bucket) => [bucket, this.text(`common.bucket_${bucket}`)])) as Record<Bucket, string>;
         const whole = this.config.lists.length > 1;
-        this.lists = this.config.lists.map((config) => {
+        this.lists = this.config.lists.map((config, index) => {
             const entity = this.hass?.states[config.entity];
             const name =
                 config.name ||
@@ -399,8 +404,11 @@ export class ListsCard extends LitElement {
                 : isCalendarList(config)
                   ? this.calendarItems(config)
                   : { items: readItems(entity, config), loading: false };
-            const arranged = items && arrange(items, config, Date.now(), names, { timeZone: this.timeZone(), whole });
-            return { config, name, arranged, loading };
+            const arrangeBy = (list: ListConfig) => items && arrange(items, list, Date.now(), names, { timeZone: this.timeZone(), whole });
+            const limited = arrangeBy(config);
+            const cut = limited?.hidden ?? 0;
+            const open = cut > 0 && !config.hide_more && this.expanded.has(index);
+            return { config, name, arranged: open ? arrangeBy({ ...config, limit: 0 }) : limited, loading, cut, open };
         });
     }
 
@@ -590,10 +598,29 @@ export class ListsCard extends LitElement {
         this.measureSoon();
     }
 
+    /**
+     * How wide the buttons on a title's row are at most on the card, in rows: a link's button, and with the texts folded
+     * away, the chevron that opens one. Every row makes that room at its end, so the dates end at the same place.
+     */
+    private titleButtonsPx = 0;
+
+    private measureTitleButtons(): void {
+        const fold = this.textMode() === "fold";
+        const items = this.lists.flatMap((list) => list.arranged?.groups.flatMap((group) => group.items) ?? []);
+        this.titleButtonsPx =
+            this.layoutMode() === "timeline"
+                ? 0
+                : Math.max(
+                      0,
+                      ...items.filter((item) => item.uid === undefined).map((item) => (item.link ? 28 : 0) + (fold && item.text ? 20 : 0)),
+                  );
+    }
+
     protected render(): TemplateResult | typeof nothing {
         if (!this.hass || !this.config) {
             return nothing;
         }
+        this.measureTitleButtons();
         const several = this.lists.length > 1;
         return html`
             <ha-card style=${this.cardStyle()} class=${this.cardClass()} @transitionend=${this.slid}>
@@ -662,7 +689,7 @@ export class ListsCard extends LitElement {
             return html`${adding}${adding === nothing ? html`<div class="empty">${this.emptyText(list)}</div>` : nothing}`;
         }
         return html`${adding}${groups.map((group) => this.group(group, `${index} ${group.key}`, index, this.clearRow(list, group)))}
-        ${this.more(list)}`;
+        ${this.more(list, index)}`;
     }
 
     /** One of several lists: a group of its own, under its name. */
@@ -673,7 +700,7 @@ export class ListsCard extends LitElement {
             ? nothing
             : items.length === 0
               ? html`<div class="empty">${this.emptyText(list)}</div>`
-              : this.more(list);
+              : this.more(list, index);
         return this.group(group, `${index} list`, index, html`${empty}${this.clearRow(list, group)}`);
     }
 
@@ -684,9 +711,21 @@ export class ListsCard extends LitElement {
         return list.config.empty || this.text("common.empty");
     }
 
-    private more(list: Shown): TemplateResult | typeof nothing {
-        const hidden = list.arranged?.hidden ?? 0;
-        return hidden > 0 ? html`<div class="more">${this.text("common.more", { n: hidden })}</div>` : nothing;
+    /** What the list's limit leaves out, as a row that opens it, and once opened a row that shuts it again. */
+    private more(list: Shown, index: number): TemplateResult | typeof nothing {
+        if (list.cut === 0 || list.config.hide_more) {
+            return nothing;
+        }
+        const toggle = () => {
+            const expanded = new Set(this.expanded);
+            if (!expanded.delete(index)) {
+                expanded.add(index);
+            }
+            this.expanded = expanded;
+        };
+        return html`<button class="more" aria-expanded=${list.open ? "true" : "false"} @click=${toggle}>
+            ${list.open ? this.text("common.less") : this.text("common.more", { n: list.cut })}
+        </button>`;
     }
 
     private group(group: Group, key: string, list: number, rest: TemplateResult | typeof nothing): TemplateResult {
@@ -748,15 +787,22 @@ export class ListsCard extends LitElement {
         // The chevron keeps its place on every item with a text that may be cut, so a text's width never depends on it.
         const chevron =
             item.text && mode !== "full" ? html`<ha-icon class="chev ${can ? "" : "idle"}" icon="mdi:chevron-down"></ha-icon>` : nothing;
-        const actions = item.link || (item.text && mode !== "full") ? html`<span class="act">${source}${chevron}</span>` : nothing;
         const text = item.text
             ? html`<div class="tx ${mode === "clamp" && !open ? "clamp" : ""}" data-key=${key}>${item.text}</div>`
             : nothing;
+        const timeline = this.layoutMode() === "timeline";
+        // In rows a text cut to two lines has its chevron at the end of its own row, so the title's row holds only the
+        // date and its buttons, which end where every other row's do. A folded text is out of sight, so its chevron
+        // stays on the title's row.
+        const chevronOnTitle = timeline || mode === "fold";
+        const titleButtons = [source, chevronOnTitle ? chevron : nothing].filter((part) => part !== nothing);
+        const actions =
+            titleButtons.length > 0 || (!timeline && this.titleButtonsPx > 0) ? html`<span class="act">${titleButtons}</span>` : nothing;
         const label = item.label ? html`<div class="lb" title=${item.label}>${item.label}</div>` : nothing;
         const when = this.whenText(item);
 
         if (this.layoutMode() === "timeline") {
-            const extra = this.badgeSaysIt(item) ? "" : when;
+            const extra = this.timelineWhen(item);
             const line =
                 item.label || extra
                     ? html`<div class="lb" title=${[item.label, extra].filter(Boolean).join(" · ")}>
@@ -783,7 +829,15 @@ export class ListsCard extends LitElement {
                 >
                 ${when ? html`<span class="when" title=${this.longWhen(item)}>${when}</span>` : nothing} ${actions}
             </div>
-            ${folded ? this.fold(open, html`<div class="sub">${label}${text}</div>`) : label !== nothing || text !== nothing ? html`<div class="sub">${label}${text}</div>` : nothing}
+            ${
+                folded
+                    ? this.fold(open, html`<div class="sub">${label}${text}</div>`)
+                    : label !== nothing || text !== nothing
+                      ? html`<div class="sub">
+                            ${label}${chevron === nothing ? text : html`<div class="tx-row">${text}${chevron}</div>`}
+                        </div>`
+                      : nothing
+            }
         </div>`;
     }
 
@@ -811,7 +865,7 @@ export class ListsCard extends LitElement {
         const editor = editing ? this.editor(list) : nothing;
 
         if (this.layoutMode() === "timeline") {
-            const extra = this.badgeSaysIt(item) ? "" : when;
+            const extra = editing ? "" : this.timelineWhen(item);
             return html`<div class=${classes}>
                 ${cover} ${this.badge(item)}
                 <div class="body">
@@ -1055,6 +1109,28 @@ export class ListsCard extends LitElement {
         return Boolean(start?.allDay && end?.allDay && end.time > start.time && !this.sameMonthDays(item));
     }
 
+    /**
+     * When the item is, as the timeline writes it under the title: nothing when the badge says it all, and only the time
+     * when the item is within the badge's one day, as a meeting from 18 to 19.30 is. A past one in a group toned as a
+     * warning still says how long ago it was.
+     */
+    private timelineWhen(item: Placed): string {
+        if (this.badgeSaysIt(item)) {
+            return "";
+        }
+        const start = (item.start ?? item.end)!;
+        const end = item.start && item.end ? item.end : undefined;
+        const zone = this.timeZone();
+        const day = dayOf(start, zone);
+        const oneDay = !start.allDay && (!end || (!end.allDay && dayOf(end, zone) === day));
+        const late = day < zoneDay(Date.now(), zone) && item.tone === "warning";
+        if (!oneDay || late) {
+            return this.whenText(item);
+        }
+        const time = this.format(start, { hour: "numeric", minute: "2-digit" });
+        return end && end.time !== start.time ? time.formatRange(start.time, end.time) : time.format(start.time);
+    }
+
     /** Whether the timeline's badge already says when the item is, so the text needn't: a plain day, or a period of whole days. */
     private badgeSaysIt(item: Placed): boolean {
         const start = item.start ?? item.end;
@@ -1201,14 +1277,22 @@ export class ListsCard extends LitElement {
 
     /** The card's inline style: the height it is held to, or the rows it fills up to any limit, with their spare room under the header. */
     private cardStyle(): string {
-        const style = filledStyle(this.config ?? {}, this.layout, this.minimumHeight(), this.filled);
-        return this.filled ? `${style}; --lc-spare: ${this.spare}px` : style;
+        const style = [filledStyle(this.config ?? {}, this.layout, this.minimumHeight(), this.filled)];
+        if (this.filled) {
+            style.push(`--lc-spare: ${this.spare}px`);
+        }
+        if (this.titleButtonsPx) {
+            style.push(`--lc-title-buttons: ${this.titleButtonsPx}px`);
+        }
+        return style.filter(Boolean).join("; ");
     }
 
     private cardClass(): string {
         // Without a single icon or tick on the card, the rows give its column up.
         const icons = this.lists.some((list) => list.arranged?.groups.some((group) => group.items.some((item) => item.icon || item.uid)));
-        return [this.heightStyle() && "held", this.sliding && "sliding", !icons && "no-icons"].filter(Boolean).join(" ");
+        return [this.heightStyle() && "held", this.sliding && "sliding", !icons && "no-icons", this.titleButtonsPx && "rows-buttons"]
+            .filter(Boolean)
+            .join(" ");
     }
 
     private text(key: string, values: Record<string, string | number> = {}): string {
@@ -1494,9 +1578,26 @@ export class ListsCard extends LitElement {
                 .act {
                     flex: none;
                     display: flex;
+                    justify-content: flex-end;
                     align-items: center;
                     height: 24px;
                     margin-right: -5px;
+                }
+
+                .rows-buttons .line > .act {
+                    min-width: var(--lc-title-buttons);
+                }
+
+                /* A text cut to two lines, with the chevron that opens it at the end of its row. */
+                .tx-row {
+                    display: flex;
+                    align-items: flex-start;
+                    gap: 8px;
+                }
+
+                .tx-row > .tx {
+                    flex: 1 1 auto;
+                    min-width: 0;
                 }
 
                 .src {
@@ -1805,7 +1906,8 @@ export class ListsCard extends LitElement {
                 .item.timeline::before {
                     content: "";
                     position: absolute;
-                    left: 39.5px;
+                    /* Through the badge's middle: the item's padding and half the badge, less half the line. */
+                    left: 41.5px;
                     top: 0;
                     bottom: 0;
                     width: 1px;
@@ -1823,12 +1925,12 @@ export class ListsCard extends LitElement {
                 .badge {
                     flex: none;
                     position: relative;
-                    width: 48px;
+                    width: 52px;
                     box-sizing: border-box;
                     margin: 6px 0;
                     text-align: center;
                     border-radius: 6px;
-                    padding: 3px 0 2px;
+                    padding: 4px 0 3px;
                     line-height: 1.15;
                     background: var(--card-background-color, #fff);
                     box-shadow: inset 0 0 0 1px var(--divider-color, rgba(0, 0, 0, 0.12));
@@ -1868,10 +1970,18 @@ export class ListsCard extends LitElement {
                     color: var(--lc-warning);
                 }
 
+                /*
+                 * The title and the line under it stand centred against a badge of two lines, 36 px tall from 6 px down,
+                 * and anything more flows on below them. A title alone is centred against the badge by itself.
+                 */
                 .body {
                     flex: 1 1 auto;
                     min-width: 0;
-                    padding: 7px 0;
+                    padding: 6px 0 7px;
+                }
+
+                .timeline .body:has(> .ti:only-child) {
+                    padding-top: 14px;
                 }
 
                 .timeline .ti {
@@ -1902,6 +2012,29 @@ export class ListsCard extends LitElement {
                 .empty {
                     font-size: 13px;
                     padding-top: 8px;
+                }
+
+                /* The row of what the limit leaves out is a button that opens it, looking like the row it was. */
+                button.more {
+                    display: block;
+                    width: 100%;
+                    margin: 0;
+                    border: 0;
+                    background: none;
+                    font: inherit;
+                    font-size: 12px;
+                    text-align: start;
+                    cursor: pointer;
+                }
+
+                button.more:hover {
+                    color: var(--primary-color);
+                }
+
+                button.more:focus-visible {
+                    outline: 2px solid var(--primary-color);
+                    outline-offset: -2px;
+                    border-radius: 4px;
                 }
 
                 .fold {

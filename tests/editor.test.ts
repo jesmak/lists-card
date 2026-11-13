@@ -49,6 +49,15 @@ describe("tidyList", () => {
         });
     });
 
+    it("keeps hide_more only when it is on", () => {
+        expect(tidyList({ entity: "sensor.chores", limit: 3, hide_more: true })).toEqual({
+            entity: "sensor.chores",
+            limit: 3,
+            hide_more: true,
+        });
+        expect(tidyList({ entity: "sensor.chores", hide_more: false })).toEqual({ entity: "sensor.chores" });
+    });
+
     it("keeps the other calendars, but not the list's own entity among them", () => {
         expect(tidyList({ entity: "calendar.home", entities: ["calendar.home", "calendar.holidays", ""] })).toEqual({
             entity: "calendar.home",

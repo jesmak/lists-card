@@ -729,6 +729,7 @@ var en_default = {
     unreadable: "No list found in {entity}.",
     empty: "Nothing on the list.",
     more: "+ {n} more",
+    less: "Show less",
     open_source: "Open the source",
     bucket_before: "Earlier",
     bucket_now: "Now",
@@ -800,7 +801,9 @@ var en_default = {
     group_key: "By the group key",
     group_none: "None, one list",
     limit: "Most items shown",
-    limit_helper: "0 shows them all. The card says how many were left out.",
+    limit_helper: "0 shows them all. The card says how many were left out, and a tap on that shows them.",
+    hide_more: "Hide how many were left out",
+    hide_more_helper: "The list shows only its most items, and doesn't say how many were left out.",
     order: "Time groups shown, in order",
     order_helper: "The items of a group left out aren't shown. Ticked holds the items ticked on a to-do list.",
     before: "Earlier",
@@ -841,6 +844,7 @@ var fi_default = {
     unreadable: "Entiteetist\xE4 {entity} ei l\xF6ytynyt listaa.",
     empty: "Lista on tyhj\xE4.",
     more: "+ {n} muuta",
+    less: "N\xE4yt\xE4 v\xE4hemm\xE4n",
     open_source: "Avaa l\xE4hde",
     bucket_before: "Aiemmat",
     bucket_now: "Nyt",
@@ -912,7 +916,9 @@ var fi_default = {
     group_key: "Ryhm\xE4n avaimen mukaan",
     group_none: "Ei ryhmi\xE4, yksi lista",
     limit: "Rivej\xE4 enint\xE4\xE4n",
-    limit_helper: "0 n\xE4ytt\xE4\xE4 kaikki. Kortti kertoo, montako j\xE4tettiin pois.",
+    limit_helper: "0 n\xE4ytt\xE4\xE4 kaikki. Kortti kertoo, montako j\xE4tettiin pois, ja ne saa n\xE4kyviin napauttamalla.",
+    hide_more: "Piilota pois j\xE4tettyjen m\xE4\xE4r\xE4",
+    hide_more_helper: "Lista n\xE4ytt\xE4\xE4 vain enimm\xE4ism\xE4\xE4r\xE4n rivej\xE4, eik\xE4 kerro, montako j\xE4tettiin pois.",
     order: "N\xE4ytett\xE4v\xE4t aikaryhm\xE4t j\xE4rjestyksess\xE4",
     order_helper: "Pois j\xE4tetyn ryhm\xE4n rivej\xE4 ei n\xE4ytet\xE4. Merkityiss\xE4 ovat teht\xE4v\xE4listan merkityt rivit.",
     before: "Aiemmat",
@@ -1157,7 +1163,7 @@ function validList(list) {
   const count = (value) => typeof value === "number" && Number.isInteger(value) && value >= 0;
   const textOrUnset = (value) => value == null || typeof value === "string";
   return config !== null && typeof config === "object" && typeof config.entity === "string" && config.entity !== "" && // More entities are merged only into a calendar's list.
-  (config.entities == null || Array.isArray(config.entities) && config.entities.every((entity) => typeof entity === "string" && entity.startsWith("calendar.")) && config.entity.startsWith("calendar.") && !config.attribute) && textOrUnset(config.attribute) && textOrUnset(config.path) && textOrUnset(config.name) && textOrUnset(config.empty) && (config.fields == null || typeof config.fields === "object" && Object.values(config.fields).every(textOrUnset)) && (config.group == null || GROUPINGS.includes(config.group)) && (config.limit == null || count(config.limit)) && (config.order == null || Array.isArray(config.order) && config.order.every((b3) => BUCKETS.includes(b3))) && bucket(config.before) && bucket(config.now) && bucket(config.after) && bucket(config.done);
+  (config.entities == null || Array.isArray(config.entities) && config.entities.every((entity) => typeof entity === "string" && entity.startsWith("calendar.")) && config.entity.startsWith("calendar.") && !config.attribute) && textOrUnset(config.attribute) && textOrUnset(config.path) && textOrUnset(config.name) && textOrUnset(config.empty) && (config.fields == null || typeof config.fields === "object" && Object.values(config.fields).every(textOrUnset)) && (config.group == null || GROUPINGS.includes(config.group)) && (config.limit == null || count(config.limit)) && (config.hide_more == null || typeof config.hide_more === "boolean") && (config.order == null || Array.isArray(config.order) && config.order.every((b3) => BUCKETS.includes(b3))) && bucket(config.before) && bucket(config.now) && bucket(config.after) && bucket(config.done);
 }
 function arrange(items, list, now, names, { timeZone, whole = false } = {}) {
   const today = zoneDay(now, timeZone);
@@ -1383,6 +1389,11 @@ function listsSchema(text2) {
               description: text2("editor.limit_helper"),
               selector: { number: { min: 0, step: 1, mode: "box" } }
             },
+            hide_more: {
+              label: text2("editor.hide_more"),
+              description: text2("editor.hide_more_helper"),
+              selector: { boolean: {} }
+            },
             order: {
               label: text2("editor.order"),
               description: text2("editor.order_helper"),
@@ -1417,7 +1428,7 @@ function tidy(value) {
 }
 function tidyList(list) {
   const tidied = { entity: list.entity };
-  for (const key of ["attribute", "path", "name", "empty"]) {
+  for (const key of ["attribute", "path", "name", "empty", "hide_more"]) {
     if (!blank(list[key])) {
       tidied[key] = list[key];
     }
@@ -1741,10 +1752,16 @@ var ListsCard = class extends i4 {
     this.failed = /* @__PURE__ */ new Set();
     this.ticking = /* @__PURE__ */ new Map();
     this.asking = /* @__PURE__ */ new Set();
+    this.expanded = /* @__PURE__ */ new Set();
     this.focusEditor = false;
     this.subscriptions = /* @__PURE__ */ new Map();
     this.tickTimers = /* @__PURE__ */ new Map();
     this.lists = [];
+    /**
+     * How wide the buttons on a title's row are at most on the card, in rows: a link's button, and with the texts folded
+     * away, the chevron that opens one. Every row makes that room at its end, so the dates end at the same place.
+     */
+    this.titleButtonsPx = 0;
     this.slid = (event) => {
       const fold = event.target;
       if (event.propertyName !== "grid-template-rows" || !fold.classList?.contains("fold")) {
@@ -1941,15 +1958,18 @@ var ListsCard = class extends i4 {
     this.watchSources();
     const names = Object.fromEntries(BUCKETS.map((bucket) => [bucket, this.text(`common.bucket_${bucket}`)]));
     const whole = this.config.lists.length > 1;
-    this.lists = this.config.lists.map((config) => {
+    this.lists = this.config.lists.map((config, index) => {
       const entity = this.hass?.states[config.entity];
       const name = config.name || entity && this.hass?.formatEntityName?.(entity, [{ type: "device" }, { type: "entity" }]) || entity?.attributes.friendly_name || config.entity;
       const { items, loading } = isTodoList(config) ? {
         items: this.todoItems(config.entity),
         loading: !this.todos.has(config.entity) && !this.failed.has(todoKey(config.entity))
       } : isCalendarList(config) ? this.calendarItems(config) : { items: readItems(entity, config), loading: false };
-      const arranged = items && arrange(items, config, Date.now(), names, { timeZone: this.timeZone(), whole });
-      return { config, name, arranged, loading };
+      const arrangeBy = (list) => items && arrange(items, list, Date.now(), names, { timeZone: this.timeZone(), whole });
+      const limited = arrangeBy(config);
+      const cut = limited?.hidden ?? 0;
+      const open = cut > 0 && !config.hide_more && this.expanded.has(index);
+      return { config, name, arranged: open ? arrangeBy({ ...config, limit: 0 }) : limited, loading, cut, open };
     });
   }
   /**
@@ -2119,10 +2139,19 @@ var ListsCard = class extends i4 {
     }
     this.measureSoon();
   }
+  measureTitleButtons() {
+    const fold = this.textMode() === "fold";
+    const items = this.lists.flatMap((list) => list.arranged?.groups.flatMap((group) => group.items) ?? []);
+    this.titleButtonsPx = this.layoutMode() === "timeline" ? 0 : Math.max(
+      0,
+      ...items.filter((item) => item.uid === void 0).map((item) => (item.link ? 28 : 0) + (fold && item.text ? 20 : 0))
+    );
+  }
   render() {
     if (!this.hass || !this.config) {
       return A;
     }
+    this.measureTitleButtons();
     const several = this.lists.length > 1;
     return b2`
             <ha-card style=${this.cardStyle()} class=${this.cardClass()} @transitionend=${this.slid}>
@@ -2186,13 +2215,13 @@ var ListsCard = class extends i4 {
       return b2`${adding}${adding === A ? b2`<div class="empty">${this.emptyText(list)}</div>` : A}`;
     }
     return b2`${adding}${groups.map((group) => this.group(group, `${index} ${group.key}`, index, this.clearRow(list, group)))}
-        ${this.more(list)}`;
+        ${this.more(list, index)}`;
   }
   /** One of several lists: a group of its own, under its name. */
   listAsGroup(list, index) {
     const items = list.arranged?.groups.flatMap((group2) => group2.items) ?? [];
     const group = { key: "list", name: list.name, tone: "plain", items };
-    const empty = list.loading ? A : items.length === 0 ? b2`<div class="empty">${this.emptyText(list)}</div>` : this.more(list);
+    const empty = list.loading ? A : items.length === 0 ? b2`<div class="empty">${this.emptyText(list)}</div>` : this.more(list, index);
     return this.group(group, `${index} list`, index, b2`${empty}${this.clearRow(list, group)}`);
   }
   emptyText(list) {
@@ -2201,9 +2230,21 @@ var ListsCard = class extends i4 {
     }
     return list.config.empty || this.text("common.empty");
   }
-  more(list) {
-    const hidden = list.arranged?.hidden ?? 0;
-    return hidden > 0 ? b2`<div class="more">${this.text("common.more", { n: hidden })}</div>` : A;
+  /** What the list's limit leaves out, as a row that opens it, and once opened a row that shuts it again. */
+  more(list, index) {
+    if (list.cut === 0 || list.config.hide_more) {
+      return A;
+    }
+    const toggle = () => {
+      const expanded = new Set(this.expanded);
+      if (!expanded.delete(index)) {
+        expanded.add(index);
+      }
+      this.expanded = expanded;
+    };
+    return b2`<button class="more" aria-expanded=${list.open ? "true" : "false"} @click=${toggle}>
+            ${list.open ? this.text("common.less") : this.text("common.more", { n: list.cut })}
+        </button>`;
   }
   group(group, key, list, rest) {
     const items = b2`<div class="items">
@@ -2254,12 +2295,15 @@ var ListsCard = class extends i4 {
                   ><ha-icon icon="mdi:open-in-new"></ha-icon
               ></a>` : A;
     const chevron = item.text && mode !== "full" ? b2`<ha-icon class="chev ${can ? "" : "idle"}" icon="mdi:chevron-down"></ha-icon>` : A;
-    const actions = item.link || item.text && mode !== "full" ? b2`<span class="act">${source}${chevron}</span>` : A;
     const text2 = item.text ? b2`<div class="tx ${mode === "clamp" && !open ? "clamp" : ""}" data-key=${key}>${item.text}</div>` : A;
+    const timeline = this.layoutMode() === "timeline";
+    const chevronOnTitle = timeline || mode === "fold";
+    const titleButtons = [source, chevronOnTitle ? chevron : A].filter((part) => part !== A);
+    const actions = titleButtons.length > 0 || !timeline && this.titleButtonsPx > 0 ? b2`<span class="act">${titleButtons}</span>` : A;
     const label = item.label ? b2`<div class="lb" title=${item.label}>${item.label}</div>` : A;
     const when = this.whenText(item);
     if (this.layoutMode() === "timeline") {
-      const extra = this.badgeSaysIt(item) ? "" : when;
+      const extra = this.timelineWhen(item);
       const line = item.label || extra ? b2`<div class="lb" title=${[item.label, extra].filter(Boolean).join(" \xB7 ")}>
                           ${item.label ?? A}${item.label && extra ? " \xB7 " : A}${extra ? b2`<span class="when">${extra}</span>` : A}
                       </div>` : A;
@@ -2282,7 +2326,9 @@ var ListsCard = class extends i4 {
                 >
                 ${when ? b2`<span class="when" title=${this.longWhen(item)}>${when}</span>` : A} ${actions}
             </div>
-            ${folded ? this.fold(open, b2`<div class="sub">${label}${text2}</div>`) : label !== A || text2 !== A ? b2`<div class="sub">${label}${text2}</div>` : A}
+            ${folded ? this.fold(open, b2`<div class="sub">${label}${text2}</div>`) : label !== A || text2 !== A ? b2`<div class="sub">
+                            ${label}${chevron === A ? text2 : b2`<div class="tx-row">${text2}${chevron}</div>`}
+                        </div>` : A}
         </div>`;
   }
   /**
@@ -2303,7 +2349,7 @@ var ListsCard = class extends i4 {
     const when = editing ? "" : this.whenText(item);
     const editor = editing ? this.editor(list) : A;
     if (this.layoutMode() === "timeline") {
-      const extra = this.badgeSaysIt(item) ? "" : when;
+      const extra = editing ? "" : this.timelineWhen(item);
       return b2`<div class=${classes}>
                 ${cover} ${this.badge(item)}
                 <div class="body">
@@ -2503,6 +2549,27 @@ var ListsCard = class extends i4 {
     const { start, end } = item;
     return Boolean(start?.allDay && end?.allDay && end.time > start.time && !this.sameMonthDays(item));
   }
+  /**
+   * When the item is, as the timeline writes it under the title: nothing when the badge says it all, and only the time
+   * when the item is within the badge's one day, as a meeting from 18 to 19.30 is. A past one in a group toned as a
+   * warning still says how long ago it was.
+   */
+  timelineWhen(item) {
+    if (this.badgeSaysIt(item)) {
+      return "";
+    }
+    const start = item.start ?? item.end;
+    const end = item.start && item.end ? item.end : void 0;
+    const zone = this.timeZone();
+    const day = dayOf(start, zone);
+    const oneDay = !start.allDay && (!end || !end.allDay && dayOf(end, zone) === day);
+    const late = day < zoneDay(Date.now(), zone) && item.tone === "warning";
+    if (!oneDay || late) {
+      return this.whenText(item);
+    }
+    const time = this.format(start, { hour: "numeric", minute: "2-digit" });
+    return end && end.time !== start.time ? time.formatRange(start.time, end.time) : time.format(start.time);
+  }
   /** Whether the timeline's badge already says when the item is, so the text needn't: a plain day, or a period of whole days. */
   badgeSaysIt(item) {
     const start = item.start ?? item.end;
@@ -2622,12 +2689,18 @@ var ListsCard = class extends i4 {
   }
   /** The card's inline style: the height it is held to, or the rows it fills up to any limit, with their spare room under the header. */
   cardStyle() {
-    const style = filledStyle(this.config ?? {}, this.layout, this.minimumHeight(), this.filled);
-    return this.filled ? `${style}; --lc-spare: ${this.spare}px` : style;
+    const style = [filledStyle(this.config ?? {}, this.layout, this.minimumHeight(), this.filled)];
+    if (this.filled) {
+      style.push(`--lc-spare: ${this.spare}px`);
+    }
+    if (this.titleButtonsPx) {
+      style.push(`--lc-title-buttons: ${this.titleButtonsPx}px`);
+    }
+    return style.filter(Boolean).join("; ");
   }
   cardClass() {
     const icons = this.lists.some((list) => list.arranged?.groups.some((group) => group.items.some((item) => item.icon || item.uid)));
-    return [this.heightStyle() && "held", this.sliding && "sliding", !icons && "no-icons"].filter(Boolean).join(" ");
+    return [this.heightStyle() && "held", this.sliding && "sliding", !icons && "no-icons", this.titleButtonsPx && "rows-buttons"].filter(Boolean).join(" ");
   }
   text(key, values = {}) {
     return Object.entries(values).reduce(
@@ -2910,9 +2983,26 @@ var ListsCard = class extends i4 {
                 .act {
                     flex: none;
                     display: flex;
+                    justify-content: flex-end;
                     align-items: center;
                     height: 24px;
                     margin-right: -5px;
+                }
+
+                .rows-buttons .line > .act {
+                    min-width: var(--lc-title-buttons);
+                }
+
+                /* A text cut to two lines, with the chevron that opens it at the end of its row. */
+                .tx-row {
+                    display: flex;
+                    align-items: flex-start;
+                    gap: 8px;
+                }
+
+                .tx-row > .tx {
+                    flex: 1 1 auto;
+                    min-width: 0;
                 }
 
                 .src {
@@ -3221,7 +3311,8 @@ var ListsCard = class extends i4 {
                 .item.timeline::before {
                     content: "";
                     position: absolute;
-                    left: 39.5px;
+                    /* Through the badge's middle: the item's padding and half the badge, less half the line. */
+                    left: 41.5px;
                     top: 0;
                     bottom: 0;
                     width: 1px;
@@ -3239,12 +3330,12 @@ var ListsCard = class extends i4 {
                 .badge {
                     flex: none;
                     position: relative;
-                    width: 48px;
+                    width: 52px;
                     box-sizing: border-box;
                     margin: 6px 0;
                     text-align: center;
                     border-radius: 6px;
-                    padding: 3px 0 2px;
+                    padding: 4px 0 3px;
                     line-height: 1.15;
                     background: var(--card-background-color, #fff);
                     box-shadow: inset 0 0 0 1px var(--divider-color, rgba(0, 0, 0, 0.12));
@@ -3284,10 +3375,18 @@ var ListsCard = class extends i4 {
                     color: var(--lc-warning);
                 }
 
+                /*
+                 * The title and the line under it stand centred against a badge of two lines, 36 px tall from 6 px down,
+                 * and anything more flows on below them. A title alone is centred against the badge by itself.
+                 */
                 .body {
                     flex: 1 1 auto;
                     min-width: 0;
-                    padding: 7px 0;
+                    padding: 6px 0 7px;
+                }
+
+                .timeline .body:has(> .ti:only-child) {
+                    padding-top: 14px;
                 }
 
                 .timeline .ti {
@@ -3318,6 +3417,29 @@ var ListsCard = class extends i4 {
                 .empty {
                     font-size: 13px;
                     padding-top: 8px;
+                }
+
+                /* The row of what the limit leaves out is a button that opens it, looking like the row it was. */
+                button.more {
+                    display: block;
+                    width: 100%;
+                    margin: 0;
+                    border: 0;
+                    background: none;
+                    font: inherit;
+                    font-size: 12px;
+                    text-align: start;
+                    cursor: pointer;
+                }
+
+                button.more:hover {
+                    color: var(--primary-color);
+                }
+
+                button.more:focus-visible {
+                    outline: 2px solid var(--primary-color);
+                    outline-offset: -2px;
+                    border-radius: 4px;
                 }
 
                 .fold {
@@ -3430,6 +3552,9 @@ __decorateClass([
 __decorateClass([
   r5()
 ], ListsCard.prototype, "asking", 2);
+__decorateClass([
+  r5()
+], ListsCard.prototype, "expanded", 2);
 if (!customElements.get("lists-card")) {
   customElements.define("lists-card", ListsCard);
   console.info(

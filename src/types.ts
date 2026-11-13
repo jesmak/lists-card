@@ -63,8 +63,10 @@ export interface ListConfig {
     name?: string;
     fields?: FieldMap;
     group?: Grouping;
-    /** The most items shown. The card says how many were left out. */
+    /** The most items shown. The card says how many were left out, unless `hide_more` is set. */
     limit?: number;
+    /** No row saying how many the limit left out, so the list is only its first items. */
+    hide_more?: boolean;
     before?: BucketConfig;
     now?: BucketConfig;
     after?: BucketConfig;

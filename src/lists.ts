@@ -285,6 +285,7 @@ export function validList(list: unknown): list is ListConfig {
         (config.fields == null || (typeof config.fields === "object" && Object.values(config.fields).every(textOrUnset))) &&
         (config.group == null || GROUPINGS.includes(config.group)) &&
         (config.limit == null || count(config.limit)) &&
+        (config.hide_more == null || typeof config.hide_more === "boolean") &&
         (config.order == null || (Array.isArray(config.order) && config.order.every((b) => BUCKETS.includes(b)))) &&
         bucket(config.before) &&
         bucket(config.now) &&

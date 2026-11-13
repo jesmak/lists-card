@@ -86,10 +86,23 @@ describe("one list", () => {
         expect(texts(element, ".pill")).toEqual(["3"]);
     });
 
-    it("says how many items its limit left out", async () => {
+    it("says how many items its limit left out, opens them on a tap and shuts them on another", async () => {
         const element = await card(hassWith(chores), { lists: [{ ...CHORES, limit: 1 }] });
         expect(texts(element, ".ti")).toEqual(["Water the plants"]);
         expect(texts(element, ".more")).toEqual(["+ 2 more"]);
+        element.shadowRoot!.querySelector<HTMLButtonElement>("button.more")!.click();
+        await element.updateComplete;
+        expect(texts(element, ".ti")).toEqual(["Water the plants", "Dishes", "Laundry"]);
+        expect(texts(element, ".more")).toEqual(["Show less"]);
+        element.shadowRoot!.querySelector<HTMLButtonElement>("button.more")!.click();
+        await element.updateComplete;
+        expect(texts(element, ".ti")).toEqual(["Water the plants"]);
+    });
+
+    it("says nothing of what its limit left out when told to hide it", async () => {
+        const element = await card(hassWith(chores), { lists: [{ ...CHORES, limit: 1, hide_more: true }] });
+        expect(texts(element, ".ti")).toEqual(["Water the plants"]);
+        expect(element.shadowRoot!.querySelector(".more")).toBeNull();
     });
 
     it("says so when the list is empty, in the list's own words when it has them", async () => {
@@ -157,6 +170,38 @@ describe("an item's text and link", () => {
     });
 });
 
+describe("the rows' right edge", () => {
+    const entries = [
+        { title: "With a text", start: "2020-03-01", text: "Short." },
+        { title: "Plain", start: "2020-03-02" },
+        { title: "With a link", start: "2020-03-03", link: "https://example.com/a" },
+    ];
+    const rows = (text: "clamp" | "fold") =>
+        card(hassWith(sensor("sensor.notices", "Notices", { entries })), {
+            text,
+            lists: [{ entity: "sensor.notices", attribute: "entries", group: "none" }],
+        });
+    const titleRow = (element: ListsCard, title: string) =>
+        [...element.shadowRoot!.querySelectorAll(".item")]
+            .find((e) => e.querySelector(".ti")!.textContent!.includes(title))!
+            .querySelector(".line")!;
+
+    it("puts a cut text's chevron at the end of the text's row, so the title's row has only the date and the link", async () => {
+        const element = await rows("clamp");
+        expect(titleRow(element, "With a text").querySelector(".chev")).toBeNull();
+        expect(element.shadowRoot!.querySelector(".tx-row > .chev")).not.toBeNull();
+        // Every title row makes the same room at its end as the one with a link's button.
+        expect(element.shadowRoot!.querySelector("ha-card")!.getAttribute("style")).toContain("--lc-title-buttons: 28px");
+        expect(titleRow(element, "Plain").querySelector(".act")).not.toBeNull();
+    });
+
+    it("keeps a folded text's chevron on the title's row, where it can be seen, and makes room for it on every row", async () => {
+        const element = await rows("fold");
+        expect(titleRow(element, "With a text").querySelector(".act .chev")).not.toBeNull();
+        expect(element.shadowRoot!.querySelector("ha-card")!.getAttribute("style")).toContain("--lc-title-buttons: 28px");
+    });
+});
+
 describe("when an item is", () => {
     // Whole days in a past year read the same in any zone and on any day the tests run.
     const dated = (entries: Array<Record<string, unknown>>, tone?: "warning") =>
@@ -189,6 +234,25 @@ describe("when an item is", () => {
     it("is a range for a period", async () => {
         const [range] = texts(await dated([{ title: "Works", start: "2020-03-30", end: "2020-04-02" }]), ".when");
         expect(range).toMatch(/^3\/30\/2020\s*–\s*4\/2\/2020$/);
+    });
+
+    it("is only its time under a timeline's title when it is within the badge's one day", async () => {
+        const element = await timeline([
+            { title: "Choir", start: "2020-03-10T18:00:00Z", end: "2020-03-10T19:30:00Z" },
+            { title: "Dentist", start: "2020-03-12T08:15:00Z" },
+            { title: "Night shift", start: "2020-03-14T20:00:00Z", end: "2020-03-15T06:00:00Z" },
+        ]);
+        const when = (title: string) =>
+            [...element.shadowRoot!.querySelectorAll(".item")]
+                .find((e) => e.querySelector(".ti")!.textContent!.includes(title))!
+                .querySelector(".lb .when")!.textContent!;
+        const [choir, dentist, night] = [when("Choir"), when("Dentist"), when("Night shift")];
+        // The times in the browser's zone, with no date, as the badge has it.
+        expect(choir).not.toMatch(/3\/10|2020/);
+        expect(choir).toMatch(/\d:\d{2}.*–.*\d:\d{2}/);
+        expect(dentist).not.toMatch(/3\/12|2020/);
+        // Over two days, so the dates are written out.
+        expect(night).toMatch(/2020/);
     });
 
     it("is in the timeline's badge: the day, the month, and the year when it isn't this year", async () => {

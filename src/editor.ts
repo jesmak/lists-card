@@ -107,6 +107,11 @@ function listsSchema(text: Text) {
                             description: text("editor.limit_helper"),
                             selector: { number: { min: 0, step: 1, mode: "box" } },
                         },
+                        hide_more: {
+                            label: text("editor.hide_more"),
+                            description: text("editor.hide_more_helper"),
+                            selector: { boolean: {} },
+                        },
                         order: {
                             label: text("editor.order"),
                             description: text("editor.order_helper"),
@@ -149,7 +154,7 @@ function tidy<T extends object>(value: T | undefined): T | undefined {
 /** A list as the configuration keeps it: blank values and defaults left out, so it stays as short as one written by hand. */
 export function tidyList(list: ListConfig): ListConfig {
     const tidied: Record<string, unknown> = { entity: list.entity };
-    for (const key of ["attribute", "path", "name", "empty"] as const) {
+    for (const key of ["attribute", "path", "name", "empty", "hide_more"] as const) {
         if (!blank(list[key])) {
             tidied[key] = list[key];
         }
