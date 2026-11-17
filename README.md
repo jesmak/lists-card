@@ -32,8 +32,8 @@ The card shows what its entity holds and remembers nothing itself. The only list
 
 ### With the Marketplace
 
-1. Open Settings › Marketplace, choose Add from link and paste `https://github.com/jesmak/lists-card`
-2. Open Lists card in the Marketplace and choose Install
+1. Open Settings › Marketplace and search for Lists card
+2. Open it and choose Install
 3. Refresh your browser
 
 ### Manual
@@ -624,6 +624,6 @@ MIT, see [LICENSE](LICENSE).
 [release-date-shield]: https://img.shields.io/github/release-date/jesmak/lists-card?style=for-the-badge
 [releases]: https://github.com/jesmak/lists-card/releases
 [downloads-shield]: https://img.shields.io/github/downloads/jesmak/lists-card/total.svg?style=for-the-badge
-[marketplace-shield]: https://img.shields.io/badge/Marketplace-Custom-orange.svg?style=for-the-badge
+[marketplace-shield]: https://img.shields.io/badge/Marketplace-Default-green.svg?style=for-the-badge
 [marketplace]: https://my.home-assistant.io/redirect/marketplace_repository/?owner=jesmak&repository=lists-card&category=plugin
 [license-shield]: https://img.shields.io/github/license/jesmak/lists-card.svg?style=for-the-badge
