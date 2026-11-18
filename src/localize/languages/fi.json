@@ -2,7 +2,7 @@
     "common": {
         "name": "Listakortti",
         "description": "Mikä tahansa entiteetin lista, kuten tehtävät, tapahtumat tai tiedotteet, ryhmiteltynä ajan tai avaimen mukaan",
-        "invalid_configuration": "Virheelliset asetukset. Jokainen lista kohdassa lists tarvitsee entiteetin (entity), ja muita entiteettejä (entities) voi olla vain kalenterilistassa. Ryhmittelyn (group) on oltava time, key tai none, rajan (limit) kokonaisluku, järjestyksen (order) lista arvoista before, now, after ja done, ja sävyn (tone) plain, warning, highlight tai dimmed.",
+        "invalid_configuration": "Virheelliset asetukset. Jokainen lista kohdassa lists tarvitsee entiteetin (entity), ja muita entiteettejä (entities) voi olla vain kalenterilistassa. Ryhmittelyn (group) on oltava time, key, month tai none, rajan (limit) kokonaisluku, järjestyksen (order) lista arvoista before, now, after ja done, ja sävyn (tone) plain, warning, highlight tai dimmed.",
         "invalid_layout": "Virheellinen asettelu. Asettelun (layout) on oltava rows tai timeline.",
         "invalid_text": "Virheellinen tekstin tapa. Tekstin (text) on oltava full, clamp tai fold.",
         "invalid_headings": "Virheelliset otsikot. Otsikoiden (headings) on oltava plain tai fold.",

@@ -2,7 +2,7 @@
     "common": {
         "name": "Lists card",
         "description": "Any list an entity holds, such as tasks, events or notices, grouped by time or by a key",
-        "invalid_configuration": "Invalid configuration. Each entry under lists needs an entity, more entities (entities) are for a calendar's list only, group must be time, key or none, limit a whole number, order a list of before, now, after and done, and a tone plain, warning, highlight or dimmed.",
+        "invalid_configuration": "Invalid configuration. Each entry under lists needs an entity, more entities (entities) are for a calendar's list only, group must be time, key, month or none, limit a whole number, order a list of before, now, after and done, and a tone plain, warning, highlight or dimmed.",
         "invalid_layout": "Invalid layout. Layout must be rows or timeline.",
         "invalid_text": "Invalid text mode. Text must be full, clamp or fold.",
         "invalid_headings": "Invalid headings. Headings must be plain or fold.",

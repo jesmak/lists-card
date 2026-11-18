@@ -1,4 +1,4 @@
-/*! lists-card 1.1.0 | MIT License */
+/*! lists-card 1.1.1 | MIT License */
 var __defProp = Object.defineProperty;
 var __getOwnPropDesc = Object.getOwnPropertyDescriptor;
 var __decorateClass = (decorators, target, key, kind) => {
@@ -711,14 +711,14 @@ var c4 = e5(class extends i5 {
 });
 
 // src/const.ts
-var CARD_VERSION = "1.1.0";
+var CARD_VERSION = "1.1.1";
 
 // src/localize/languages/en.json
 var en_default = {
   common: {
     name: "Lists card",
     description: "Any list an entity holds, such as tasks, events or notices, grouped by time or by a key",
-    invalid_configuration: "Invalid configuration. Each entry under lists needs an entity, more entities (entities) are for a calendar's list only, group must be time, key or none, limit a whole number, order a list of before, now, after and done, and a tone plain, warning, highlight or dimmed.",
+    invalid_configuration: "Invalid configuration. Each entry under lists needs an entity, more entities (entities) are for a calendar's list only, group must be time, key, month or none, limit a whole number, order a list of before, now, after and done, and a tone plain, warning, highlight or dimmed.",
     invalid_layout: "Invalid layout. Layout must be rows or timeline.",
     invalid_text: "Invalid text mode. Text must be full, clamp or fold.",
     invalid_headings: "Invalid headings. Headings must be plain or fold.",
@@ -853,7 +853,7 @@ var fi_default = {
   common: {
     name: "Listakortti",
     description: "Mik\xE4 tahansa entiteetin lista, kuten teht\xE4v\xE4t, tapahtumat tai tiedotteet, ryhmiteltyn\xE4 ajan tai avaimen mukaan",
-    invalid_configuration: "Virheelliset asetukset. Jokainen lista kohdassa lists tarvitsee entiteetin (entity), ja muita entiteettej\xE4 (entities) voi olla vain kalenterilistassa. Ryhmittelyn (group) on oltava time, key tai none, rajan (limit) kokonaisluku, j\xE4rjestyksen (order) lista arvoista before, now, after ja done, ja s\xE4vyn (tone) plain, warning, highlight tai dimmed.",
+    invalid_configuration: "Virheelliset asetukset. Jokainen lista kohdassa lists tarvitsee entiteetin (entity), ja muita entiteettej\xE4 (entities) voi olla vain kalenterilistassa. Ryhmittelyn (group) on oltava time, key, month tai none, rajan (limit) kokonaisluku, j\xE4rjestyksen (order) lista arvoista before, now, after ja done, ja s\xE4vyn (tone) plain, warning, highlight tai dimmed.",
     invalid_layout: "Virheellinen asettelu. Asettelun (layout) on oltava rows tai timeline.",
     invalid_text: "Virheellinen tekstin tapa. Tekstin (text) on oltava full, clamp tai fold.",
     invalid_headings: "Virheelliset otsikot. Otsikoiden (headings) on oltava plain tai fold.",
