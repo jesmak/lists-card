@@ -728,6 +728,16 @@ describe("the spare room of a filled row", () => {
         expect(style).toContain("--lc-spare: 12px");
         expect(style).toContain("--lc-spare-bottom: 12px");
     });
+
+    it("is given the same way on a card held to a height, when it has less than a row to spare", async () => {
+        const element = await card(hassWith(chores), { lists: [CHORES], height: 300 });
+        Object.assign(element as unknown as { spare: number }, { spare: 24 });
+        await element.updateComplete;
+        const style = element.shadowRoot!.querySelector("ha-card")!.getAttribute("style")!;
+        expect(style).toContain("height: 300px");
+        expect(style).toContain("--lc-spare: 12px");
+        expect(style).toContain("--lc-spare-bottom: 12px");
+    });
 });
 
 describe("the configuration", () => {

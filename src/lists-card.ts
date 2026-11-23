@@ -34,7 +34,7 @@ import {
 import { browserLanguage, translate } from "./localize/localize";
 import { draftOf, hasFeature, moveTarget, saveData } from "./todo";
 import type { Draft, TodoFeature } from "./todo";
-import { drawnScale, fillLimit, filledHeight, filledStyle, spareRoom, validRowStep } from "./rows";
+import { drawnScale, fillLimit, filledHeight, filledStyle, heldSpare, spareRoom, validRowStep } from "./rows";
 import { BUCKETS, EDITING, HEADINGS, LAYOUTS, TEXT_MODES } from "./types";
 import type {
     Arranged,
@@ -1289,7 +1289,8 @@ export class ListsCard extends LitElement {
             return;
         }
         const limit = fillLimit(this.config ?? {}, this.layout, this.minimumHeight());
-        if (!limit) {
+        const held = !limit && Boolean(heightStyle(this.config ?? {}, this.layout, this.minimumHeight()));
+        if (!limit && !held) {
             if (this.filled) this.filled = 0;
             if (this.spare) this.spare = 0;
             return;
@@ -1311,6 +1312,13 @@ export class ListsCard extends LitElement {
             const listStyle = getComputedStyle(list);
             content -= Math.max(0, px(listStyle.paddingTop) - this.listTop()) + Math.max(0, px(listStyle.paddingBottom) - LIST_BOTTOM_PX);
         }
+        // Held to a height, less than a row to spare is spread as on filled rows, and more goes under the lists.
+        if (held) {
+            const spare = heldSpare(card.getBoundingClientRect().height / scale, content);
+            if (this.filled) this.filled = 0;
+            if (spare !== this.spare) this.spare = spare;
+            return;
+        }
         const filled = filledHeight(content, this.config ?? {}, limit);
         const spare = spareRoom(filled, content);
         if (filled !== this.filled) {
@@ -1322,13 +1330,13 @@ export class ListsCard extends LitElement {
     }
 
     /**
-     * The card's inline style: the height it is held to, or the rows it fills up to any limit, with their spare room.
-     * Under a header the room goes between it and the lists. A card with no header is centred instead, the room split so
-     * the lists stand as far from the card's top as from its bottom.
+     * The card's inline style: the height it is held to, or the rows it fills up to any limit, with their spare room, or a
+     * held card's when it is less than a row. Under a header the room goes between it and the lists. A card with no header
+     * is centred instead, the room split so the lists stand as far from the card's top as from its bottom.
      */
     private cardStyle(): string {
         const style = [filledStyle(this.config ?? {}, this.layout, this.minimumHeight(), this.filled)];
-        if (this.filled) {
+        if (this.filled || this.spare) {
             // With no header the list has as much room at its top as at its bottom, so the spare room is split in half.
             const top = this.hasHeader() ? this.spare : Math.floor(this.spare / 2);
             style.push(`--lc-spare: ${top}px`, `--lc-spare-bottom: ${this.spare - top}px`);
@@ -2167,23 +2175,6 @@ export class ListsCard extends LitElement {
                 /* A card with no header has as much room above its lists as below them. */
                 .no-header > .list {
                     padding-top: calc(12px + var(--lc-spare, 0px));
-                }
-
-                /*
-                 * Held to a height, a card with no header centres its lists while they fit. The auto margins share the
-                 * room left over, and come to nothing once the lists are taller, so they scroll from their top.
-                 */
-                .held.no-header > .list {
-                    display: flex;
-                    flex-direction: column;
-                }
-
-                .held.no-header > .list > :first-child {
-                    margin-top: auto;
-                }
-
-                .held.no-header > .list > :last-child {
-                    margin-bottom: auto;
                 }
 
                 .sliding.held .list {
