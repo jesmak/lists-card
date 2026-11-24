@@ -1,13 +1,15 @@
 /**
  * The card's visual editor: the title and its icon, the layout, how an item's text is shown, the group headings, what the
- * card may change on its to-do lists, its lists, and how the card rounds its height to the rows of a sections view. Each
- * list is a row that opens a page of its own, with the fields that list's kind can use: a calendar's, a to-do list's or
- * an entity attribute's. Its height mode is set in YAML only.
+ * card may change on its to-do lists, its lists, how the card rounds its height to the rows of a sections view, and how
+ * a list that scrolls shows that there is more. Each list is a row that opens a page of its own, with the fields that
+ * list's kind can use: a calendar's, a to-do list's or an entity attribute's. Its height mode is set in YAML only.
  */
 import { LitElement, css, html, nothing } from "lit";
 import type { CSSResultGroup, TemplateResult } from "lit";
 import { customElement, property, state } from "lit/decorators.js";
 
+import { DEFAULT_SCROLL_INDICATOR } from "./const";
+import { scrollIndicatorData, scrollIndicatorSchema, tidyScrollIndicator } from "./fade";
 import type { HomeAssistant } from "./hass";
 import { browserLanguage, translate } from "./localize/localize";
 import { DEFAULT_TONES, MAX_DAYS, MAX_ITEMS } from "./lists";
@@ -64,10 +66,6 @@ export function listKind(list: Partial<ListConfig>): ListKind {
 const bucketsOf = (kind: ListKind) => (kind === "todo" ? BUCKETS : BUCKETS.filter((bucket) => bucket !== "done"));
 
 /**
- * The fields of one list's page, those its kind can use. A field inside an object selector takes its helper from
- * `description`, as ha-form's computeHelper doesn't reach it.
- */
-/**
  * The attributes of an entity that can't hold a list as they are now: those that are neither a list nor an object, nor
  * text that reads as JSON. An object stays on offer, as a list may be deeper inside it, reached with a path. Only the
  * value at the moment is known, so an attribute that is empty now is left out too, and the picker takes a name typed in.
@@ -91,6 +89,10 @@ export function notListAttributes(attributes: Record<string, unknown> | undefine
         .map(([name]) => name);
 }
 
+/**
+ * The fields of one list's page, those its kind can use. A field inside an object selector takes its helper from
+ * `description`, as ha-form's computeHelper doesn't reach it.
+ */
 export function listSchema(kind: ListKind, text: Text, hiddenAttributes: string[] = []) {
     // The days the earlier and coming groups reach are fields of the page itself. Only the done group's reach stays its own.
     const bucket = (name: string) => ({
@@ -316,7 +318,7 @@ export function tidyList(list: ListConfig): ListConfig {
 
 /** The form's values as the card's configuration, with empty values and defaults left out. */
 export function configFromForm(value: ListsCardConfig): ListsCardConfig {
-    const config: ListsCardConfig = tidyRowStep(value);
+    const config: ListsCardConfig = tidyScrollIndicator(tidyRowStep(value), DEFAULT_SCROLL_INDICATOR);
     config.lists = (config.lists ?? []).filter((list) => list?.entity).map(tidyList);
     for (const key of ["title", "icon"]) {
         if (!config[key]) {
@@ -360,15 +362,16 @@ export class ListsCardEditor extends LitElement {
             return this.listPage(lists[this.open], this.open);
         }
         const text: Text = (key) => this.text(key);
+        const data = formData(scrollIndicatorData(rowStepData(this.config), DEFAULT_SCROLL_INDICATOR));
         return html`
-            ${this.form(formData(rowStepData(this.config)), lookSchema(text), this.valueChanged)}
+            ${this.form(data, lookSchema(text), this.valueChanged)}
             <div class="lists">
                 <div class="lists-title">${this.text("editor.lists")}</div>
                 ${lists.map((list, index) => this.listRow(list, index, lists.length))}
                 ${this.form({}, [{ name: "add_list", selector: { entity: {} } }], this.addList)}
                 <p class="helper">${this.text("editor.lists_helper")}</p>
             </div>
-            ${this.form(formData(rowStepData(this.config)), rowStepSchema(this.config, text), this.valueChanged)}
+            ${this.form(data, [...rowStepSchema(this.config, text), ...scrollIndicatorSchema(text)], this.valueChanged)}
         `;
     }
 

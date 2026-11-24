@@ -8,6 +8,7 @@
         "invalid_headings": "Virheelliset otsikot. Otsikoiden (headings) on oltava plain tai fold.",
         "invalid_height": "Virheellinen korkeus. Korkeuksien (height ja max_height) on oltava positiivisia lukuja pikseleinä, ja korkeustilan (height_mode) auto, fixed tai max.",
         "invalid_row_step": "Virheellinen pyöristys. Pyöristyksen (row_step) on oltava full tai half.",
+        "invalid_scroll_indicator": "Virheellinen scroll_indicator. Sen on oltava both, fade tai scrollbar.",
         "invalid_editing": "Virheellinen muokkaus. Muokkauksen (editing) on oltava full, tick tai none.",
         "no_lists": "Ei vielä listoja. Lisää lista kortin asetuksista.",
         "unreadable": "Entiteetistä {entity} ei löytynyt listaa.",
@@ -128,6 +129,11 @@
         "row_step": "Pyöristys osioihin jaetussa näkymässä",
         "row_step_helper": "Automaattisella rivikorkeudella kortin korkeus pyöristetään ylöspäin kokonaisiin riveihin, tai tilan säästämiseksi puolikkaisiin riveihin.",
         "row_step_full": "Kokonaisiin riveihin",
-        "row_step_half": "Puolikkaisiin riveihin"
+        "row_step_half": "Puolikkaisiin riveihin",
+        "scroll_indicator": "Vieritys",
+        "scroll_indicator_helper": "Näkyy, kun kortin korkeus on rajattu eikä koko sisältö mahdu siihen",
+        "scroll_indicator_both": "Häivytetty reuna ja vierityspalkki",
+        "scroll_indicator_fade": "Häivytetty reuna",
+        "scroll_indicator_scrollbar": "Vierityspalkki"
     }
 }

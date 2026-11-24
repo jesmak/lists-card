@@ -226,6 +226,7 @@ describe("configFromForm", () => {
             text: "fold",
             headings: "plain",
             row_step: "full",
+            scroll_indicator: "fade",
             lists: [{ entity: "sensor.chores", group: "time", limit: 0, order: ["before", "now", "after", "done"] }, { entity: "" }],
         } as unknown as ListsCardConfig;
         expect(configFromForm(form)).toEqual({
@@ -241,6 +242,7 @@ describe("configFromForm", () => {
             type: TYPE,
             title: "Home",
             layout: "timeline",
+            scroll_indicator: "both",
             lists: [{ entity: "sensor.chores", attribute: "tasks", fields: { start: "due" }, after: { days: 7 }, order: ["now", "after"] }],
         };
         const form = {

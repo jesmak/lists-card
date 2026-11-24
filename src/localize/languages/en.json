@@ -8,6 +8,7 @@
         "invalid_headings": "Invalid headings. Headings must be plain or fold.",
         "invalid_height": "Invalid height. The heights (height and max_height) must be positive numbers in pixels, and the height mode (height_mode) auto, fixed or max.",
         "invalid_row_step": "Invalid rounding. The rounding (row_step) must be full or half.",
+        "invalid_scroll_indicator": "Invalid scroll_indicator. It must be both, fade or scrollbar.",
         "invalid_editing": "Invalid editing. Editing (editing) must be full, tick or none.",
         "no_lists": "No lists yet. Add one in the card's settings.",
         "unreadable": "No list found in {entity}.",
@@ -128,6 +129,11 @@
         "row_step": "Rounding in a sections view",
         "row_step_helper": "On automatic rows the card's height is rounded up to whole rows, or to half rows to save room.",
         "row_step_full": "To whole rows",
-        "row_step_half": "To half rows"
+        "row_step_half": "To half rows",
+        "scroll_indicator": "Scrolling",
+        "scroll_indicator_helper": "Shown when the card's height is limited and its content doesn't all fit",
+        "scroll_indicator_both": "Faded edge and scrollbar",
+        "scroll_indicator_fade": "Faded edge",
+        "scroll_indicator_scrollbar": "Scrollbar"
     }
 }

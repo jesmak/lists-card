@@ -1,4 +1,4 @@
-/*! lists-card 1.1.1 | MIT License */
+/*! lists-card 1.2.0 | MIT License */
 var __defProp = Object.defineProperty;
 var __getOwnPropDesc = Object.getOwnPropertyDescriptor;
 var __decorateClass = (decorators, target, key, kind) => {
@@ -711,7 +711,148 @@ var c4 = e5(class extends i5 {
 });
 
 // src/const.ts
-var CARD_VERSION = "1.1.1";
+var CARD_VERSION = "1.2.0";
+var DEFAULT_SCROLL_INDICATOR = "fade";
+
+// src/fade.ts
+var SCROLL_INDICATORS = ["both", "fade", "scrollbar"];
+function validScrollIndicator(config) {
+  return config.scroll_indicator === void 0 || config.scroll_indicator === null || SCROLL_INDICATORS.includes(config.scroll_indicator);
+}
+function scrollIndicator(config, fallback) {
+  return config.scroll_indicator ?? fallback;
+}
+function scrollIndicatorSchema(text2) {
+  return [
+    {
+      name: "scroll_indicator",
+      selector: {
+        select: {
+          mode: "dropdown",
+          options: SCROLL_INDICATORS.map((value) => ({ value, label: text2(`editor.scroll_indicator_${value}`) }))
+        }
+      }
+    }
+  ];
+}
+function scrollIndicatorData(config, fallback) {
+  return { ...config, scroll_indicator: scrollIndicator(config, fallback) };
+}
+function tidyScrollIndicator(config, fallback) {
+  const tidied = { ...config };
+  if (scrollIndicator(tidied, fallback) === fallback) {
+    delete tidied.scroll_indicator;
+  }
+  return tidied;
+}
+var fadeStyles = i`
+    .fades {
+        --fade-length: min(24px, 25%);
+        scroll-padding-block: calc(var(--fade-top-offset, 0px) + var(--fade-length, 24px)) var(--fade-length, 24px);
+    }
+
+    .fade-top {
+        mask-image: linear-gradient(
+            to bottom,
+            #000 var(--fade-top-offset, 0px),
+            transparent var(--fade-top-offset, 0px),
+            #000 calc(var(--fade-top-offset, 0px) + var(--fade-length, 24px))
+        );
+    }
+
+    .fade-bottom {
+        mask-image: linear-gradient(to top, transparent, #000 var(--fade-length, 24px));
+    }
+
+    .fade-top.fade-bottom {
+        mask-image: linear-gradient(
+            to bottom,
+            #000 var(--fade-top-offset, 0px),
+            transparent var(--fade-top-offset, 0px),
+            #000 calc(var(--fade-top-offset, 0px) + var(--fade-length, 24px)),
+            #000 calc(100% - var(--fade-length, 24px)),
+            transparent
+        );
+    }
+
+    /* Over the card's own scrollbar style, whatever its selector. */
+    .scroll-hidden {
+        scrollbar-width: none !important;
+    }
+
+    .scroll-hidden::-webkit-scrollbar {
+        display: none;
+    }
+`;
+function markFade(part) {
+  const hidden = part.scrollHeight - part.clientHeight;
+  part.classList.toggle("fade-top", hidden > 1 && part.scrollTop > 1);
+  part.classList.toggle("fade-bottom", hidden > 1 && hidden - part.scrollTop > 1);
+}
+var onScroll = (event) => markFade(event.currentTarget);
+var ScrollFade = class {
+  constructor(host, parts, indicator) {
+    this.host = host;
+    this.parts = parts;
+    this.indicator = indicator;
+    /** Each followed part with the children whose size it watches. */
+    this.followed = /* @__PURE__ */ new Map();
+    this.resized = typeof ResizeObserver === "undefined" ? void 0 : new ResizeObserver((entries) => {
+      for (const { target } of entries) {
+        const part = this.followed.has(target) ? target : target.parentElement;
+        if (part && this.followed.has(part)) {
+          markFade(part);
+        }
+      }
+    });
+    host.addController(this);
+  }
+  hostConnected() {
+    if (this.host.hasUpdated) {
+      this.follow();
+    }
+  }
+  hostUpdated() {
+    if (this.host.isConnected) {
+      this.follow();
+    }
+  }
+  hostDisconnected() {
+    for (const part of [...this.followed.keys()]) {
+      this.forget(part);
+    }
+  }
+  follow() {
+    const indicator = this.indicator();
+    const now = new Set(indicator === "scrollbar" ? [] : this.parts());
+    for (const part of [...this.followed.keys()]) {
+      if (!now.has(part)) {
+        this.forget(part);
+      }
+    }
+    for (const part of now) {
+      if (!this.followed.has(part)) {
+        part.addEventListener("scroll", onScroll, { passive: true });
+        this.resized?.observe(part);
+      }
+      part.classList.add("fades");
+      part.classList.toggle("scroll-hidden", indicator === "fade");
+      const before = this.followed.get(part) ?? [];
+      const children = [...part.children];
+      before.filter((child) => !children.includes(child)).forEach((child) => this.resized?.unobserve(child));
+      children.filter((child) => !before.includes(child)).forEach((child) => this.resized?.observe(child));
+      this.followed.set(part, children);
+      markFade(part);
+    }
+  }
+  forget(part) {
+    this.followed.get(part)?.forEach((child) => this.resized?.unobserve(child));
+    this.followed.delete(part);
+    part.removeEventListener("scroll", onScroll);
+    this.resized?.unobserve(part);
+    part.classList.remove("fades", "fade-top", "fade-bottom", "scroll-hidden");
+  }
+};
 
 // src/localize/languages/en.json
 var en_default = {
@@ -724,6 +865,7 @@ var en_default = {
     invalid_headings: "Invalid headings. Headings must be plain or fold.",
     invalid_height: "Invalid height. The heights (height and max_height) must be positive numbers in pixels, and the height mode (height_mode) auto, fixed or max.",
     invalid_row_step: "Invalid rounding. The rounding (row_step) must be full or half.",
+    invalid_scroll_indicator: "Invalid scroll_indicator. It must be both, fade or scrollbar.",
     invalid_editing: "Invalid editing. Editing (editing) must be full, tick or none.",
     no_lists: "No lists yet. Add one in the card's settings.",
     unreadable: "No list found in {entity}.",
@@ -844,7 +986,12 @@ var en_default = {
     row_step: "Rounding in a sections view",
     row_step_helper: "On automatic rows the card's height is rounded up to whole rows, or to half rows to save room.",
     row_step_full: "To whole rows",
-    row_step_half: "To half rows"
+    row_step_half: "To half rows",
+    scroll_indicator: "Scrolling",
+    scroll_indicator_helper: "Shown when the card's height is limited and its content doesn't all fit",
+    scroll_indicator_both: "Faded edge and scrollbar",
+    scroll_indicator_fade: "Faded edge",
+    scroll_indicator_scrollbar: "Scrollbar"
   }
 };
 
@@ -859,6 +1006,7 @@ var fi_default = {
     invalid_headings: "Virheelliset otsikot. Otsikoiden (headings) on oltava plain tai fold.",
     invalid_height: "Virheellinen korkeus. Korkeuksien (height ja max_height) on oltava positiivisia lukuja pikselein\xE4, ja korkeustilan (height_mode) auto, fixed tai max.",
     invalid_row_step: "Virheellinen py\xF6ristys. Py\xF6ristyksen (row_step) on oltava full tai half.",
+    invalid_scroll_indicator: "Virheellinen scroll_indicator. Sen on oltava both, fade tai scrollbar.",
     invalid_editing: "Virheellinen muokkaus. Muokkauksen (editing) on oltava full, tick tai none.",
     no_lists: "Ei viel\xE4 listoja. Lis\xE4\xE4 lista kortin asetuksista.",
     unreadable: "Entiteetist\xE4 {entity} ei l\xF6ytynyt listaa.",
@@ -979,7 +1127,12 @@ var fi_default = {
     row_step: "Py\xF6ristys osioihin jaetussa n\xE4kym\xE4ss\xE4",
     row_step_helper: "Automaattisella rivikorkeudella kortin korkeus py\xF6ristet\xE4\xE4n yl\xF6sp\xE4in kokonaisiin riveihin, tai tilan s\xE4\xE4st\xE4miseksi puolikkaisiin riveihin.",
     row_step_full: "Kokonaisiin riveihin",
-    row_step_half: "Puolikkaisiin riveihin"
+    row_step_half: "Puolikkaisiin riveihin",
+    scroll_indicator: "Vieritys",
+    scroll_indicator_helper: "N\xE4kyy, kun kortin korkeus on rajattu eik\xE4 koko sis\xE4lt\xF6 mahdu siihen",
+    scroll_indicator_both: "H\xE4ivytetty reuna ja vierityspalkki",
+    scroll_indicator_fade: "H\xE4ivytetty reuna",
+    scroll_indicator_scrollbar: "Vierityspalkki"
   }
 };
 
@@ -1646,7 +1799,7 @@ function tidyList(list) {
   return tidied;
 }
 function configFromForm(value) {
-  const config = tidyRowStep(value);
+  const config = tidyScrollIndicator(tidyRowStep(value), DEFAULT_SCROLL_INDICATOR);
   config.lists = (config.lists ?? []).filter((list) => list?.entity).map(tidyList);
   for (const key of ["title", "icon"]) {
     if (!config[key]) {
@@ -1698,15 +1851,16 @@ var ListsCardEditor = class extends i4 {
       return this.listPage(lists[this.open], this.open);
     }
     const text2 = (key) => this.text(key);
+    const data = formData(scrollIndicatorData(rowStepData(this.config), DEFAULT_SCROLL_INDICATOR));
     return b2`
-            ${this.form(formData(rowStepData(this.config)), lookSchema(text2), this.valueChanged)}
+            ${this.form(data, lookSchema(text2), this.valueChanged)}
             <div class="lists">
                 <div class="lists-title">${this.text("editor.lists")}</div>
                 ${lists.map((list, index) => this.listRow(list, index, lists.length))}
                 ${this.form({}, [{ name: "add_list", selector: { entity: {} } }], this.addList)}
                 <p class="helper">${this.text("editor.lists_helper")}</p>
             </div>
-            ${this.form(formData(rowStepData(this.config)), rowStepSchema(this.config, text2), this.valueChanged)}
+            ${this.form(data, [...rowStepSchema(this.config, text2), ...scrollIndicatorSchema(text2)], this.valueChanged)}
         `;
   }
   form(data, schema, changed, kind) {
@@ -1907,104 +2061,6 @@ ListsCardEditor = __decorateClass([
   t3("lists-card-editor")
 ], ListsCardEditor);
 
-// src/fade.ts
-var fadeStyles = i`
-    .fades {
-        --fade-length: min(24px, 25%);
-        scroll-padding-block: calc(var(--fade-top-offset, 0px) + var(--fade-length, 24px)) var(--fade-length, 24px);
-    }
-
-    .fade-top {
-        mask-image: linear-gradient(
-            to bottom,
-            #000 var(--fade-top-offset, 0px),
-            transparent var(--fade-top-offset, 0px),
-            #000 calc(var(--fade-top-offset, 0px) + var(--fade-length, 24px))
-        );
-    }
-
-    .fade-bottom {
-        mask-image: linear-gradient(to top, transparent, #000 var(--fade-length, 24px));
-    }
-
-    .fade-top.fade-bottom {
-        mask-image: linear-gradient(
-            to bottom,
-            #000 var(--fade-top-offset, 0px),
-            transparent var(--fade-top-offset, 0px),
-            #000 calc(var(--fade-top-offset, 0px) + var(--fade-length, 24px)),
-            #000 calc(100% - var(--fade-length, 24px)),
-            transparent
-        );
-    }
-`;
-function markFade(part) {
-  const hidden = part.scrollHeight - part.clientHeight;
-  part.classList.toggle("fade-top", hidden > 1 && part.scrollTop > 1);
-  part.classList.toggle("fade-bottom", hidden > 1 && hidden - part.scrollTop > 1);
-}
-var onScroll = (event) => markFade(event.currentTarget);
-var ScrollFade = class {
-  constructor(host, parts) {
-    this.host = host;
-    this.parts = parts;
-    /** Each followed part with the children whose size it watches. */
-    this.followed = /* @__PURE__ */ new Map();
-    this.resized = typeof ResizeObserver === "undefined" ? void 0 : new ResizeObserver((entries) => {
-      for (const { target } of entries) {
-        const part = this.followed.has(target) ? target : target.parentElement;
-        if (part && this.followed.has(part)) {
-          markFade(part);
-        }
-      }
-    });
-    host.addController(this);
-  }
-  hostConnected() {
-    if (this.host.hasUpdated) {
-      this.follow();
-    }
-  }
-  hostUpdated() {
-    if (this.host.isConnected) {
-      this.follow();
-    }
-  }
-  hostDisconnected() {
-    for (const part of [...this.followed.keys()]) {
-      this.forget(part);
-    }
-  }
-  follow() {
-    const now = new Set(this.parts());
-    for (const part of [...this.followed.keys()]) {
-      if (!now.has(part)) {
-        this.forget(part);
-      }
-    }
-    for (const part of now) {
-      if (!this.followed.has(part)) {
-        part.addEventListener("scroll", onScroll, { passive: true });
-        this.resized?.observe(part);
-      }
-      part.classList.add("fades");
-      const before = this.followed.get(part) ?? [];
-      const children = [...part.children];
-      before.filter((child) => !children.includes(child)).forEach((child) => this.resized?.unobserve(child));
-      children.filter((child) => !before.includes(child)).forEach((child) => this.resized?.observe(child));
-      this.followed.set(part, children);
-      markFade(part);
-    }
-  }
-  forget(part) {
-    this.followed.get(part)?.forEach((child) => this.resized?.unobserve(child));
-    this.followed.delete(part);
-    part.removeEventListener("scroll", onScroll);
-    this.resized?.unobserve(part);
-    part.classList.remove("fades", "fade-top", "fade-bottom");
-  }
-};
-
 // src/todo.ts
 var TODO_FEATURES = {
   create: 1,
@@ -2143,7 +2199,11 @@ var ListsCard = class extends i4 {
         this.sliding = false;
       }
     };
-    new ScrollFade(this, () => this.heightStyle() ? this.renderRoot.querySelectorAll(".list") : []);
+    new ScrollFade(
+      this,
+      () => this.heightStyle() ? this.renderRoot.querySelectorAll(".list") : [],
+      () => scrollIndicator(this.config ?? {}, DEFAULT_SCROLL_INDICATOR)
+    );
   }
   static getConfigElement() {
     return document.createElement("lists-card-editor");
@@ -2185,6 +2245,9 @@ var ListsCard = class extends i4 {
     }
     if (!validRowStep(config)) {
       throw invalid("invalid_row_step");
+    }
+    if (!validScrollIndicator(config)) {
+      throw invalid("invalid_scroll_indicator");
     }
     if (config.editing != null && !EDITING.includes(config.editing)) {
       throw invalid("invalid_editing");
@@ -2384,7 +2447,6 @@ var ListsCard = class extends i4 {
   features(entity) {
     return Number(this.hass?.states[entity]?.attributes.supported_features ?? 0);
   }
-  /** Whether the card may change a to-do list in this way: the list supports it, and the card isn't read only. */
   /** Whether the card may change a to-do list in this way: the list supports it, and the card is set to change everything. */
   can(list, feature) {
     return (this.config?.editing ?? "full") === "full" && this.supports(list, feature);
@@ -3916,14 +3978,11 @@ var ListsCard = class extends i4 {
                     flex-basis: 0;
                 }
 
-                /* The lists scroll with no scrollbar. Their fading edges show that there is more. */
+                /* The lists' rows are as wide whether they scroll or not. */
                 .held .list {
                     overflow-y: auto;
-                    scrollbar-width: none;
-                }
-
-                .held .list::-webkit-scrollbar {
-                    display: none;
+                    scrollbar-width: thin;
+                    scrollbar-gutter: stable;
                 }
 
                 /* A card with no header has as much room above its lists as below them. */

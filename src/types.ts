@@ -1,3 +1,4 @@
+import type { ScrollIndicatorConfig } from "./fade";
 import type { LovelaceCardConfig } from "./hass";
 import type { RowStepConfig } from "./rows";
 
@@ -87,7 +88,7 @@ export interface ListConfig {
     empty?: string;
 }
 
-export interface ListsCardConfig extends LovelaceCardConfig, RowStepConfig {
+export interface ListsCardConfig extends LovelaceCardConfig, RowStepConfig, ScrollIndicatorConfig {
     lists: ListConfig[];
     title?: string;
     /** An icon before the title. */

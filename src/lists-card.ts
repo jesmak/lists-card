@@ -11,9 +11,9 @@ import type { CSSResultGroup, PropertyValues, TemplateResult } from "lit";
 import { property, state } from "lit/decorators.js";
 import { repeat } from "lit/directives/repeat.js";
 
-import { CARD_VERSION } from "./const";
+import { CARD_VERSION, DEFAULT_SCROLL_INDICATOR } from "./const";
 import "./editor";
-import { ScrollFade, fadeStyles } from "./fade";
+import { ScrollFade, fadeStyles, scrollIndicator, validScrollIndicator } from "./fade";
 import type { HomeAssistant } from "./hass";
 import { gridMinRows, heightCardSize, heightStyle, validHeight } from "./height";
 import {
@@ -185,7 +185,11 @@ export class ListsCard extends LitElement {
     constructor() {
         super();
         // Fades the edges of the lists while the card is held to a height and they scroll.
-        new ScrollFade(this, () => (this.heightStyle() ? this.renderRoot.querySelectorAll<HTMLElement>(".list") : []));
+        new ScrollFade(
+            this,
+            () => (this.heightStyle() ? this.renderRoot.querySelectorAll<HTMLElement>(".list") : []),
+            () => scrollIndicator(this.config ?? {}, DEFAULT_SCROLL_INDICATOR),
+        );
     }
 
     public static getConfigElement(): HTMLElement {
@@ -230,6 +234,9 @@ export class ListsCard extends LitElement {
         }
         if (!validRowStep(config)) {
             throw invalid("invalid_row_step");
+        }
+        if (!validScrollIndicator(config)) {
+            throw invalid("invalid_scroll_indicator");
         }
         if (config.editing != null && !EDITING.includes(config.editing)) {
             throw invalid("invalid_editing");
@@ -473,7 +480,6 @@ export class ListsCard extends LitElement {
         return Number(this.hass?.states[entity]?.attributes.supported_features ?? 0);
     }
 
-    /** Whether the card may change a to-do list in this way: the list supports it, and the card isn't read only. */
     /** Whether the card may change a to-do list in this way: the list supports it, and the card is set to change everything. */
     private can(list: ListConfig, feature: TodoFeature): boolean {
         return (this.config?.editing ?? "full") === "full" && this.supports(list, feature);
@@ -2162,14 +2168,11 @@ export class ListsCard extends LitElement {
                     flex-basis: 0;
                 }
 
-                /* The lists scroll with no scrollbar. Their fading edges show that there is more. */
+                /* The lists' rows are as wide whether they scroll or not. */
                 .held .list {
                     overflow-y: auto;
-                    scrollbar-width: none;
-                }
-
-                .held .list::-webkit-scrollbar {
-                    display: none;
+                    scrollbar-width: thin;
+                    scrollbar-gutter: stable;
                 }
 
                 /* A card with no header has as much room above its lists as below them. */
